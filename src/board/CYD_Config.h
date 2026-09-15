@@ -39,8 +39,8 @@ constexpr uint32_t VoxUartBaud = 921600;
 constexpr uint32_t VoxUartBaudFallback = 460800;
 
 // Footswitches
-constexpr int Footswitch1 = 22;
-constexpr int Footswitch2 = 27;
+constexpr int Footswitch1Pin = 22;
+constexpr int Footswitch2Pin = 27;
 
 // UI timing
 constexpr uint16_t UiFrameMs = 33;        // ~30 FPS target
