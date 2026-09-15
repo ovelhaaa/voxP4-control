@@ -115,5 +115,45 @@ All targets exceed the 40×40px minimum recommended for resistive touchscreens.
 - `performance_screen.svg` - Main performance view
 - `fx_chain_screen.svg` - Effect chain visualization
 - `effect_edit_screen.svg` - Parameter editor
+- `footswitch_config_screen.svg` - Footswitch configuration (FS1/FS2 mode and actions)
+- `preset_manager_screen.svg` - Preset browser with LOAD/SAVE/COPY operations
 
 These mockups are reference implementations. The actual LVGL-based UI should match these designs closely.
+
+---
+
+## Implementation Status
+
+### Round 1 Complete ✅
+
+**Widgets Created:**
+- `VuMeter` - Vertical VU meter with peak hold indicator
+- `EffectCard` - Compact effect status card for chain/performance views
+
+**Theme System:**
+- `UiThemeColor` enum for programmatic color access
+- `UiTheme_get_color()` helper function
+- Added colors: `COLOR_ACCENT_GREEN`, `COLOR_DISABLED`, `COLOR_BORDER`
+
+**Screens Mocked:**
+- Performance Screen (main view)
+- FX Chain Screen (effect flow)
+- Effect Edit Screen (parameter editor)
+- Footswitch Config Screen (NEW - FS1/FS2 setup)
+- Preset Manager Screen (NEW - preset browser)
+
+### Next Round TODO
+
+**Screens to Implement:**
+1. `FootswitchConfigScreen` - Configure FS1/FS2 mode and actions
+2. `PresetManagerScreen` - Browse, load, save presets
+3. `SystemScreen` - Diagnostics, link status, telemetry
+
+**Protocol Integration:**
+- VoxLink UART communication layer
+- Frame parser (SOF, CRC16, sequence numbers)
+- State synchronization on boot
+
+**Hardware Drivers:**
+- Footswitch GPIO driver with debounce
+- UART driver for VoxLink protocol

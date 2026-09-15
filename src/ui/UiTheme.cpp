@@ -10,7 +10,40 @@ static lv_style_t style_meter;
 static lv_style_t style_text_primary;
 static lv_style_t style_text_secondary;
 
+// Helper para converter lv_color_t
+inline lv_color_t to_lv_color(lv_color_t c) {
+    return c;
+}
+
 }  // namespace VoxUiTheme
+
+lv_color_t UiTheme_get_color(UiThemeColor color) {
+    using namespace VoxUiTheme;
+    switch (color) {
+        case COLOR_BG_DARK:       return VoxUiTheme::COLOR_BG_DARK;
+        case COLOR_BG_CARD:       return VoxUiTheme::COLOR_BG_CARD;
+        case COLOR_BG_HEADER:     return VoxUiTheme::COLOR_BG_HEADER;
+        case COLOR_ACCENT:        return VoxUiTheme::COLOR_ACCENT;
+        case COLOR_ACCENT_BRIGHT: return VoxUiTheme::COLOR_ACCENT_BRIGHT;
+        case COLOR_ACCENT_GREEN:  return VoxUiTheme::COLOR_ACCENT_GREEN;
+        case COLOR_SUCCESS:       return VoxUiTheme::COLOR_SUCCESS;
+        case COLOR_WARNING:       return VoxUiTheme::COLOR_WARNING;
+        case COLOR_ERROR:         return VoxUiTheme::COLOR_ERROR;
+        case COLOR_LINK_OK:       return VoxUiTheme::COLOR_LINK_OK;
+        case COLOR_LINK_LOST:     return VoxUiTheme::COLOR_LINK_LOST;
+        case COLOR_DISABLED:      return VoxUiTheme::COLOR_DISABLED;
+        case COLOR_BORDER:        return VoxUiTheme::COLOR_BORDER;
+        case COLOR_TEXT_PRIMARY:  return VoxUiTheme::COLOR_TEXT_PRIMARY;
+        case COLOR_TEXT_SECONDARY:return VoxUiTheme::COLOR_TEXT_SECONDARY;
+        case COLOR_TEXT_MUTED:    return VoxUiTheme::COLOR_TEXT_MUTED;
+        case COLOR_METER_LOW:     return VoxUiTheme::COLOR_METER_LOW;
+        case COLOR_METER_MID:     return VoxUiTheme::COLOR_METER_MID;
+        case COLOR_METER_HIGH:    return VoxUiTheme::COLOR_METER_HIGH;
+        case COLOR_EFFECT_ON:     return VoxUiTheme::COLOR_EFFECT_ON;
+        case COLOR_EFFECT_OFF:    return VoxUiTheme::COLOR_EFFECT_OFF;
+        default:                  return VoxUiTheme::COLOR_BG_DARK;
+    }
+}
 
 void ui_theme_init(void) {
     using namespace VoxUiTheme;
