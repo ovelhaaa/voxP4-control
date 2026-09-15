@@ -1,5 +1,6 @@
 #include "PerformanceScreen.h"
 #include "../UiTheme.h"
+#include <cstdio>
 
 static lv_obj_t* performance_container = nullptr;
 static lv_obj_t* preset_label = nullptr;
@@ -44,7 +45,7 @@ void performance_screen_init(lv_obj_t* parent) {
     // Link indicator
     link_indicator = lv_label_create(header);
     lv_label_set_text(link_indicator, "● LINK");
-    lv_obj_set_style_text_color(link_indicator, lv_color_make(0xEF5350), 0);  // Red = not connected
+    lv_obj_set_style_text_color(link_indicator, lv_color_make(0xEF, 0x53, 0x50), 0);  // Red = not connected
     lv_obj_set_style_text_font(link_indicator, &lv_font_montserrat_14, 0);
     
     // === METERS SECTION ===
@@ -66,7 +67,7 @@ void performance_screen_init(lv_obj_t* parent) {
     
     lv_obj_t* in_label = lv_label_create(input_row);
     lv_label_set_text(in_label, "IN");
-    lv_obj_set_style_text_color(in_label, lv_color_make(0xB0B0B0), 0);
+    lv_obj_set_style_text_color(in_label, lv_color_make(0xB0, 0xB0, 0xB0), 0);
     lv_obj_set_style_text_font(in_label, &lv_font_montserrat_12, 0);
     
     input_meter = lv_bar_create(input_row);
@@ -74,11 +75,11 @@ void performance_screen_init(lv_obj_t* parent) {
     lv_bar_set_range(input_meter, -60, 0);
     lv_bar_set_value(input_meter, -60, LV_ANIM_OFF);
     lv_obj_set_style_bg_color(input_meter, lv_color_make(0x30, 0x30, 0x30), 0);
-    lv_obj_set_style_bg_color(lv_bar_get_indic(input_meter), lv_color_make(0x4CAF50), 0);
+    lv_obj_set_style_bg_color(input_meter, lv_color_make(0x4C, 0xAF, 0x50), LV_PART_INDICATOR);
     
     input_db_label = lv_label_create(input_row);
     lv_label_set_text(input_db_label, "-60 dB");
-    lv_obj_set_style_text_color(input_db_label, lv_color_make(0xB0B0B0), 0);
+    lv_obj_set_style_text_color(input_db_label, lv_color_make(0xB0, 0xB0, 0xB0), 0);
     lv_obj_set_style_text_font(input_db_label, &lv_font_montserrat_12, 0);
     
     // Output meter row
@@ -92,7 +93,7 @@ void performance_screen_init(lv_obj_t* parent) {
     
     lv_obj_t* out_label = lv_label_create(output_row);
     lv_label_set_text(out_label, "OUT");
-    lv_obj_set_style_text_color(out_label, lv_color_make(0xB0B0B0), 0);
+    lv_obj_set_style_text_color(out_label, lv_color_make(0xB0, 0xB0, 0xB0), 0);
     lv_obj_set_style_text_font(out_label, &lv_font_montserrat_12, 0);
     
     output_meter = lv_bar_create(output_row);
@@ -100,11 +101,11 @@ void performance_screen_init(lv_obj_t* parent) {
     lv_bar_set_range(output_meter, -60, 0);
     lv_bar_set_value(output_meter, -60, LV_ANIM_OFF);
     lv_obj_set_style_bg_color(output_meter, lv_color_make(0x30, 0x30, 0x30), 0);
-    lv_obj_set_style_bg_color(lv_bar_get_indic(output_meter), lv_color_make(0x4CAF50), 0);
+    lv_obj_set_style_bg_color(output_meter, lv_color_make(0x4C, 0xAF, 0x50), LV_PART_INDICATOR);
     
     output_db_label = lv_label_create(output_row);
     lv_label_set_text(output_db_label, "-60 dB");
-    lv_obj_set_style_text_color(output_db_label, lv_color_make(0xB0B0B0), 0);
+    lv_obj_set_style_text_color(output_db_label, lv_color_make(0xB0, 0xB0, 0xB0), 0);
     lv_obj_set_style_text_font(output_db_label, &lv_font_montserrat_12, 0);
     
     // === PITCH SECTION ===
@@ -124,7 +125,7 @@ void performance_screen_init(lv_obj_t* parent) {
     
     voiced_label = lv_label_create(pitch_container);
     lv_label_set_text(voiced_label, "UNVOICED");
-    lv_obj_set_style_text_color(voiced_label, lv_color_make(0x707070), 0);
+    lv_obj_set_style_text_color(voiced_label, lv_color_make(0x70, 0x70, 0x70), 0);
     lv_obj_set_style_text_font(voiced_label, &lv_font_montserrat_14, 0);
     
     // === EFFECT BUTTONS ===
@@ -139,7 +140,7 @@ void performance_screen_init(lv_obj_t* parent) {
     for (int i = 0; i < 4; i++) {
         effect_buttons[i] = lv_btn_create(effects_container);
         lv_obj_set_size(effect_buttons[i], 70, 50);
-        lv_obj_set_style_bg_color(effect_buttons[i], lv_color_make(0x424242), 0);  // OFF state
+        lv_obj_set_style_bg_color(effect_buttons[i], lv_color_make(0x42, 0x42, 0x42), 0);  // OFF state
         lv_obj_set_style_radius(effect_buttons[i], 8, 0);
         
         lv_obj_t* btn_label = lv_label_create(effect_buttons[i]);
@@ -161,12 +162,12 @@ void performance_screen_init(lv_obj_t* parent) {
     
     fs_labels[0] = lv_label_create(fs_container);
     lv_label_set_text(fs_labels[0], "FS1 HARMONY");
-    lv_obj_set_style_text_color(fs_labels[0], lv_color_make(0xB0B0B0), 0);
+    lv_obj_set_style_text_color(fs_labels[0], lv_color_make(0xB0, 0xB0, 0xB0), 0);
     lv_obj_set_style_text_font(fs_labels[0], &lv_font_montserrat_12, 0);
     
     fs_labels[1] = lv_label_create(fs_container);
     lv_label_set_text(fs_labels[1], "FS2 REVERB");
-    lv_obj_set_style_text_color(fs_labels[1], lv_color_make(0xB0B0B0), 0);
+    lv_obj_set_style_text_color(fs_labels[1], lv_color_make(0xB0, 0xB0, 0xB0), 0);
     lv_obj_set_style_text_font(fs_labels[1], &lv_font_montserrat_12, 0);
 }
 
@@ -193,14 +194,14 @@ void performance_update_pitch(float freqHz, const char* noteName, bool voiced) {
     }
     if (voiced_label) {
         lv_label_set_text(voiced_label, voiced ? "VOICED" : "UNVOICED");
-        lv_obj_set_style_text_color(voiced_label, voiced ? lv_color_make(0x4CAF50) : lv_color_make(0x707070), 0);
+        lv_obj_set_style_text_color(voiced_label, voiced ? lv_color_make(0x4C, 0xAF, 0x50) : lv_color_make(0x70, 0x70, 0x70), 0);
     }
 }
 
 void performance_update_effect(int effectIndex, bool enabled) {
     if (effectIndex >= 0 && effectIndex < 4 && effect_buttons[effectIndex]) {
         lv_obj_set_style_bg_color(effect_buttons[effectIndex], 
-            enabled ? lv_color_make(0x4CAF50) : lv_color_make(0x424242), 0);
+            enabled ? lv_color_make(0x4C, 0xAF, 0x50) : lv_color_make(0x42, 0x42, 0x42), 0);
     }
 }
 
@@ -212,7 +213,7 @@ void performance_update_link(bool connected) {
     if (link_indicator) {
         lv_label_set_text(link_indicator, connected ? "● LINK" : "○ LINK");
         lv_obj_set_style_text_color(link_indicator, 
-            connected ? lv_color_make(0x66BB6A) : lv_color_make(0xEF5350), 0);
+            connected ? lv_color_make(0x66, 0xBB, 0x6A) : lv_color_make(0xEF, 0x53, 0x50), 0);
     }
 }
 
@@ -222,6 +223,6 @@ void performance_update_footswitch(int fsIndex, const char* label, bool pressed)
         snprintf(buf, sizeof(buf), "%s%s", label, pressed ? " [PRESSED]" : "");
         lv_label_set_text(fs_labels[fsIndex], buf);
         lv_obj_set_style_text_color(fs_labels[fsIndex],
-            pressed ? lv_color_make(0xFFA726) : lv_color_make(0xB0B0B0), 0);
+            pressed ? lv_color_make(0xFF, 0xA7, 0x26) : lv_color_make(0xB0, 0xB0, 0xB0), 0);
     }
 }

@@ -1,5 +1,6 @@
 #include "PresetsScreen.h"
 #include "../UiTheme.h"
+#include <cstdio>
 
 static lv_obj_t* presets_container = nullptr;
 static lv_obj_t* preset_list = nullptr;
@@ -47,12 +48,12 @@ void presets_screen_init(lv_obj_t* parent) {
     
     lv_obj_t* current_title = lv_label_create(current_row);
     lv_label_set_text(current_title, "CURRENT:");
-    lv_obj_set_style_text_color(current_title, lv_color_make(0xB0B0B0), 0);
+    lv_obj_set_style_text_color(current_title, lv_color_make(0xB0, 0xB0, 0xB0), 0);
     lv_obj_set_style_text_font(current_title, &lv_font_montserrat_12, 0);
     
     current_preset_label = lv_label_create(current_row);
     lv_label_set_text(current_preset_label, "P03 Lead Air");
-    lv_obj_set_style_text_color(current_preset_label, lv_color_make(0x64B5F6), 0);
+    lv_obj_set_style_text_color(current_preset_label, lv_color_make(0x64, 0xB5, 0xF6), 0);
     lv_obj_set_style_text_font(current_preset_label, &lv_font_montserrat_14, 0);
     
     // === PRESET LIST ===
@@ -89,7 +90,7 @@ void presets_screen_init(lv_obj_t* parent) {
             selected_index = lv_obj_get_index(btn) - 1; // -1 because of possible scrollbar
             
             // Highlight selected
-            lv_obj_set_style_bg_color(btn, lv_color_make(0x64B5F6), 0);
+            lv_obj_set_style_bg_color(btn, lv_color_make(0x64, 0xB5, 0xF6), 0);
             lv_obj_set_style_text_color(btn, lv_color_black(), 0);
         }, LV_EVENT_CLICKED, NULL);
     }
@@ -106,7 +107,7 @@ void presets_screen_init(lv_obj_t* parent) {
     // LOAD button
     load_btn = lv_btn_create(action_row);
     lv_obj_set_size(load_btn, 90, 36);
-    lv_obj_set_style_bg_color(load_btn, lv_color_make(0x4CAF50), 0);
+    lv_obj_set_style_bg_color(load_btn, lv_color_make(0x4C, 0xAF, 0x50), 0);
     lv_obj_set_style_radius(load_btn, 8, 0);
     
     lv_obj_t* load_label = lv_label_create(load_btn);
@@ -118,7 +119,7 @@ void presets_screen_init(lv_obj_t* parent) {
     // SAVE button
     save_btn = lv_btn_create(action_row);
     lv_obj_set_size(save_btn, 90, 36);
-    lv_obj_set_style_bg_color(save_btn, lv_color_make(0x2196F3), 0);
+    lv_obj_set_style_bg_color(save_btn, lv_color_make(0x21, 0x96, 0xF3), 0);
     lv_obj_set_style_radius(save_btn, 8, 0);
     
     lv_obj_t* save_label = lv_label_create(save_btn);
@@ -130,7 +131,7 @@ void presets_screen_init(lv_obj_t* parent) {
     // DELETE button
     delete_btn = lv_btn_create(action_row);
     lv_obj_set_size(delete_btn, 90, 36);
-    lv_obj_set_style_bg_color(delete_btn, lv_color_make(0xEF5350), 0);
+    lv_obj_set_style_bg_color(delete_btn, lv_color_make(0xEF, 0x53, 0x50), 0);
     lv_obj_set_style_radius(delete_btn, 8, 0);
     
     lv_obj_t* delete_label = lv_label_create(delete_btn);

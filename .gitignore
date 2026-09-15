@@ -1,61 +1,47 @@
 ```
-# PlatformIO build artifacts and dependencies
+# Build artifacts
 .pio/
-.platformio/
-*.pio/libdeps/
-
-# Build outputs
-.build/
+pioenvs/
+.piolibdeps/
+.sconsign.dblite
+.config/
 dist/
 build/
 
-# Dependencies
-node_modules/
-venv/
-.venv/
+# PlatformIO specific
+.platformio/
 
-# Logs and temporary files
-*.log
+# Temporary files
 *.tmp
-
-# IDE and editor files
-.vscode/
-.idea/
-*.swp
-*.swo
+*.temp
+*.log
 
 # Environment files
 .env
 .env.local
 *.env.*
 
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
 # Coverage reports
 coverage/
 htmlcov/
-.coverage
+*.coverage
 
-# Compression artifacts (from library downloads)
-*.zip
-*.gz
-*.tar
-*.tgz
-*.bz2
-*.xz
-*.7z
-*.rar
-*.zst
-*.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
-
+# Cache directories
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.mypy_cache/
+.pytest_cache/
+.coverage*
 ```

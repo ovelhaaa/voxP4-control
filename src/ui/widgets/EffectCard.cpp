@@ -62,14 +62,12 @@ void effect_card_set_enabled(EffectCard_t* card, bool enabled) {
     card->is_enabled = enabled;
     
     // Atualiza cor do indicador
-    lv_color_t color = enabled ? UiTheme_get_color(COLOR_ACCENT_GREEN) 
-                               : UiTheme_get_color(COLOR_DISABLED);
-    lv_obj_set_style_bg_color(card->status_indicator, color, 0);
+    lv_obj_set_style_bg_color(card->status_indicator, 
+        enabled ? UiTheme_get_color(COLOR_ACCENT_GREEN) : UiTheme_get_color(COLOR_DISABLED), 0);
     
     // Atualiza border do card para destacar quando ativo
-    lv_color_t border_color = enabled ? UiTheme_get_color(COLOR_ACCENT_GREEN) 
-                                      : UiTheme_get_color(COLOR_BORDER);
-    lv_obj_set_style_border_color(card->card, border_color, 0);
+    lv_obj_set_style_border_color(card->card, 
+        enabled ? UiTheme_get_color(COLOR_ACCENT_GREEN) : UiTheme_get_color(COLOR_BORDER), 0);
 }
 
 void effect_card_set_param(EffectCard_t* card, const char* param_text) {

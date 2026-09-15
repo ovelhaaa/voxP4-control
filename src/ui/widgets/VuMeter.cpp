@@ -72,12 +72,13 @@ VuMeter_t* vu_meter_create(lv_obj_t* parent, int32_t x, int32_t y,
     lv_label_set_text(type_label, label_text);
     lv_obj_align(type_label, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_set_style_text_font(type_label, &lv_font_montserrat_10, 0);
-    lv_obj_set_style_text_color(type_label, UiTheme_get_color(COLOR_TEXT_SECONDARY), 0);
+    lv_obj_set_style_text_color(type_label, lv_color_make(0xB0, 0xB0, 0xB0), 0);
     
     // Inicializa estado
     meter->current_db = -60.0f;
     meter->peak_db = -60.0f;
     meter->peak_hold_time = 0;
+    meter->height = height;
     
     return meter;
 }
@@ -105,16 +106,16 @@ void vu_meter_update(VuMeter_t* meter, float db) {
         meter->peak_hold_time = lv_tick_get();
         
         // Move peak indicator para nova posição
-        int32_t peak_y = (height - 40) - ((height - 40) * percent / 100);
+        int32_t peak_y = (meter->height - 40) - ((meter->height - 40) * percent / 100);
         lv_obj_set_y(meter->peak_indicator, peak_y);
         lv_obj_clear_flag(meter->peak_indicator, LV_OBJ_FLAG_HIDDEN);
     }
     
     // Timeout do peak hold (500ms)
-    if (lv_tick_elapse(meter->peak_hold_time) > 500) {
+    if (lv_tick_elaps(meter->peak_hold_time) > 500) {
         meter->peak_db = db;  // Reset para valor atual
         meter->peak_hold_time = lv_tick_get();
-        int32_t peak_y = (height - 40) - ((height - 40) * percent / 100);
+        int32_t peak_y = (meter->height - 40) - ((meter->height - 40) * percent / 100);
         lv_obj_set_y(meter->peak_indicator, peak_y);
     }
     
