@@ -6,6 +6,8 @@ static lv_obj_t* preset_label = nullptr;
 static lv_obj_t* link_indicator = nullptr;
 static lv_obj_t* input_meter = nullptr;
 static lv_obj_t* output_meter = nullptr;
+static lv_obj_t* input_db_label = nullptr;
+static lv_obj_t* output_db_label = nullptr;
 static lv_obj_t* pitch_label = nullptr;
 static lv_obj_t* voiced_label = nullptr;
 static lv_obj_t* effect_buttons[4] = {nullptr};
@@ -43,7 +45,7 @@ void performance_screen_init(lv_obj_t* parent) {
     link_indicator = lv_label_create(header);
     lv_label_set_text(link_indicator, "● LINK");
     lv_obj_set_style_text_color(link_indicator, lv_color_make(0xEF5350), 0);  // Red = not connected
-    lv_obj_set_style_text_font(preset_label, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(link_indicator, &lv_font_montserrat_14, 0);
     
     // === METERS SECTION ===
     lv_obj_t* meters_container = lv_obj_create(performance_container);
@@ -74,10 +76,10 @@ void performance_screen_init(lv_obj_t* parent) {
     lv_obj_set_style_bg_color(input_meter, lv_color_make(0x30, 0x30, 0x30), 0);
     lv_obj_set_style_bg_color(lv_bar_get_indic(input_meter), lv_color_make(0x4CAF50), 0);
     
-    lv_obj_t* in_db_label = lv_label_create(input_row);
-    lv_label_set_text(in_db_label, "-60 dB");
-    lv_obj_set_style_text_color(in_db_label, lv_color_make(0xB0B0B0), 0);
-    lv_obj_set_style_text_font(in_db_label, &lv_font_montserrat_12, 0);
+    input_db_label = lv_label_create(input_row);
+    lv_label_set_text(input_db_label, "-60 dB");
+    lv_obj_set_style_text_color(input_db_label, lv_color_make(0xB0B0B0), 0);
+    lv_obj_set_style_text_font(input_db_label, &lv_font_montserrat_12, 0);
     
     // Output meter row
     lv_obj_t* output_row = lv_obj_create(meters_container);
@@ -100,10 +102,10 @@ void performance_screen_init(lv_obj_t* parent) {
     lv_obj_set_style_bg_color(output_meter, lv_color_make(0x30, 0x30, 0x30), 0);
     lv_obj_set_style_bg_color(lv_bar_get_indic(output_meter), lv_color_make(0x4CAF50), 0);
     
-    lv_obj_t* out_db_label = lv_label_create(output_row);
-    lv_label_set_text(out_db_label, "-60 dB");
-    lv_obj_set_style_text_color(out_db_label, lv_color_make(0xB0B0B0), 0);
-    lv_obj_set_style_text_font(out_db_label, &lv_font_montserrat_12, 0);
+    output_db_label = lv_label_create(output_row);
+    lv_label_set_text(output_db_label, "-60 dB");
+    lv_obj_set_style_text_color(output_db_label, lv_color_make(0xB0B0B0), 0);
+    lv_obj_set_style_text_font(output_db_label, &lv_font_montserrat_12, 0);
     
     // === PITCH SECTION ===
     lv_obj_t* pitch_container = lv_obj_create(performance_container);
@@ -171,6 +173,16 @@ void performance_screen_init(lv_obj_t* parent) {
 void performance_update_meters(float inputDb, float outputDb) {
     if (input_meter) lv_bar_set_value(input_meter, (int32_t)inputDb, LV_ANIM_ON);
     if (output_meter) lv_bar_set_value(output_meter, (int32_t)outputDb, LV_ANIM_ON);
+    if (input_db_label) {
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%.1f dB", inputDb);
+        lv_label_set_text(input_db_label, buf);
+    }
+    if (output_db_label) {
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%.1f dB", outputDb);
+        lv_label_set_text(output_db_label, buf);
+    }
 }
 
 void performance_update_pitch(float freqHz, const char* noteName, bool voiced) {

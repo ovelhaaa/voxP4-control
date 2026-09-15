@@ -28,7 +28,7 @@ public:
             cfg.pin_sclk = VoxCydConfig::TftSclk;
             cfg.pin_miso = VoxCydConfig::TftMiso;
             cfg.pin_mosi = VoxCydConfig::TftMosi;
-            cfg.pin_cs = VoxCydConfig::TftCs;
+            cfg.pin_dc = VoxCydConfig::TftDc;
 
             _bus_instance.config(cfg);
             _panel_instance.setBus(&_bus_instance);
@@ -39,11 +39,6 @@ public:
 
             cfg.pin_cs = VoxCydConfig::TftCs;
             cfg.pin_rst = VoxCydConfig::TftRst;
-            cfg.pin_dc = VoxCydConfig::TftDc;
-            cfg.pin_d0 = VoxCydConfig::TftMosi;
-            cfg.pin_d1 = VoxCydConfig::TftMiso;
-            cfg.pin_d2 = VoxCydConfig::TftSclk;
-            cfg.pin_d3 = VoxCydConfig::TftBacklight;
 
             cfg.readable = true;
             cfg.bus_shared = false;
@@ -71,6 +66,7 @@ public:
             cfg.x_max = VoxCydConfig::TouchMaxX;
             cfg.y_min = VoxCydConfig::TouchMinY;
             cfg.y_max = VoxCydConfig::TouchMaxY;
+            cfg.offset_rotation = 2;
             cfg.pin_sclk = VoxCydConfig::TouchSclk;
             cfg.pin_miso = VoxCydConfig::TouchMiso;
             cfg.pin_mosi = VoxCydConfig::TouchMosi;

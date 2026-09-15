@@ -13,7 +13,7 @@ constexpr lv_color_t COLOR_BG_HEADER = LV_COLOR_MAKE(0x2A, 0x2A, 0x3A);    // He
 
 // Accent colors
 constexpr lv_color_t COLOR_ACCENT = LV_COLOR_MAKE(0x4A, 0x90, 0xD9);       // Blue accent
-constexpr lv_color_t COLOR_ACCENT_BRIGHT = LV_COLOR_MAKE(0x64B5F6);        // Bright blue
+constexpr lv_color_t COLOR_ACCENT_BRIGHT = LV_COLOR_MAKE(0x64, 0xB5, 0xF6);        // Bright blue
 
 // Status colors
 constexpr lv_color_t COLOR_SUCCESS = LV_COLOR_MAKE(0x4CAF50);              // Green - ON/active
