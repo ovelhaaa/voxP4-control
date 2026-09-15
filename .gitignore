@@ -1,0 +1,47 @@
+```
+# Build artifacts
+.pio/
+pioenvs/
+.piolibdeps/
+.sconsign.dblite
+.config/
+dist/
+build/
+
+# PlatformIO specific
+.platformio/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Environment files
+.env
+.env.local
+*.env.*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Coverage reports
+coverage/
+htmlcov/
+*.coverage
+
+# Cache directories
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.mypy_cache/
+.pytest_cache/
+.coverage*
+```
