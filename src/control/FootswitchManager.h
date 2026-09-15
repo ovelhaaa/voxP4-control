@@ -60,4 +60,8 @@ bool footswitch_is_pressed(int fsIndex);
 // Get action name string
 const char* footswitch_action_name(FootswitchAction action);
 
+// Compatibility wrappers for main.cpp
+static inline void footswitch_init(void) { footswitch_manager_init(); }
+static inline void footswitch_poll(void) { footswitch_manager_poll(); }
+
 #endif  // FOOTSWITCH_MANAGER_H

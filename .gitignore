@@ -1,27 +1,43 @@
 ```
-# Compiled and build artifacts
-*.o
-*.obj
-*.exe
-*.dll
-*.so
-*.a
-*.out
+# PlatformIO build artifacts
+.platformio/
+.piolibdeps/
+.sconsign.dblite
+.pioenvs/
+.pioproject
 
-# Dependencies
+# Build outputs
 build/
 dist/
+*.bin
+*.hex
+*.elf
+*.map
 
-# Logs and temp files
-*.log
-*.tmp
+# Dependencies
+lib/
+pioasm/
 
-# Editors
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# Logs
+*.log
 
 # Environment
 .env
 .env.local
 *.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.bak
+*~
 ```

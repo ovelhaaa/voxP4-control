@@ -115,8 +115,10 @@ All targets exceed the 40×40px minimum recommended for resistive touchscreens.
 - `performance_screen.svg` - Main performance view
 - `fx_chain_screen.svg` - Effect chain visualization
 - `effect_edit_screen.svg` - Parameter editor
-- `footswitch_config_screen.svg` - Footswitch configuration (FS1/FS2 mode and actions)
-- `preset_manager_screen.svg` - Preset browser with LOAD/SAVE/COPY operations
+- `footswitch_screen.svg` - Footswitch configuration (FS1/FS2 mode and actions)
+- `presets_screen.svg` - Preset browser with LOAD/SAVE operations
+- `system_screen.svg` - System diagnostics and telemetry
+- `boot_screen.svg` - Boot/loading screen with initialization status
 
 These mockups are reference implementations. The actual LVGL-based UI should match these designs closely.
 
@@ -124,36 +126,51 @@ These mockups are reference implementations. The actual LVGL-based UI should mat
 
 ## Implementation Status
 
-### Round 1 Complete ✅
+### Round 4 Complete ✅
 
-**Widgets Created:**
-- `VuMeter` - Vertical VU meter with peak hold indicator
-- `EffectCard` - Compact effect status card for chain/performance views
+**Core Firmware:**
+- `src/main.cpp` - Entry point with setup/loop
+- `platformio.ini` - Build configuration for ESP32-CYD
+- `.github/workflows/ci.yml` - GitHub Actions CI/CD pipeline
 
-**Theme System:**
-- `UiThemeColor` enum for programmatic color access
-- `UiTheme_get_color()` helper function
-- Added colors: `COLOR_ACCENT_GREEN`, `COLOR_DISABLED`, `COLOR_BORDER`
+**Hardware Drivers:**
+- `board/CYD_Config.h` - Pin definitions and hardware config
+- `board/LGFX_CYD.h` - LovyanGFX display/touch driver
 
-**Screens Mocked:**
-- Performance Screen (main view)
-- FX Chain Screen (effect flow)
+**UI Framework:**
+- `ui/UiApp.cpp/h` - LVGL initialization, state management
+- `ui/UiTheme.cpp/h` - Theme colors and styles
+- `ui/screens/PerformanceScreen.cpp/h` - Main performance screen
+- `ui/screens/FootswitchScreen.cpp/h` - FS1/FS2 configuration
+- `ui/screens/PresetsScreen.cpp/h` - Preset management
+- `ui/widgets/VuMeter.cpp/h` - VU meter widget
+- `ui/widgets/EffectCard.cpp/h` - Effect card widget
+
+**Control Layer:**
+- `control/FootswitchManager.cpp/h` - Footswitch polling, debounce, actions
+
+**Mockups Created:**
+- Performance Screen (main view with meters, pitch, effects)
+- FX Chain Screen (effect flow diagram)
 - Effect Edit Screen (parameter editor)
-- Footswitch Config Screen (NEW - FS1/FS2 setup)
-- Preset Manager Screen (NEW - preset browser)
+- Footswitch Screen (FS1/FS2 mode and action config)
+- Presets Screen (preset list with LOAD/SAVE)
+- System Screen (diagnostics, telemetry, link status)
+- Boot Screen (initialization progress)
 
 ### Next Round TODO
-
-**Screens to Implement:**
-1. `FootswitchConfigScreen` - Configure FS1/FS2 mode and actions
-2. `PresetManagerScreen` - Browse, load, save presets
-3. `SystemScreen` - Diagnostics, link status, telemetry
 
 **Protocol Integration:**
 - VoxLink UART communication layer
 - Frame parser (SOF, CRC16, sequence numbers)
 - State synchronization on boot
+- Message handlers (HELLO, CAPS, STATE_SNAPSHOT, etc.)
 
-**Hardware Drivers:**
-- Footswitch GPIO driver with debounce
-- UART driver for VoxLink protocol
+**Additional Screens:**
+- Complete navigation between all screens
+- Touch event handlers for interactive elements
+
+**Testing:**
+- Hardware bring-up validation
+- Unit tests for protocol parser
+- Integration tests for state sync
