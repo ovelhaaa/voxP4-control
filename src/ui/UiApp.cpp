@@ -13,7 +13,7 @@ static const char* note_name_from_midi(int note) {
 
 static lv_obj_t* main_screen = nullptr;
 static UiScreenId current_screen = UiScreenId::PERFORMANCE;
-static UiAppState app_state = {0};
+static UiAppState app_state = {};
 
 // LVGL display driver
 static lv_disp_drv_t disp_drv;
@@ -29,7 +29,7 @@ static void disp_flush(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* c
     if (lcd_device) {
         lcd_device->startWrite();
         lcd_device->setAddrWindow(area->x1, area->y1, area->x2 - area->x1 + 1, area->y2 - area->y1 + 1);
-        lcd_device->writePixels((lgfx::rgb565_t*)color_p, lv_area_get_width(area) * lv_area_get_height(area), false, false);
+        lcd_device->writePixels((lgfx::rgb565_t*)color_p, lv_area_get_width(area) * lv_area_get_height(area), false);
         lcd_device->endWrite();
     }
     lv_disp_flush_ready(disp);

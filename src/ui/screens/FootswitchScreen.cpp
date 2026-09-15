@@ -74,7 +74,7 @@ void footswitch_screen_init(lv_obj_t* parent) {
     
     fs1_state_indicator = lv_label_create(fs1_header);
     lv_label_set_text(fs1_state_indicator, "RELEASED");
-    lv_obj_set_style_text_color(fs1_state_indicator, lv_color_make(0xB0B0B0), 0);
+    lv_obj_set_style_text_color(fs1_state_indicator, lv_color_make(0xB0, 0xB0, 0xB0), 0);
     lv_obj_set_style_text_font(fs1_state_indicator, &lv_font_montserrat_12, 0);
     
     // FS1 Mode
@@ -87,12 +87,12 @@ void footswitch_screen_init(lv_obj_t* parent) {
     
     lv_obj_t* fs1_mode_title = lv_label_create(fs1_mode_row);
     lv_label_set_text(fs1_mode_title, "MODE: ");
-    lv_obj_set_style_text_color(fs1_mode_title, lv_color_make(0xB0B0B0), 0);
+    lv_obj_set_style_text_color(fs1_mode_title, lv_color_make(0xB0, 0xB0, 0xB0), 0);
     lv_obj_set_style_text_font(fs1_mode_title, &lv_font_montserrat_12, 0);
     
     fs1_mode_label = lv_label_create(fs1_mode_row);
     lv_label_set_text(fs1_mode_label, "MOMENTARY");
-    lv_obj_set_style_text_color(fs1_mode_label, lv_color_make(0x64B5F6), 0);
+    lv_obj_set_style_text_color(fs1_mode_label, lv_color_make(0x64, 0xB5, 0xF6), 0);
     lv_obj_set_style_text_font(fs1_mode_label, &lv_font_montserrat_12, 0);
     
     // FS1 Action
@@ -105,7 +105,7 @@ void footswitch_screen_init(lv_obj_t* parent) {
     
     lv_obj_t* fs1_action_title = lv_label_create(fs1_action_row);
     lv_label_set_text(fs1_action_title, "ACTION: ");
-    lv_obj_set_style_text_color(fs1_action_title, lv_color_make(0xB0B0B0), 0);
+    lv_obj_set_style_text_color(fs1_action_title, lv_color_make(0xB0, 0xB0, 0xB0), 0);
     lv_obj_set_style_text_font(fs1_action_title, &lv_font_montserrat_12, 0);
     
     fs1_action_label = lv_label_create(fs1_action_row);
@@ -138,7 +138,7 @@ void footswitch_screen_init(lv_obj_t* parent) {
     
     fs2_state_indicator = lv_label_create(fs2_header);
     lv_label_set_text(fs2_state_indicator, "RELEASED");
-    lv_obj_set_style_text_color(fs2_state_indicator, lv_color_make(0xB0B0B0), 0);
+    lv_obj_set_style_text_color(fs2_state_indicator, lv_color_make(0xB0, 0xB0, 0xB0), 0);
     lv_obj_set_style_text_font(fs2_state_indicator, &lv_font_montserrat_12, 0);
     
     // FS2 Mode
@@ -151,12 +151,12 @@ void footswitch_screen_init(lv_obj_t* parent) {
     
     lv_obj_t* fs2_mode_title = lv_label_create(fs2_mode_row);
     lv_label_set_text(fs2_mode_title, "MODE: ");
-    lv_obj_set_style_text_color(fs2_mode_title, lv_color_make(0xB0B0B0), 0);
+    lv_obj_set_style_text_color(fs2_mode_title, lv_color_make(0xB0, 0xB0, 0xB0), 0);
     lv_obj_set_style_text_font(fs2_mode_title, &lv_font_montserrat_12, 0);
     
     fs2_mode_label = lv_label_create(fs2_mode_row);
     lv_label_set_text(fs2_mode_label, "LATCHING");
-    lv_obj_set_style_text_color(fs2_mode_label, lv_color_make(0x64B5F6), 0);
+    lv_obj_set_style_text_color(fs2_mode_label, lv_color_make(0x64, 0xB5, 0xF6), 0);
     lv_obj_set_style_text_font(fs2_mode_label, &lv_font_montserrat_12, 0);
     
     // FS2 Action
@@ -169,7 +169,7 @@ void footswitch_screen_init(lv_obj_t* parent) {
     
     lv_obj_t* fs2_action_title = lv_label_create(fs2_action_row);
     lv_label_set_text(fs2_action_title, "ACTION: ");
-    lv_obj_set_style_text_color(fs2_action_title, lv_color_make(0xB0B0B0), 0);
+    lv_obj_set_style_text_color(fs2_action_title, lv_color_make(0xB0, 0xB0, 0xB0), 0);
     lv_obj_set_style_text_font(fs2_action_title, &lv_font_montserrat_12, 0);
     
     fs2_action_label = lv_label_create(fs2_action_row);
@@ -180,8 +180,8 @@ void footswitch_screen_init(lv_obj_t* parent) {
     // === HELP TEXT ===
     lv_obj_t* help_label = lv_label_create(fs_container);
     lv_label_set_text(help_label, "Tap to edit configuration. Long press to test.");
-    lv_obj_set_style_text_color(help_label, lv_color_make(0x707070), 0);
-    lv_obj_set_style_text_font(help_label, &lv_font_montserrat_10, 0);
+    lv_obj_set_style_text_color(help_label, lv_color_make(0x70, 0x70, 0x70), 0);
+    lv_obj_set_style_text_font(help_label, &lv_font_montserrat_14, 0);
     lv_obj_center(help_label);
 }
 
@@ -208,13 +208,13 @@ void footswitch_update_state(int fsIndex, bool pressed) {
         if (fs1_state_indicator) {
             lv_label_set_text(fs1_state_indicator, pressed ? "PRESSED" : "RELEASED");
             lv_obj_set_style_text_color(fs1_state_indicator, 
-                pressed ? lv_color_make(0xFFA726) : lv_color_make(0xB0B0B0), 0);
+                pressed ? lv_color_make(0xFF, 0xA7, 0x26) : lv_color_make(0xB0, 0xB0, 0xB0), 0);
         }
     } else if (fsIndex == 1) {
         if (fs2_state_indicator) {
             lv_label_set_text(fs2_state_indicator, pressed ? "PRESSED" : "RELEASED");
             lv_obj_set_style_text_color(fs2_state_indicator, 
-                pressed ? lv_color_make(0xFFA726) : lv_color_make(0xB0B0B0), 0);
+                pressed ? lv_color_make(0xFF, 0xA7, 0x26) : lv_color_make(0xB0, 0xB0, 0xB0), 0);
         }
     }
 }

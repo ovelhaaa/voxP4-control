@@ -2,6 +2,7 @@
 #define CYD_CONFIG_H
 
 #include <stdint.h>
+#include <cstddef>
 
 namespace VoxCydConfig {
 

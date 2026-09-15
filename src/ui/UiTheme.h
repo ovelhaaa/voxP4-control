@@ -5,27 +5,27 @@
 
 // Enum para acesso programático às cores
 typedef enum {
-    COLOR_BG_DARK,
-    COLOR_BG_CARD,
-    COLOR_BG_HEADER,
-    COLOR_ACCENT,
-    COLOR_ACCENT_BRIGHT,
-    COLOR_ACCENT_GREEN,
-    COLOR_SUCCESS,
-    COLOR_WARNING,
-    COLOR_ERROR,
-    COLOR_LINK_OK,
-    COLOR_LINK_LOST,
-    COLOR_DISABLED,
-    COLOR_BORDER,
-    COLOR_TEXT_PRIMARY,
-    COLOR_TEXT_SECONDARY,
-    COLOR_TEXT_MUTED,
-    COLOR_METER_LOW,
-    COLOR_METER_MID,
-    COLOR_METER_HIGH,
-    COLOR_EFFECT_ON,
-    COLOR_EFFECT_OFF
+    THEME_COLOR_BG_DARK,
+    THEME_COLOR_BG_CARD,
+    THEME_COLOR_BG_HEADER,
+    THEME_COLOR_ACCENT,
+    THEME_COLOR_ACCENT_BRIGHT,
+    THEME_COLOR_ACCENT_GREEN,
+    THEME_COLOR_SUCCESS,
+    THEME_COLOR_WARNING,
+    THEME_COLOR_ERROR,
+    THEME_COLOR_LINK_OK,
+    THEME_COLOR_LINK_LOST,
+    THEME_COLOR_DISABLED,
+    THEME_COLOR_BORDER,
+    THEME_COLOR_TEXT_PRIMARY,
+    THEME_COLOR_TEXT_SECONDARY,
+    THEME_COLOR_TEXT_MUTED,
+    THEME_COLOR_METER_LOW,
+    THEME_COLOR_METER_MID,
+    THEME_COLOR_METER_HIGH,
+    THEME_COLOR_EFFECT_ON,
+    THEME_COLOR_EFFECT_OFF
 } UiThemeColor;
 
 // Color palette - dark theme optimized for stage use
@@ -66,6 +66,28 @@ constexpr lv_color_t COLOR_EFFECT_OFF = LV_COLOR_MAKE(0x42, 0x42, 0x42);        
 constexpr lv_color_t COLOR_EFFECT_PRESSED = LV_COLOR_MAKE(0xFF, 0xA7, 0x26);       // Footswitch pressed
 
 }  // namespace VoxUiTheme
+
+using VoxUiTheme::COLOR_BG_DARK;
+using VoxUiTheme::COLOR_BG_CARD;
+using VoxUiTheme::COLOR_BG_HEADER;
+using VoxUiTheme::COLOR_ACCENT;
+using VoxUiTheme::COLOR_ACCENT_BRIGHT;
+using VoxUiTheme::COLOR_ACCENT_GREEN;
+using VoxUiTheme::COLOR_SUCCESS;
+using VoxUiTheme::COLOR_WARNING;
+using VoxUiTheme::COLOR_ERROR;
+using VoxUiTheme::COLOR_LINK_OK;
+using VoxUiTheme::COLOR_LINK_LOST;
+using VoxUiTheme::COLOR_DISABLED;
+using VoxUiTheme::COLOR_BORDER;
+using VoxUiTheme::COLOR_TEXT_PRIMARY;
+using VoxUiTheme::COLOR_TEXT_SECONDARY;
+using VoxUiTheme::COLOR_TEXT_MUTED;
+using VoxUiTheme::COLOR_METER_LOW;
+using VoxUiTheme::COLOR_METER_MID;
+using VoxUiTheme::COLOR_METER_HIGH;
+using VoxUiTheme::COLOR_EFFECT_ON;
+using VoxUiTheme::COLOR_EFFECT_OFF;
 
 // Theme API
 void ui_theme_init(void);
