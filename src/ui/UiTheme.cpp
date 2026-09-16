@@ -67,17 +67,17 @@ void ui_theme_init(void) {
     // Primary text style - main labels
     lv_style_init(&style_text_primary);
     lv_style_set_text_color(&style_text_primary, COLOR_TEXT_PRIMARY);
-    lv_style_set_text_font(&style_text_primary, FONT_BODY);
+    lv_style_set_text_font(&style_text_primary, &lv_font_montserrat_14);
     
     // Secondary text style - supporting labels
     lv_style_init(&style_text_secondary);
     lv_style_set_text_color(&style_text_secondary, COLOR_TEXT_SECONDARY);
-    lv_style_set_text_font(&style_text_secondary, FONT_SMALL);
+    lv_style_set_text_font(&style_text_secondary, &lv_font_montserrat_12);
     
     // Muted text style - inactive/disabled
     lv_style_init(&style_text_muted);
     lv_style_set_text_color(&style_text_muted, COLOR_TEXT_MUTED);
-    lv_style_set_text_font(&style_text_muted, FONT_SMALL);
+    lv_style_set_text_font(&style_text_muted, &lv_font_montserrat_12);
     
     // Button style - large touch target
     lv_style_init(&style_button);
@@ -86,7 +86,7 @@ void ui_theme_init(void) {
     lv_style_set_radius(&style_button, RADIUS_M);
     lv_style_set_pad_all(&style_button, SPACING_L);
     lv_style_set_text_color(&style_button, COLOR_TEXT_PRIMARY);
-    lv_style_set_text_font(&style_button, FONT_EMPHASIS);
+    lv_style_set_text_font(&style_button, &lv_font_montserrat_16);
     
     // Navigation tab style
     lv_style_init(&style_nav_tab);
@@ -96,7 +96,7 @@ void ui_theme_init(void) {
     lv_style_set_pad_all(&style_nav_tab, SPACING_S);
     lv_style_set_border_width(&style_nav_tab, 0);
     lv_style_set_text_color(&style_nav_tab, COLOR_TEXT_SECONDARY);
-    lv_style_set_text_font(&style_nav_tab, FONT_SMALL);
+    lv_style_set_text_font(&style_nav_tab, &lv_font_montserrat_12);
 }
 
 lv_color_t UiTheme_get_color(UiThemeColor color) {

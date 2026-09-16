@@ -14,7 +14,7 @@ static const char* effect_names[] = {
 
 EffectCard_t* effect_card_create(lv_obj_t* parent, int32_t x, int32_t y, 
                                   EffectType_t effect_type) {
-    EffectCard_t* card = (EffectCard_t*)lv_malloc(sizeof(EffectCard_t));
+    EffectCard_t* card = (EffectCard_t*)lv_mem_alloc(sizeof(EffectCard_t));
     if (!card) return NULL;
     
     card->effect_type = effect_type;
@@ -34,7 +34,7 @@ EffectCard_t* effect_card_create(lv_obj_t* parent, int32_t x, int32_t y,
     card->name_label = lv_label_create(card->card);
     lv_label_set_text(card->name_label, effect_names[effect_type]);
     lv_obj_align(card->name_label, LV_ALIGN_TOP_LEFT, 0, 0);
-    lv_obj_set_style_text_font(card->name_label, &lv_font_montserrat_9, 0);
+    lv_obj_set_style_text_font(card->name_label, FONT_TINY, 0);
     lv_obj_set_style_text_color(card->name_label, COLOR_TEXT_PRIMARY, 0);
     
     // Indicador de status (LED circular) - sutil, não verde sólido
@@ -50,7 +50,7 @@ EffectCard_t* effect_card_create(lv_obj_t* parent, int32_t x, int32_t y,
     card->param_label = lv_label_create(card->card);
     lv_label_set_text(card->param_label, "--");
     lv_obj_align(card->param_label, LV_ALIGN_BOTTOM_LEFT, 0, 0);
-    lv_obj_set_style_text_font(card->param_label, &lv_font_montserrat_10, 0);
+    lv_obj_set_style_text_font(card->param_label, FONT_TINY, 0);
     lv_obj_set_style_text_color(card->param_label, COLOR_ACCENT_BRIGHT, 0);
     
     return card;

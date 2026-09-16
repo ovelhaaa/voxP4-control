@@ -1,8 +1,6 @@
 #ifndef LV_CONF_H
 #define LV_CONF_H
 
-#define LV_CONF_INCLUDE_SIMPLE
-
 #include <stdint.h>
 
 // Graphics configuration
@@ -15,6 +13,7 @@
 #define LV_MEM_SIZE (48U * 1024U)
 
 // Font configuration
+#define LV_FONT_MONTSERRAT_10 1
 #define LV_FONT_MONTSERRAT_12 1
 #define LV_FONT_MONTSERRAT_14 1
 #define LV_FONT_MONTSERRAT_16 1

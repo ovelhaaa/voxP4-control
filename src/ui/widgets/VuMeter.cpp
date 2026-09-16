@@ -28,7 +28,7 @@ static lv_color_t get_meter_color(float db) {
 
 VuMeter_t* vu_meter_create(lv_obj_t* parent, int32_t x, int32_t y, 
                            int32_t height, const char* label_text) {
-    VuMeter_t* meter = (VuMeter_t*)lv_malloc(sizeof(VuMeter_t));
+    VuMeter_t* meter = (VuMeter_t*)lv_mem_alloc(sizeof(VuMeter_t));
     if (!meter) return NULL;
     
     // Container principal
@@ -70,7 +70,7 @@ VuMeter_t* vu_meter_create(lv_obj_t* parent, int32_t x, int32_t y,
     lv_obj_t* type_label = lv_label_create(meter->container);
     lv_label_set_text(type_label, label_text);
     lv_obj_align(type_label, LV_ALIGN_TOP_MID, 0, 0);
-    lv_obj_set_style_text_font(type_label, &lv_font_montserrat_10, 0);
+    lv_obj_set_style_text_font(type_label, FONT_TINY, 0);
     lv_obj_set_style_text_color(type_label, COLOR_TEXT_MUTED, 0);
     
     // Inicializa estado
