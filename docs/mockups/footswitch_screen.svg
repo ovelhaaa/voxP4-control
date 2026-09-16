@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="240" height="320" viewBox="0 0 240 320" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="240" height="320" fill="#121212"/>
+  
+  <!-- Header -->
+  <rect width="240" height="32" fill="#2A2A3A"/>
+  <text x="8" y="21" font-family="Arial" font-size="16" fill="white" font-weight="bold">FOOTSWITCH CONFIG</text>
+  
+  <!-- FS1 Card -->
+  <rect x="8" y="40" width="224" height="80" rx="8" fill="#1E1E2E"/>
+  
+  <!-- FS1 Header -->
+  <rect x="14" y="46" width="212" height="28" rx="6" fill="#2A2A3A"/>
+  <text x="20" y="65" font-family="Arial" font-size="14" fill="white" font-weight="bold">FS1</text>
+  <text x="170" y="65" font-family="Arial" font-size="12" fill="#B0B0B0">RELEASED</text>
+  
+  <!-- FS1 Mode -->
+  <text x="20" y="95" font-family="Arial" font-size="12" fill="#B0B0B0">MODE:</text>
+  <text x="75" y="95" font-family="Arial" font-size="12" fill="#64B5F6" font-weight="bold">MOMENTARY</text>
+  
+  <!-- FS1 Action -->
+  <text x="20" y="115" font-family="Arial" font-size="12" fill="#B0B0B0">ACTION:</text>
+  <text x="85" y="115" font-family="Arial" font-size="12" fill="white">HARMONY TOGGLE</text>
+  
+  <!-- FS2 Card -->
+  <rect x="8" y="128" width="224" height="80" rx="8" fill="#1E1E2E"/>
+  
+  <!-- FS2 Header -->
+  <rect x="14" y="134" width="212" height="28" rx="6" fill="#2A2A3A"/>
+  <text x="20" y="153" font-family="Arial" font-size="14" fill="white" font-weight="bold">FS2</text>
+  <text x="170" y="153" font-family="Arial" font-size="12" fill="#B0B0B0">RELEASED</text>
+  
+  <!-- FS2 Mode -->
+  <text x="20" y="183" font-family="Arial" font-size="12" fill="#B0B0B0">MODE:</text>
+  <text x="75" y="183" font-family="Arial" font-size="12" fill="#64B5F6" font-weight="bold">LATCHING</text>
+  
+  <!-- FS2 Action -->
+  <text x="20" y="203" font-family="Arial" font-size="12" fill="#B0B0B0">ACTION:</text>
+  <text x="85" y="203" font-family="Arial" font-size="12" fill="white">REVERB TOGGLE</text>
+  
+  <!-- Help Text -->
+  <text x="120" y="230" font-family="Arial" font-size="10" fill="#707070" text-anchor="middle">Tap to edit configuration. Long press to test.</text>
+  
+  <!-- Navigation Bar -->
+  <rect y="288" width="240" height="32" fill="#2A2A3A"/>
+  <rect x="0" y="288" width="48" height="32" fill="#1E1E2E"/>
+  <text x="24" y="309" font-family="Arial" font-size="10" fill="#64B5F6" text-anchor="middle">PERF</text>
+  <text x="72" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">CHAIN</text>
+  <text x="120" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">EDIT</text>
+  <text x="168" y="309" font-family="Arial" font-size="10" fill="white" font-weight="bold" text-anchor="middle">FS</text>
+  <text x="216" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">PRESETS</text>
+</svg>
