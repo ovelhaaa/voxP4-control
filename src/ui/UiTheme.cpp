@@ -40,12 +40,12 @@ static lv_style_t style_button_touch;
 static lv_style_t style_effect_card;
 static lv_style_t style_effect_card_active;
 
-// Font mapping
-static const lv_font_t* font_hero = &lv_font_montserrat_28;
-static const lv_font_t* font_emphasis = &lv_font_montserrat_20;
+// Font mapping - using only fonts available in lv_conf.h
+static const lv_font_t* font_hero = &lv_font_montserrat_24;
+static const lv_font_t* font_emphasis = &lv_font_montserrat_18;
 static const lv_font_t* font_body = &lv_font_montserrat_16;
-static const lv_font_t* font_small = &lv_font_montserrat_12;
-static const lv_font_t* font_tiny = &lv_font_montserrat_10;
+static const lv_font_t* font_small = &lv_font_montserrat_14;
+static const lv_font_t* font_tiny = &lv_font_montserrat_12;
 
 void ui_theme_init(void) {
     // === BACKGROUND STYLES ===

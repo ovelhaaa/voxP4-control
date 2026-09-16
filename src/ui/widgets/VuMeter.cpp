@@ -34,8 +34,9 @@ static lv_color_t get_meter_color(float db) {
 
 VuMeter_t* vu_meter_create(lv_obj_t* parent, int32_t x, int32_t y, 
                            int32_t width, int32_t height, const char* label_text) {
-    VuMeter_t* meter = (VuMeter_t*)lv_calloc(1, sizeof(VuMeter_t));
+    VuMeter_t* meter = (VuMeter_t*)lv_mem_alloc(sizeof(VuMeter_t));
     if (!meter) return NULL;
+    lv_memset(meter, 0, sizeof(VuMeter_t));
     
     meter->width = width;
     meter->height = height;
@@ -88,7 +89,7 @@ VuMeter_t* vu_meter_create(lv_obj_t* parent, int32_t x, int32_t y,
     // Label do valor em dB
     meter->db_label = lv_label_create(meter->container);
     lv_label_set_text(meter->db_label, "-60.0");
-    lv_obj_set_style_text_font(meter->db_label, &lv_font_montserrat_11, 0);
+    lv_obj_set_style_text_font(meter->db_label, &lv_font_montserrat_12, 0);
     lv_obj_set_style_text_color(meter->db_label, COLOR_TEXT_SECONDARY, 0);
     lv_obj_set_style_min_width(meter->db_label, 42, 0);
     lv_obj_set_flex_grow(meter->db_label, 0);
