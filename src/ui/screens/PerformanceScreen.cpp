@@ -1,227 +1,228 @@
 #include "PerformanceScreen.h"
 #include "../UiTheme.h"
-#include "../widgets/VuMeter.h"
-#include "../widgets/EffectCard.h"
 #include <cstdio>
 
 static lv_obj_t* performance_container = nullptr;
-static lv_obj_t* header_preset_label = nullptr;
-static lv_obj_t* header_link_label = nullptr;
-static VuMeter_t* input_meter = nullptr;
-static VuMeter_t* output_meter = nullptr;
-static lv_obj_t* pitch_note_label = nullptr;
-static lv_obj_t* pitch_freq_label = nullptr;
+static lv_obj_t* preset_label = nullptr;
+static lv_obj_t* link_indicator = nullptr;
+static lv_obj_t* input_meter = nullptr;
+static lv_obj_t* output_meter = nullptr;
+static lv_obj_t* input_db_label = nullptr;
+static lv_obj_t* output_db_label = nullptr;
+static lv_obj_t* pitch_label = nullptr;
 static lv_obj_t* voiced_label = nullptr;
-static EffectCard_t* effect_cards[4] = {nullptr};
-static lv_obj_t* fs_container = nullptr;
-static lv_obj_t* fs1_label = nullptr;
-static lv_obj_t* fs2_label = nullptr;
-static lv_obj_t* fs1_indicator = nullptr;
-static lv_obj_t* fs2_indicator = nullptr;
+static lv_obj_t* effect_buttons[4] = {nullptr};
+static lv_obj_t* fs_labels[2] = {nullptr};
 
-// Effect names and default params
+// Effect names for buttons
 static const char* effect_names[] = {"HARMONY", "REVERB", "LIMIT", "DELAY"};
-static const char* effect_default_params[] = {"+3rd", "18%", "-3dB", "OFF"};
 
 void performance_screen_init(lv_obj_t* parent) {
-    // Clear parent first
-    lv_obj_clean(parent);
-    
-    // Create main container with theme bg style
+    // Create main container with padding
     performance_container = lv_obj_create(parent);
     lv_obj_set_size(performance_container, LV_PCT(100), LV_PCT(100));
-    lv_obj_add_style(performance_container, ui_style_get_bg(), 0);
-    lv_obj_set_style_pad_all(performance_container, THEME_SPACING_XS, 0);
+    lv_obj_set_style_bg_color(performance_container, lv_color_make(0x12, 0x12, 0x12), 0);
+    lv_obj_set_style_pad_all(performance_container, 8, 0);
     lv_obj_set_style_border_width(performance_container, 0, 0);
     lv_obj_set_flex_flow(performance_container, LV_FLEX_FLOW_COLUMN);
     
-    // === HEADER (28px height) ===
+    // === HEADER ===
     lv_obj_t* header = lv_obj_create(performance_container);
-    lv_obj_set_size(header, LV_PCT(100), THEME_HEADER_HEIGHT);
-    lv_obj_add_style(header, ui_style_get_header(), 0);
+    lv_obj_set_size(header, LV_PCT(100), 32);
+    lv_obj_set_style_bg_color(header, lv_color_make(0x2A, 0x2A, 0x3A), 0);
+    lv_obj_set_style_radius(header, 0, 0);
+    lv_obj_set_style_border_width(header, 0, 0);
+    lv_obj_set_style_pad_hor(header, 8, 0);
     lv_obj_set_flex_flow(header, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(header, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     
-    // Preset name
-    header_preset_label = lv_label_create(header);
-    lv_label_set_text(header_preset_label, "P03 Lead Air");
-    lv_obj_set_style_text_color(header_preset_label, COLOR_TEXT_PRIMARY, 0);
-    lv_obj_set_style_text_font(header_preset_label, ui_theme_get_font(THEME_FONT_BODY), 0);
+    // Preset name label
+    preset_label = lv_label_create(header);
+    lv_label_set_text(preset_label, "P03 Lead Air");
+    lv_obj_set_style_text_color(preset_label, lv_color_white(), 0);
+    lv_obj_set_style_text_font(preset_label, &lv_font_montserrat_16, 0);
     
     // Link indicator
-    header_link_label = lv_label_create(header);
-    lv_label_set_text(header_link_label, "LINK LOST");
-    lv_obj_set_style_text_color(header_link_label, COLOR_LINK_LOST, 0);
-    lv_obj_set_style_text_font(header_link_label, ui_theme_get_font(THEME_FONT_SMALL), 0);
+    link_indicator = lv_label_create(header);
+    lv_label_set_text(link_indicator, "● LINK");
+    lv_obj_set_style_text_color(link_indicator, lv_color_make(0xEF, 0x53, 0x50), 0);  // Red = not connected
+    lv_obj_set_style_text_font(link_indicator, &lv_font_montserrat_14, 0);
     
-    // === METERS SECTION (60px) ===
-    lv_obj_t* meters_area = lv_obj_create(performance_container);
-    lv_obj_set_size(meters_area, LV_PCT(100), 60);
-    lv_obj_set_style_bg_color(meters_area, COLOR_BG, 0);
-    lv_obj_set_style_border_width(meters_area, 0, 0);
-    lv_obj_set_style_pad_row(meters_area, THEME_SPACING_S, 0);
-    lv_obj_set_style_pad_hor(meters_area, THEME_SPACING_M, 0);
-    lv_obj_set_flex_flow(meters_area, LV_FLEX_FLOW_COLUMN);
+    // === METERS SECTION ===
+    lv_obj_t* meters_container = lv_obj_create(performance_container);
+    lv_obj_set_size(meters_container, LV_PCT(100), 60);
+    lv_obj_set_style_bg_color(meters_container, lv_color_make(0x12, 0x12, 0x12), 0);
+    lv_obj_set_style_border_width(meters_container, 0, 0);
+    lv_obj_set_style_pad_row(meters_container, 8, 0);
+    lv_obj_set_flex_flow(meters_container, LV_FLEX_FLOW_COLUMN);
     
-    // Input meter usando VuMeter widget horizontal
-    input_meter = vu_meter_create(meters_area, 0, 0, lv_obj_get_width(meters_area), 24, "IN");
+    // Input meter row
+    lv_obj_t* input_row = lv_obj_create(meters_container);
+    lv_obj_set_size(input_row, LV_PCT(100), 24);
+    lv_obj_set_style_bg_color(input_row, lv_color_make(0x12, 0x12, 0x12), 0);
+    lv_obj_set_style_border_width(input_row, 0, 0);
+    lv_obj_set_style_pad_column(input_row, 8, 0);
+    lv_obj_set_flex_flow(input_row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(input_row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     
-    // Output meter
-    output_meter = vu_meter_create(meters_area, 0, 0, lv_obj_get_width(meters_area), 24, "OUT");
+    lv_obj_t* in_label = lv_label_create(input_row);
+    lv_label_set_text(in_label, "IN");
+    lv_obj_set_style_text_color(in_label, lv_color_make(0xB0, 0xB0, 0xB0), 0);
+    lv_obj_set_style_text_font(in_label, &lv_font_montserrat_12, 0);
     
-    // === PITCH SECTION (48px) - Musical hierarchy ===
-    lv_obj_t* pitch_area = lv_obj_create(performance_container);
-    lv_obj_set_size(pitch_area, LV_PCT(100), 48);
-    lv_obj_add_style(pitch_area, ui_style_get_card(), 0);
-    lv_obj_set_flex_flow(pitch_area, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(pitch_area, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_column(pitch_area, THEME_SPACING_L, 0);
+    input_meter = lv_bar_create(input_row);
+    lv_obj_set_size(input_meter, 180, 16);
+    lv_bar_set_range(input_meter, -60, 0);
+    lv_bar_set_value(input_meter, -60, LV_ANIM_OFF);
+    lv_obj_set_style_bg_color(input_meter, lv_color_make(0x30, 0x30, 0x30), 0);
+    lv_obj_set_style_bg_color(input_meter, lv_color_make(0x4C, 0xAF, 0x50), LV_PART_INDICATOR);
     
-    // Note name (hero)
-    pitch_note_label = lv_label_create(pitch_area);
-    lv_label_set_text(pitch_note_label, "A3");
-    lv_obj_set_style_text_color(pitch_note_label, COLOR_TEXT_PRIMARY, 0);
-    lv_obj_set_style_text_font(pitch_note_label, ui_theme_get_font(THEME_FONT_HERO), 0);
+    input_db_label = lv_label_create(input_row);
+    lv_label_set_text(input_db_label, "-60 dB");
+    lv_obj_set_style_text_color(input_db_label, lv_color_make(0xB0, 0xB0, 0xB0), 0);
+    lv_obj_set_style_text_font(input_db_label, &lv_font_montserrat_12, 0);
     
-    // Frequency (emphasis)
-    pitch_freq_label = lv_label_create(pitch_area);
-    lv_label_set_text(pitch_freq_label, "220.1 Hz");
-    lv_obj_set_style_text_color(pitch_freq_label, COLOR_TEXT_SECONDARY, 0);
-    lv_obj_set_style_text_font(pitch_freq_label, ui_theme_get_font(THEME_FONT_EMPHASIS), 0);
+    // Output meter row
+    lv_obj_t* output_row = lv_obj_create(meters_container);
+    lv_obj_set_size(output_row, LV_PCT(100), 24);
+    lv_obj_set_style_bg_color(output_row, lv_color_make(0x12, 0x12, 0x12), 0);
+    lv_obj_set_style_border_width(output_row, 0, 0);
+    lv_obj_set_style_pad_column(output_row, 8, 0);
+    lv_obj_set_flex_flow(output_row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(output_row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     
-    // Voiced status
-    voiced_label = lv_label_create(pitch_area);
-    lv_label_set_text(voiced_label, "VOICED");
-    lv_obj_set_style_text_color(voiced_label, COLOR_SUCCESS, 0);
-    lv_obj_set_style_text_font(voiced_label, ui_theme_get_font(THEME_FONT_SMALL), 0);
+    lv_obj_t* out_label = lv_label_create(output_row);
+    lv_label_set_text(out_label, "OUT");
+    lv_obj_set_style_text_color(out_label, lv_color_make(0xB0, 0xB0, 0xB0), 0);
+    lv_obj_set_style_text_font(out_label, &lv_font_montserrat_12, 0);
     
-    // === EFFECT CARDS (56px) - Using EffectCard widgets ===
-    lv_obj_t* effects_area = lv_obj_create(performance_container);
-    lv_obj_set_size(effects_area, LV_PCT(100), 56);
-    lv_obj_set_style_bg_color(effects_area, COLOR_BG, 0);
-    lv_obj_set_style_border_width(effects_area, 0, 0);
-    lv_obj_set_style_pad_column(effects_area, THEME_SPACING_S, 0);
-    lv_obj_set_flex_flow(effects_area, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(effects_area, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    output_meter = lv_bar_create(output_row);
+    lv_obj_set_size(output_meter, 180, 16);
+    lv_bar_set_range(output_meter, -60, 0);
+    lv_bar_set_value(output_meter, -60, LV_ANIM_OFF);
+    lv_obj_set_style_bg_color(output_meter, lv_color_make(0x30, 0x30, 0x30), 0);
+    lv_obj_set_style_bg_color(output_meter, lv_color_make(0x4C, 0xAF, 0x50), LV_PART_INDICATOR);
+    
+    output_db_label = lv_label_create(output_row);
+    lv_label_set_text(output_db_label, "-60 dB");
+    lv_obj_set_style_text_color(output_db_label, lv_color_make(0xB0, 0xB0, 0xB0), 0);
+    lv_obj_set_style_text_font(output_db_label, &lv_font_montserrat_12, 0);
+    
+    // === PITCH SECTION ===
+    lv_obj_t* pitch_container = lv_obj_create(performance_container);
+    lv_obj_set_size(pitch_container, LV_PCT(100), 32);
+    lv_obj_set_style_bg_color(pitch_container, lv_color_make(0x1E, 0x1E, 0x2E), 0);
+    lv_obj_set_style_radius(pitch_container, 8, 0);
+    lv_obj_set_style_border_width(pitch_container, 0, 0);
+    lv_obj_set_style_pad_all(pitch_container, 8, 0);
+    lv_obj_set_flex_flow(pitch_container, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(pitch_container, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    
+    pitch_label = lv_label_create(pitch_container);
+    lv_label_set_text(pitch_label, "Pitch: A3  220.1Hz");
+    lv_obj_set_style_text_color(pitch_label, lv_color_white(), 0);
+    lv_obj_set_style_text_font(pitch_label, &lv_font_montserrat_14, 0);
+    
+    voiced_label = lv_label_create(pitch_container);
+    lv_label_set_text(voiced_label, "UNVOICED");
+    lv_obj_set_style_text_color(voiced_label, lv_color_make(0x70, 0x70, 0x70), 0);
+    lv_obj_set_style_text_font(voiced_label, &lv_font_montserrat_14, 0);
+    
+    // === EFFECT BUTTONS ===
+    lv_obj_t* effects_container = lv_obj_create(performance_container);
+    lv_obj_set_size(effects_container, LV_PCT(100), 56);
+    lv_obj_set_style_bg_color(effects_container, lv_color_make(0x12, 0x12, 0x12), 0);
+    lv_obj_set_style_border_width(effects_container, 0, 0);
+    lv_obj_set_style_pad_column(effects_container, 8, 0);
+    lv_obj_set_flex_flow(effects_container, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(effects_container, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     
     for (int i = 0; i < 4; i++) {
-        effect_cards[i] = effect_card_create(effects_area, 0, 0, (EffectType_t)i);
-        effect_card_set_param(effect_cards[i], effect_default_params[i]);
-        effect_card_set_enabled(effect_cards[i], false);
+        effect_buttons[i] = lv_btn_create(effects_container);
+        lv_obj_set_size(effect_buttons[i], 70, 50);
+        lv_obj_set_style_bg_color(effect_buttons[i], lv_color_make(0x42, 0x42, 0x42), 0);  // OFF state
+        lv_obj_set_style_radius(effect_buttons[i], 8, 0);
         
-        // Add click event to toggle effect
-        lv_obj_add_event_cb(effect_cards[i]->card, [](lv_event_t* e) {
-            EffectCard_t* card = (EffectCard_t*)lv_event_get_user_data(e);
-            if (card) {
-                bool currently_on = effect_card_is_enabled(card);
-                effect_card_set_enabled(card, !currently_on);
-                // TODO: Send command to P4
-            }
-        }, LV_EVENT_CLICKED, effect_cards[i]);
+        lv_obj_t* btn_label = lv_label_create(effect_buttons[i]);
+        lv_label_set_text(btn_label, effect_names[i]);
+        lv_obj_center(btn_label);
+        lv_obj_set_style_text_color(btn_label, lv_color_white(), 0);
+        lv_obj_set_style_text_font(btn_label, &lv_font_montserrat_12, 0);
     }
     
-    // === FOOTSWITCH BAR (36px) ===
-    fs_container = lv_obj_create(performance_container);
-    lv_obj_set_size(fs_container, LV_PCT(100), 36);
-    lv_obj_add_style(fs_container, ui_style_get_surface_elevated(), 0);
+    // === FOOTSWITCH LABELS ===
+    lv_obj_t* fs_container = lv_obj_create(performance_container);
+    lv_obj_set_size(fs_container, LV_PCT(100), 32);
+    lv_obj_set_style_bg_color(fs_container, lv_color_make(0x2A, 0x2A, 0x3A), 0);
+    lv_obj_set_style_radius(fs_container, 0, 0);
+    lv_obj_set_style_border_width(fs_container, 0, 0);
+    lv_obj_set_style_pad_all(fs_container, 4, 0);
     lv_obj_set_flex_flow(fs_container, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(fs_container, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_hor(fs_container, THEME_SPACING_M, 0);
     
-    // FS1
-    lv_obj_t* fs1_area = lv_obj_create(fs_container);
-    lv_obj_set_size(fs1_area, LV_PCT(48), 28);
-    lv_obj_set_style_bg_color(fs1_area, COLOR_SURFACE, 0);
-    lv_obj_set_style_radius(fs1_area, THEME_RADIUS_M, 0);
-    lv_obj_set_style_border_width(fs1_area, 0, 0);
-    lv_obj_set_flex_flow(fs1_area, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(fs1_area, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_column(fs1_area, THEME_SPACING_S, 0);
+    fs_labels[0] = lv_label_create(fs_container);
+    lv_label_set_text(fs_labels[0], "FS1 HARMONY");
+    lv_obj_set_style_text_color(fs_labels[0], lv_color_make(0xB0, 0xB0, 0xB0), 0);
+    lv_obj_set_style_text_font(fs_labels[0], &lv_font_montserrat_12, 0);
     
-    fs1_indicator = lv_obj_create(fs1_area);
-    lv_obj_set_size(fs1_indicator, 8, 8);
-    lv_obj_set_style_bg_color(fs1_indicator, COLOR_DISABLED, 0);
-    lv_obj_set_style_radius(fs1_indicator, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_pad_all(fs1_indicator, 0, 0);
-    
-    fs1_label = lv_label_create(fs1_area);
-    lv_label_set_text(fs1_label, "FS1 HARMONY");
-    lv_obj_set_style_text_color(fs1_label, COLOR_TEXT_SECONDARY, 0);
-    lv_obj_set_style_text_font(fs1_label, ui_theme_get_font(THEME_FONT_SMALL), 0);
-    
-    // FS2
-    lv_obj_t* fs2_area = lv_obj_create(fs_container);
-    lv_obj_set_size(fs2_area, LV_PCT(48), 28);
-    lv_obj_set_style_bg_color(fs2_area, COLOR_SURFACE, 0);
-    lv_obj_set_style_radius(fs2_area, THEME_RADIUS_M, 0);
-    lv_obj_set_style_border_width(fs2_area, 0, 0);
-    lv_obj_set_flex_flow(fs2_area, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(fs2_area, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_column(fs2_area, THEME_SPACING_S, 0);
-    
-    fs2_indicator = lv_obj_create(fs2_area);
-    lv_obj_set_size(fs2_indicator, 8, 8);
-    lv_obj_set_style_bg_color(fs2_indicator, COLOR_DISABLED, 0);
-    lv_obj_set_style_radius(fs2_indicator, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_pad_all(fs2_indicator, 0, 0);
-    
-    fs2_label = lv_label_create(fs2_area);
-    lv_label_set_text(fs2_label, "FS2 REVERB");
-    lv_obj_set_style_text_color(fs2_label, COLOR_TEXT_SECONDARY, 0);
-    lv_obj_set_style_text_font(fs2_label, ui_theme_get_font(THEME_FONT_SMALL), 0);
+    fs_labels[1] = lv_label_create(fs_container);
+    lv_label_set_text(fs_labels[1], "FS2 REVERB");
+    lv_obj_set_style_text_color(fs_labels[1], lv_color_make(0xB0, 0xB0, 0xB0), 0);
+    lv_obj_set_style_text_font(fs_labels[1], &lv_font_montserrat_12, 0);
 }
 
 void performance_update_meters(float inputDb, float outputDb) {
-    if (input_meter) vu_meter_update(input_meter, inputDb);
-    if (output_meter) vu_meter_update(output_meter, outputDb);
+    if (input_meter) lv_bar_set_value(input_meter, (int32_t)inputDb, LV_ANIM_ON);
+    if (output_meter) lv_bar_set_value(output_meter, (int32_t)outputDb, LV_ANIM_ON);
+    if (input_db_label) {
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%.1f dB", inputDb);
+        lv_label_set_text(input_db_label, buf);
+    }
+    if (output_db_label) {
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%.1f dB", outputDb);
+        lv_label_set_text(output_db_label, buf);
+    }
 }
 
 void performance_update_pitch(float freqHz, const char* noteName, bool voiced) {
-    if (pitch_note_label) {
-        lv_label_set_text(pitch_note_label, noteName);
-    }
-    if (pitch_freq_label) {
-        char buf[16];
-        snprintf(buf, sizeof(buf), "%.1f Hz", freqHz);
-        lv_label_set_text(pitch_freq_label, buf);
+    if (pitch_label) {
+        char buf[32];
+        snprintf(buf, sizeof(buf), "Pitch: %s  %.1fHz", noteName, freqHz);
+        lv_label_set_text(pitch_label, buf);
     }
     if (voiced_label) {
         lv_label_set_text(voiced_label, voiced ? "VOICED" : "UNVOICED");
-        lv_obj_set_style_text_color(voiced_label, voiced ? COLOR_SUCCESS : COLOR_TEXT_MUTED, 0);
+        lv_obj_set_style_text_color(voiced_label, voiced ? lv_color_make(0x4C, 0xAF, 0x50) : lv_color_make(0x70, 0x70, 0x70), 0);
     }
 }
 
 void performance_update_effect(int effectIndex, bool enabled) {
-    if (effectIndex >= 0 && effectIndex < 4 && effect_cards[effectIndex]) {
-        effect_card_set_enabled(effect_cards[effectIndex], enabled);
+    if (effectIndex >= 0 && effectIndex < 4 && effect_buttons[effectIndex]) {
+        lv_obj_set_style_bg_color(effect_buttons[effectIndex], 
+            enabled ? lv_color_make(0x4C, 0xAF, 0x50) : lv_color_make(0x42, 0x42, 0x42), 0);
     }
 }
 
 void performance_update_preset(const char* name) {
-    if (header_preset_label) {
-        lv_label_set_text(header_preset_label, name);
-    }
+    if (preset_label) lv_label_set_text(preset_label, name);
 }
 
 void performance_update_link(bool connected) {
-    if (header_link_label) {
-        lv_label_set_text(header_link_label, connected ? "LINK OK" : "LINK LOST");
-        lv_obj_set_style_text_color(header_link_label, 
-            connected ? COLOR_LINK_OK : COLOR_LINK_LOST, 0);
+    if (link_indicator) {
+        lv_label_set_text(link_indicator, connected ? "● LINK" : "○ LINK");
+        lv_obj_set_style_text_color(link_indicator, 
+            connected ? lv_color_make(0x66, 0xBB, 0x6A) : lv_color_make(0xEF, 0x53, 0x50), 0);
     }
 }
 
 void performance_update_footswitch(int fsIndex, const char* label, bool pressed) {
-    lv_obj_t* fs_label = (fsIndex == 0) ? fs1_label : fs2_label;
-    lv_obj_t* fs_indicator = (fsIndex == 0) ? fs1_indicator : fs2_indicator;
-    
-    if (fs_label) {
+    if (fsIndex >= 0 && fsIndex < 2 && fs_labels[fsIndex]) {
         char buf[32];
-        snprintf(buf, sizeof(buf), "FS%d %s", fsIndex + 1, label);
-        lv_label_set_text(fs_label, buf);
-    }
-    if (fs_indicator) {
-        lv_obj_set_style_bg_color(fs_indicator, 
-            pressed ? COLOR_FS_PRESSED : COLOR_DISABLED, 0);
+        snprintf(buf, sizeof(buf), "%s%s", label, pressed ? " [PRESSED]" : "");
+        lv_label_set_text(fs_labels[fsIndex], buf);
+        lv_obj_set_style_text_color(fs_labels[fsIndex],
+            pressed ? lv_color_make(0xFF, 0xA7, 0x26) : lv_color_make(0xB0, 0xB0, 0xB0), 0);
     }
 }

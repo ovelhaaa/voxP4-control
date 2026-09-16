@@ -1,89 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="640" height="480">
-  <defs>
-    <style>
-      .bg { fill: #090B0F; }
-      .surface { fill: #121620; }
-      .surface-elevated { fill: #191E2A; }
-      .header { fill: #121620; }
-      
-      .text-primary { fill: #F2F5F7; font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; }
-      .text-secondary { fill: #A5ADBA; font-family: Arial, sans-serif; font-size: 11px; }
-      .text-muted { fill: #687181; font-family: Arial, sans-serif; font-size: 10px; }
-      .text-accent { fill: #06B6D4; font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; }
-      .text-value { fill: #F2F5F7; font-family: Arial, sans-serif; font-size: 13px; font-weight: 600; }
-      .text-pressed { fill: #FFA726; font-family: Arial, sans-serif; font-size: 11px; font-weight: 700; }
-      
-      .card-bg { fill: #191E2A; stroke: #292F3D; stroke-width: 1; }
-      .card-active { fill: #191E2A; stroke: #06B6D4; stroke-width: 2; }
-      
-      .led-on { fill: #64F0FF; }
-      .led-off { fill: #292F3D; }
-      
-      .btn-segment { fill: #121620; stroke: #292F3D; stroke-width: 1; }
-      .btn-segment-active { fill: #06B6D4; stroke: #06B6D4; stroke-width: 1; }
-      
-      .nav-indicator { fill: #06B6D4; }
-    </style>
-  </defs>
-
+<svg width="240" height="320" viewBox="0 0 240 320" xmlns="http://www.w3.org/2000/svg">
   <!-- Background -->
-  <rect width="320" height="240" class="bg"/>
-
-  <!-- HEADER (28px) -->
-  <rect width="320" height="28" class="header"/>
-  <text x="12" y="18" class="text-primary" font-size="14">FOOTSWITCH CONFIG</text>
-
-  <!-- FS1 CARD -->
-  <rect x="8" y="36" width="304" height="84" rx="6" class="card-active"/>
+  <rect width="240" height="320" fill="#121212"/>
+  
+  <!-- Header -->
+  <rect width="240" height="32" fill="#2A2A3A"/>
+  <text x="8" y="21" font-family="Arial" font-size="16" fill="white" font-weight="bold">FOOTSWITCH CONFIG</text>
+  
+  <!-- FS1 Card -->
+  <rect x="8" y="40" width="224" height="80" rx="8" fill="#1E1E2E"/>
   
   <!-- FS1 Header -->
-  <rect x="8" y="36" width="304" height="28" rx="6" class="surface-elevated"/>
-  <text x="16" y="54" class="text-primary" font-size="13" font-weight="700">FS1</text>
-  <circle cx="290" cy="50" r="5" class="led-off"/>
-  <text x="270" y="54" class="text-muted" text-anchor="end" font-size="10">RELEASED</text>
+  <rect x="14" y="46" width="212" height="28" rx="6" fill="#2A2A3A"/>
+  <text x="20" y="65" font-family="Arial" font-size="14" fill="white" font-weight="bold">FS1</text>
+  <text x="170" y="65" font-family="Arial" font-size="12" fill="#B0B0B0">RELEASED</text>
   
   <!-- FS1 Mode -->
-  <text x="16" y="76" class="text-secondary" font-size="11">MODE:</text>
-  <rect x="60" y="68" width="70" height="18" rx="3" class="btn-segment-active"/>
-  <text x="95" y="80" class="text-primary" text-anchor="middle" font-size="10" font-weight="700">MOMENTARY</text>
-  
-  <rect x="140" y="68" width="60" height="18" rx="3" class="btn-segment"/>
-  <text x="170" y="80" class="text-secondary" text-anchor="middle" font-size="10">LATCHING</text>
+  <text x="20" y="95" font-family="Arial" font-size="12" fill="#B0B0B0">MODE:</text>
+  <text x="75" y="95" font-family="Arial" font-size="12" fill="#64B5F6" font-weight="bold">MOMENTARY</text>
   
   <!-- FS1 Action -->
-  <text x="16" y="102" class="text-secondary" font-size="11">ACTION:</text>
-  <text x="70" y="102" class="text-value" font-size="12">HARMONY TOGGLE</text>
-
-  <!-- FS2 CARD -->
-  <rect x="8" y="128" width="304" height="84" rx="6" class="card-bg"/>
+  <text x="20" y="115" font-family="Arial" font-size="12" fill="#B0B0B0">ACTION:</text>
+  <text x="85" y="115" font-family="Arial" font-size="12" fill="white">HARMONY TOGGLE</text>
+  
+  <!-- FS2 Card -->
+  <rect x="8" y="128" width="224" height="80" rx="8" fill="#1E1E2E"/>
   
   <!-- FS2 Header -->
-  <rect x="8" y="128" width="304" height="28" rx="6" class="surface-elevated"/>
-  <text x="16" y="146" class="text-primary" font-size="13" font-weight="700">FS2</text>
-  <circle cx="290" cy="142" r="5" class="led-on"/>
-  <text x="270" y="146" class="text-pressed" text-anchor="end" font-size="10">PRESSED</text>
+  <rect x="14" y="134" width="212" height="28" rx="6" fill="#2A2A3A"/>
+  <text x="20" y="153" font-family="Arial" font-size="14" fill="white" font-weight="bold">FS2</text>
+  <text x="170" y="153" font-family="Arial" font-size="12" fill="#B0B0B0">RELEASED</text>
   
   <!-- FS2 Mode -->
-  <text x="16" y="168" class="text-secondary" font-size="11">MODE:</text>
-  <rect x="60" y="160" width="70" height="18" rx="3" class="btn-segment"/>
-  <text x="95" y="172" class="text-secondary" text-anchor="middle" font-size="10">MOMENTARY</text>
-  
-  <rect x="140" y="160" width="60" height="18" rx="3" class="btn-segment-active"/>
-  <text x="170" y="172" class="text-primary" text-anchor="middle" font-size="10" font-weight="700">LATCHING</text>
+  <text x="20" y="183" font-family="Arial" font-size="12" fill="#B0B0B0">MODE:</text>
+  <text x="75" y="183" font-family="Arial" font-size="12" fill="#64B5F6" font-weight="bold">LATCHING</text>
   
   <!-- FS2 Action -->
-  <text x="16" y="194" class="text-secondary" font-size="11">ACTION:</text>
-  <text x="70" y="194" class="text-value" font-size="12">REVERB FREEZE</text>
-
-  <!-- Help text -->
-  <text x="160" y="230" class="text-muted" text-anchor="middle" font-size="9">Tap to edit • Hold to test</text>
-
-  <!-- NAVIGATION BAR -->
-  <rect y="220" width="320" height="20" class="header"/>
-  <rect x="240" y="220" width="80" height="3" class="nav-indicator"/>
-  <text x="40" y="235" class="text-secondary" text-anchor="middle" font-size="10">PERF</text>
-  <text x="120" y="235" class="text-secondary" text-anchor="middle" font-size="10">FX</text>
-  <text x="200" y="235" class="text-secondary" text-anchor="middle" font-size="10">PRESET</text>
-  <text x="280" y="235" class="text-accent" text-anchor="middle" font-size="10" font-weight="700">SET</text>
+  <text x="20" y="203" font-family="Arial" font-size="12" fill="#B0B0B0">ACTION:</text>
+  <text x="85" y="203" font-family="Arial" font-size="12" fill="white">REVERB TOGGLE</text>
+  
+  <!-- Help Text -->
+  <text x="120" y="230" font-family="Arial" font-size="10" fill="#707070" text-anchor="middle">Tap to edit configuration. Long press to test.</text>
+  
+  <!-- Navigation Bar -->
+  <rect y="288" width="240" height="32" fill="#2A2A3A"/>
+  <rect x="0" y="288" width="48" height="32" fill="#1E1E2E"/>
+  <text x="24" y="309" font-family="Arial" font-size="10" fill="#64B5F6" text-anchor="middle">PERF</text>
+  <text x="72" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">CHAIN</text>
+  <text x="120" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">EDIT</text>
+  <text x="168" y="309" font-family="Arial" font-size="10" fill="white" font-weight="bold" text-anchor="middle">FS</text>
+  <text x="216" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">PRESETS</text>
 </svg>

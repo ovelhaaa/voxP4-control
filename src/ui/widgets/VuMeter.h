@@ -2,12 +2,8 @@
 /**
  * VoxP4 CYD - VU Meter Widget
  * 
- * Widget HORIZONTAL para exibição de níveis de áudio (input/output)
- * Otimizado para Performance Screen 320x240
- * - Fast attack, controlled release
- * - Peak hold visual
- * - Zones coloridas (safe/warning/clip)
- * - Sem animações empilhadas para telemetria 20-30Hz
+ * Widget vertical para exibição de níveis de áudio (input/output)
+ * Otimizado para performance com LVGL
  */
 
 #include "lvgl.h"
@@ -16,32 +12,38 @@
 extern "C" {
 #endif
 
+// Cores do meter por faixa
+#define METER_COLOR_GREEN   LV_COLOR_MAKE(0x00, 0xE6, 0x76)  // -60dB a -12dB
+#define METER_COLOR_YELLOW  LV_COLOR_MAKE(0xFF, 0xD7, 0x40)  // -12dB a -3dB
+#define METER_COLOR_RED     LV_COLOR_MAKE(0xFF, 0x52, 0x52)  // -3dB a 0dB
+
+// Dimensões padrão
+#define METER_DEFAULT_WIDTH     40
+#define METER_DEFAULT_HEIGHT    120
+#define METER_BAR_WIDTH         28
+
 typedef struct {
-    lv_obj_t* container;      // Container principal (flex row)
-    lv_obj_t* label;          // Label IN/OUT
-    lv_obj_t* bar_bg;         // Background/track da barra
-    lv_obj_t* bar;            // Barra indicadora (fill)
-    lv_obj_t* peak_marker;    // Marcador de pico
-    lv_obj_t* db_label;       // Valor numérico em dB
-    int32_t width;
-    int32_t height;
+    lv_obj_t* container;
+    lv_obj_t* bar;
+    lv_obj_t* peak_indicator;
+    lv_obj_t* db_label;
     float current_db;
     float peak_db;
     uint32_t peak_hold_time;
+    int32_t height;
 } VuMeter_t;
 
 /**
- * Cria um VU Meter horizontal
+ * Inicializa um VU Meter vertical
  * @param parent objeto pai
  * @param x posição X
  * @param y posição Y
- * @param width largura total do widget
- * @param height altura do widget
+ * @param height altura do meter
  * @param label_text texto da etiqueta (ex: "IN", "OUT")
  * @return ponteiro para estrutura VuMeter_t
  */
 VuMeter_t* vu_meter_create(lv_obj_t* parent, int32_t x, int32_t y, 
-                           int32_t width, int32_t height, const char* label_text);
+                           int32_t height, const char* label_text);
 
 /**
  * Atualiza o valor do meter em dB

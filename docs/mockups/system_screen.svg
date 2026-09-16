@@ -1,82 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="640" height="480">
-  <defs>
-    <style>
-      .bg { fill: #090B0F; }
-      .surface { fill: #121620; }
-      .surface-elevated { fill: #191E2A; }
-      .header { fill: #121620; }
-      .text-primary { fill: #F2F5F7; font-family: Arial, sans-serif; font-size: 14px; }
-      .text-secondary { fill: #A5ADBA; font-family: Arial, sans-serif; font-size: 12px; }
-      .text-muted { fill: #687181; font-family: Arial, sans-serif; font-size: 11px; }
-      .text-accent { fill: #00E5FF; font-family: Arial, sans-serif; font-size: 14px; }
-      .link-ok { fill: #4CAF50; }
-      .meter-bg { fill: #292F3D; }
-      .meter-safe { fill: #00E5FF; }
-      .nav-tab { fill: #121620; }
-      .nav-tab-active { fill: #191E2A; }
-      .table-row { fill: #191E2A; }
-    </style>
-  </defs>
-  
+<svg width="240" height="320" viewBox="0 0 240 320" xmlns="http://www.w3.org/2000/svg">
   <!-- Background -->
-  <rect width="320" height="240" class="bg"/>
+  <rect width="240" height="320" fill="#121212"/>
   
-  <!-- HEADER (28px) -->
-  <rect width="320" height="28" class="header"/>
-  <text x="10" y="19" class="text-primary" font-size="14" font-weight="bold">SYSTEM</text>
+  <!-- Header -->
+  <rect width="240" height="32" fill="#2A2A3A"/>
+  <text x="8" y="21" font-family="Arial" font-size="16" fill="white" font-weight="bold">SYSTEM</text>
   
-  <!-- VoxLink Status Card (44px) -->
-  <rect x="8" y="36" width="304" height="44" rx="6" class="surface"/>
-  <text x="16" y="56" class="text-secondary" font-size="11">VOXLINK STATUS</text>
-  <circle cx="290" cy="50" r="6" class="link-ok"/>
-  <text x="16" y="72" class="link-ok" font-size="13" font-weight="bold">● CONNECTED</text>
-  <text x="150" y="72" class="text-muted" font-size="10">921600 baud</text>
+  <!-- Connection Status Card -->
+  <rect x="8" y="40" width="224" height="50" rx="8" fill="#1E1E2E"/>
+  <text x="16" y="62" font-family="Arial" font-size="12" fill="#B0B0B0">VOXLINK STATUS</text>
+  <text x="16" y="80" font-family="Arial" font-size="14" fill="#66BB6A" font-weight="bold">● CONNECTED</text>
+  <text x="150" y="80" font-family="Arial" font-size="11" fill="#707070">921600 baud</text>
   
-  <!-- System Stats Grid (80px) -->
-  <rect x="8" y="86" width="304" height="80" rx="6" class="surface"/>
+  <!-- CPU Load -->
+  <rect x="8" y="96" width="224" height="40" rx="8" fill="#1E1E2E"/>
+  <text x="16" y="116" font-family="Arial" font-size="12" fill="#B0B0B0">CPU LOAD</text>
+  <rect x="100" y="106" width="120" height="16" rx="4" fill="#303030"/>
+  <rect x="100" y="106" width="48" height="16" rx="4" fill="#4CAF50"/>
+  <text x="228" y="118" font-family="Arial" font-size="11" fill="white" text-anchor="end">24%</text>
   
-  <!-- Row 1: CPU Load -->
-  <rect x="14" y="92" width="292" height="22" rx="4" class="table-row"/>
-  <text x="22" y="107" class="text-secondary" font-size="11">CPU LOAD</text>
-  <rect x="200" y="96" width="80" height="12" rx="2" class="meter-bg"/>
-  <rect x="200" y="96" width="32" height="12" rx="2" class="meter-safe"/>
-  <text x="290" y="107" class="text-primary" text-anchor="end" font-size="11">24%</text>
+  <!-- Audio Buffer -->
+  <rect x="8" y="142" width="224" height="40" rx="8" fill="#1E1E2E"/>
+  <text x="16" y="162" font-family="Arial" font-size="12" fill="#B0B0B0">AUDIO BUFFER</text>
+  <text x="200" y="162" font-family="Arial" font-size="11" fill="#4CAF50">OK</text>
   
-  <!-- Row 2: Audio Buffer -->
-  <rect x="14" y="118" width="292" height="22" rx="4" class="table-row"/>
-  <text x="22" y="133" class="text-secondary" font-size="11">AUDIO BUFFER</text>
-  <text x="290" y="133" class="link-ok" text-anchor="end" font-size="11" font-weight="bold">OK</text>
+  <!-- Frame Stats -->
+  <rect x="8" y="188" width="224" height="50" rx="8" fill="#1E1E2E"/>
+  <text x="16" y="208" font-family="Arial" font-size="12" fill="#B0B0B0">FRAME RATE</text>
+  <text x="16" y="226" font-family="Arial" font-size="14" fill="white">28 FPS</text>
+  <text x="120" y="226" font-family="Arial" font-size="11" fill="#707070">Target: 30 FPS</text>
   
-  <!-- Row 3: Sample Rate -->
-  <rect x="14" y="144" width="292" height="22" rx="4" class="table-row"/>
-  <text x="22" y="159" class="text-secondary" font-size="11">SAMPLE RATE</text>
-  <text x="290" y="159" class="text-primary" text-anchor="end" font-size="11">48 kHz</text>
+  <!-- Device Info -->
+  <rect x="8" y="244" width="224" height="36" rx="8" fill="#2A2A3A"/>
+  <text x="16" y="260" font-family="Arial" font-size="10" fill="#707070">ESP32 CYD @ 240 MHz</text>
+  <text x="16" y="274" font-family="Arial" font-size="10" fill="#707070">LVGL 8.3 | Free Heap: 156 KB</text>
   
-  <!-- Diagnostics (56px) -->
-  <rect x="8" y="172" width="304" height="56" rx="6" class="surface"/>
-  <text x="16" y="190" class="text-secondary" font-size="11">DIAGNOSTICS</text>
-  
-  <text x="22" y="208" class="text-muted" font-size="10">Heap: 156 KB</text>
-  <text x="120" y="208" class="text-muted" font-size="10">Uptime: 2h 14m</text>
-  <text x="220" y="208" class="text-muted" font-size="10">Errors: 0</text>
-  
-  <!-- Device Info (28px) -->
-  <rect x="8" y="234" width="304" height="28" rx="6" class="surface-elevated"/>
-  <text x="16" y="252" class="text-muted" font-size="9">ESP32 CYD @ 240 MHz | LVGL 8.3</text>
-  
-  <!-- NAVIGATION BAR (20px) - Note: overlaps device info for space -->
-  <rect y="220" width="320" height="20" class="header"/>
-  
-  <rect x="0" y="220" width="80" height="20" class="nav-tab"/>
-  <text x="40" y="234" class="text-secondary" text-anchor="middle" font-size="10">PERF</text>
-  
-  <rect x="80" y="220" width="80" height="20" class="nav-tab"/>
-  <text x="120" y="234" class="text-secondary" text-anchor="middle" font-size="10">FX</text>
-  
-  <rect x="160" y="220" width="80" height="20" class="nav-tab"/>
-  <text x="200" y="234" class="text-secondary" text-anchor="middle" font-size="10">PRESET</text>
-  
-  <rect x="240" y="220" width="80" height="20" class="nav-tab-active"/>
-  <text x="280" y="234" class="text-accent" text-anchor="middle" font-size="10" font-weight="bold">SET</text>
+  <!-- Navigation Bar -->
+  <rect y="288" width="240" height="32" fill="#2A2A3A"/>
+  <rect x="240" y="288" width="48" height="32" fill="#1E1E2E" transform="translate(-48,0)"/>
+  <text x="24" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">PERF</text>
+  <text x="72" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">CHAIN</text>
+  <text x="120" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">EDIT</text>
+  <text x="168" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">FS</text>
+  <text x="216" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">PRESETS</text>
 </svg>

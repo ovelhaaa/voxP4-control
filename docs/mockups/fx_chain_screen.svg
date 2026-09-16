@@ -1,140 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="640" height="480">
   <defs>
-    <!-- VoxP4 Control Surface Design System v2 -->
     <style>
-      .bg { fill: #090B0F; }
-      .surface { fill: #121620; }
-      .surface-elevated { fill: #191E2A; }
-      .header { fill: #121620; }
-      
-      .text-primary { fill: #F2F5F7; font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; }
-      .text-secondary { fill: #A5ADBA; font-family: Arial, sans-serif; font-size: 11px; }
-      .text-muted { fill: #687181; font-family: Arial, sans-serif; font-size: 10px; }
-      .text-accent { fill: #06B6D4; font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; }
-      .text-accent-bright { fill: #64F0FF; font-family: Arial, sans-serif; font-size: 10px; }
-      
-      .effect-card-bg { fill: #121620; stroke: #292F3D; stroke-width: 1; }
-      .effect-card-active { fill: #191E2A; stroke: #06B6D4; stroke-width: 2; }
-      .led-on { fill: #64F0FF; }
-      .led-off { fill: #292F3D; }
-      
-      .arrow { fill: #292F3D; }
-      
-      .nav-tab { fill: #121620; }
-      .nav-indicator { fill: #06B6D4; }
-      
-      .btn-primary { fill: #06B6D4; }
-      .btn-secondary { fill: #191E2A; stroke: #292F3D; stroke-width: 1; }
+      .bg { fill: #121212; }
+      .card { fill: #1E1E2E; }
+      .header { fill: #2A2A3A; }
+      .text-primary { fill: #FFFFFF; font-family: Arial, sans-serif; font-size: 14px; }
+      .text-secondary { fill: #B0B0B0; font-family: Arial, sans-serif; font-size: 12px; }
+      .text-small { fill: #707070; font-family: Arial, sans-serif; font-size: 10px; }
+      .effect-off { fill: #424242; }
+      .effect-on { fill: #4CAF50; }
+      .arrow { fill: #66BB6A; }
     </style>
   </defs>
-
+  
   <!-- Background -->
   <rect width="320" height="240" class="bg"/>
-
-  <!-- HEADER (28px) -->
-  <rect width="320" height="28" class="header"/>
-  <text x="12" y="18" class="text-primary" font-size="14">FX CHAIN</text>
-
-  <!-- FX Chain - Horizontal flow with compact cards -->
   
-  <!-- Row 1: INPUT -> PITCH -> HARMONY -> DYNAMICS -->
+  <!-- HEADER -->
+  <rect width="320" height="32" class="header"/>
+  <text x="16" y="22" class="text-primary" font-size="16" font-weight="bold">FX CHAIN</text>
   
-  <!-- INPUT Card -->
-  <rect x="6" y="36" width="56" height="42" rx="5" class="surface-elevated"/>
-  <text x="34" y="52" class="text-primary" text-anchor="middle" font-size="9">INPUT</text>
-  <text x="34" y="65" class="text-muted" text-anchor="middle" font-size="9">MIC/LINE</text>
-
-  <!-- Arrow -->
-  <polygon points="68,57 63,54 63,60" class="arrow"/>
-
-  <!-- PITCH Card (Active) -->
-  <rect x="74" y="36" width="56" height="42" rx="5" class="effect-card-active"/>
-  <circle cx="82" cy="44" r="2.5" class="led-on"/>
-  <text x="102" y="52" class="text-primary" text-anchor="middle" font-size="9">PITCH</text>
-  <text x="102" y="65" class="text-accent-bright" text-anchor="middle" font-size="9">A3 220Hz</text>
-
-  <!-- Arrow -->
-  <polygon points="136,57 131,54 131,60" class="arrow"/>
-
-  <!-- HARMONY Card (Active) -->
-  <rect x="142" y="36" width="56" height="42" rx="5" class="effect-card-active"/>
-  <circle cx="150" cy="44" r="2.5" class="led-on"/>
-  <text x="170" y="52" class="text-primary" text-anchor="middle" font-size="9">HARMONY</text>
-  <text x="170" y="65" class="text-accent-bright" text-anchor="middle" font-size="9">+3rd</text>
-
-  <!-- Arrow -->
-  <polygon points="204,57 199,54 199,60" class="arrow"/>
-
-  <!-- DYNAMICS Card (Active) -->
-  <rect x="210" y="36" width="104" height="42" rx="5" class="effect-card-active"/>
-  <circle cx="218" cy="44" r="2.5" class="led-on"/>
-  <text x="262" y="52" class="text-primary" text-anchor="middle" font-size="9">DYNAMICS</text>
-  <text x="262" y="65" class="text-accent-bright" text-anchor="middle" font-size="9">-3dB GR</text>
-
-  <!-- Row 2: REVERB -> DELAY -> LIMITER -> OUTPUT -->
+  <!-- FX Chain Flow -->
   
-  <!-- REVERB Card (Active) -->
-  <rect x="6" y="86" width="56" height="42" rx="5" class="effect-card-active"/>
-  <circle cx="14" cy="94" r="2.5" class="led-on"/>
-  <text x="34" y="106" class="text-primary" text-anchor="middle" font-size="9">REVERB</text>
-  <text x="34" y="119" class="text-accent-bright" text-anchor="middle" font-size="9">Plate 18%</text>
-
+  <!-- INPUT -->
+  <rect x="80" y="40" width="160" height="28" class="card" rx="6"/>
+  <text x="160" y="60" class="text-primary" text-anchor="middle" font-size="12">INPUT</text>
+  
   <!-- Arrow -->
-  <polygon points="68,107 63,104 63,110" class="arrow"/>
-
-  <!-- DELAY Card (OFF) -->
-  <rect x="74" y="86" width="56" height="42" rx="5" class="effect-card-bg"/>
-  <circle cx="82" cy="94" r="2.5" class="led-off"/>
-  <text x="102" y="106" class="text-secondary" text-anchor="middle" font-size="9">DELAY</text>
-  <text x="102" y="119" class="text-muted" text-anchor="middle" font-size="9">OFF</text>
-
+  <polygon points="160,68 154,78 166,78" class="arrow"/>
+  
+  <!-- PITCH -->
+  <rect x="80" y="82" width="160" height="28" class="effect-on" rx="6"/>
+  <text x="160" y="102" class="text-primary" text-anchor="middle" font-size="12">PITCH DETECT</text>
+  
   <!-- Arrow -->
-  <polygon points="136,107 131,104 131,110" class="arrow"/>
-
-  <!-- LIMITER Card (Active) -->
-  <rect x="142" y="86" width="56" height="42" rx="5" class="effect-card-active"/>
-  <circle cx="150" cy="94" r="2.5" class="led-on"/>
-  <text x="170" y="106" class="text-primary" text-anchor="middle" font-size="9">LIMITER</text>
-  <text x="170" y="119" class="text-accent-bright" text-anchor="middle" font-size="9">Ceil 0dB</text>
-
+  <polygon points="160,110 154,120 166,120" class="arrow"/>
+  
+  <!-- HARMONY -->
+  <rect x="80" y="124" width="160" height="28" class="effect-on" rx="6"/>
+  <text x="160" y="140" class="text-primary" text-anchor="middle" font-size="11">HARMONY</text>
+  <text x="160" y="152" class="text-small" text-anchor="middle">+3rd / -9.0 dB</text>
+  
   <!-- Arrow -->
-  <polygon points="204,107 199,104 199,110" class="arrow"/>
-
-  <!-- OUTPUT Card -->
-  <rect x="210" y="86" width="104" height="42" rx="5" class="surface-elevated"/>
-  <text x="262" y="106" class="text-primary" text-anchor="middle" font-size="9">OUTPUT</text>
-  <text x="262" y="119" class="text-muted" text-anchor="middle" font-size="9">MAIN L/R</text>
-
-  <!-- Tap hint -->
-  <text x="160" y="145" class="text-muted" text-anchor="middle" font-size="10">Tap any card to edit parameters</text>
-
-  <!-- Quick actions row -->
-  <rect x="8" y="156" width="304" height="44" rx="5" class="surface"/>
-  <text x="16" y="174" class="text-secondary" font-size="10" font-weight="600">QUICK ACTIONS</text>
-
-  <!-- Toggle buttons -->
-  <rect x="16" y="182" width="68" height="14" rx="3" class="btn-primary"/>
-  <text x="50" y="192" class="text-primary" text-anchor="middle" font-size="8" font-weight="700">ALL ON</text>
-
-  <rect x="92" y="182" width="68" height="14" rx="3" class="btn-secondary"/>
-  <text x="126" y="192" class="text-secondary" text-anchor="middle" font-size="8">BYPASS ALL</text>
-
-  <rect x="168" y="182" width="68" height="14" rx="3" class="btn-secondary"/>
-  <text x="202" y="192" class="text-secondary" text-anchor="middle" font-size="8">RESET</text>
-
-  <rect x="244" y="182" width="60" height="14" rx="3" class="btn-secondary"/>
-  <text x="274" y="192" class="text-secondary" text-anchor="middle" font-size="8">DEFAULTS</text>
-
-  <!-- NAVIGATION BAR (20px) -->
-  <rect y="220" width="320" height="20" class="header"/>
-
-  <!-- Active indicator bar for FX tab -->
-  <rect x="80" y="220" width="80" height="3" class="nav-indicator"/>
-
-  <!-- Tab labels -->
-  <text x="40" y="235" class="text-secondary" text-anchor="middle" font-size="10">PERF</text>
-  <text x="120" y="235" class="text-accent" text-anchor="middle" font-size="10" font-weight="700">FX</text>
-  <text x="200" y="235" class="text-secondary" text-anchor="middle" font-size="10">PRESET</text>
-  <text x="280" y="235" class="text-secondary" text-anchor="middle" font-size="10">SET</text>
+  <polygon points="160,152 154,162 166,162" class="arrow"/>
+  
+  <!-- DYNAMICS -->
+  <rect x="80" y="166" width="160" height="28" class="effect-on" rx="6"/>
+  <text x="160" y="182" class="text-primary" text-anchor="middle" font-size="11">DYNAMICS</text>
+  <text x="160" y="194" class="text-small" text-anchor="middle">Comp: -3.2 dB</text>
+  
+  <!-- Arrow -->
+  <polygon points="160,194 154,204 166,204" class="arrow"/>
+  
+  <!-- REVERB -->
+  <rect x="80" y="208" width="160" height="28" class="effect-on" rx="6"/>
+  <text x="160" y="224" class="text-primary" text-anchor="middle" font-size="11">REVERB</text>
+  <text x="160" y="236" class="text-small" text-anchor="middle">Plate 35%</text>
+  
+  <!-- Note: This screen would scroll or use pagination for full chain -->
+  <!-- Visual indicator that there are more effects below -->
+  <text x="160" y="238" class="text-small" text-anchor="middle">▼ More</text>
 </svg>
