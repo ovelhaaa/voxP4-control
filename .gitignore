@@ -1,13 +1,7 @@
 ```
-# Build artifacts
+# Compiled files
 *.o
 *.obj
-*.a
-*.lib
-*.dll
-*.so
-*.dylib
-*.exe
 *.out
 
 # Dependencies
@@ -19,6 +13,10 @@ __pycache__/
 .pytest_cache/
 target/
 .gradle/
+
+# Build artifacts
+build/
+dist/
 
 # Editor/IDE files
 .vscode/
@@ -35,8 +33,10 @@ coverage/
 htmlcov/
 .coverage
 
-# Distribution / packaging
-dist/
-build/
-*.egg-info/
+# System files
+.DS_Store
+Thumbs.db
+.env
+.env.local
+*.env.*
 ```
