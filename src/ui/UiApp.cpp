@@ -5,10 +5,29 @@
 #include "screens/PresetsScreen.h"
 #include "screens/FootswitchScreen.h"
 #include "screens/SystemScreen.h"
+#include "screens/EffectEditScreen.h"
+#include "screens/SettingsScreen.h"
 #include "board/LGFX_CYD.h"
 #include <lvgl.h>
 
 using namespace VoxUiTheme;
+
+// Placeholder for action handling. In the future this will dispatch to VoxLink.
+void ui_emit_action(const UiAction& action) {
+    // For now, we print to Serial and let the UI react optimistically or wait for state sync
+    // This provides a clear boundary between view intent and state authority
+
+    // As a placeholder for optimistic UI updates:
+    if (action.type == UiActionType::ToggleEffect) {
+        // Find effect id and invert state temporarily, waiting for real state sync
+        // For demonstration, we just log it.
+        // Serial.printf("UI Action: Toggle Effect %d\n", action.id);
+    } else if (action.type == UiActionType::OpenEffect) {
+        // This is a local navigation action, not sent to P4
+        effect_edit_load_effect(action.id);
+        ui_navigate_to(UiScreenId::EFFECT_EDIT);
+    }
+}
 
 // Helper to convert MIDI note number to note name string
 static const char* note_name_from_midi(int note) {
@@ -23,8 +42,8 @@ static lv_obj_t* nav_bar = nullptr;
 static lv_obj_t* nav_tabs[4] = {nullptr, nullptr, nullptr, nullptr};
 static const char* nav_labels[] = {"PERF", "FX", "PRESET", "SET"};
 
-// Screen containers (4 main tabs)
-static lv_obj_t* screen_containers[5] = {nullptr, nullptr, nullptr, nullptr, nullptr}; // 0-3: main tabs, 4: SYSTEM
+// Screen containers
+static lv_obj_t* screen_containers[7] = {nullptr};
 static UiScreenId current_screen = UiScreenId::PERFORMANCE;
 static UiAppState app_state = {};
 
@@ -48,13 +67,34 @@ static void disp_flush(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* c
     lv_disp_flush_ready(disp);
 }
 
+// Touch read callback
+static void touchpad_read(lv_indev_drv_t* indev_drv, lv_indev_data_t* data) {
+    if (!lcd_device) return;
+
+    uint16_t touchX, touchY;
+    bool touched = lcd_device->getTouch(&touchX, &touchY);
+
+    if (!touched) {
+        data->state = LV_INDEV_STATE_REL;
+    } else {
+        data->state = LV_INDEV_STATE_PR;
+        // The LGFX_CYD config already handles rotation correctly
+        data->point.x = touchX;
+        data->point.y = touchY;
+    }
+}
+
 // Navigation tab click callback
 static void nav_tab_clicked(lv_event_t* e) {
     lv_obj_t* tab = lv_event_get_target(e);
     int index = (int)(intptr_t)lv_obj_get_user_data(tab);
     
     if (index >= 0 && index < 4) {
-        ui_navigate_to(static_cast<UiScreenId>(index));
+        if (index == 3) {
+            ui_navigate_to(UiScreenId::SETTINGS);
+        } else {
+            ui_navigate_to(static_cast<UiScreenId>(index));
+        }
     }
 }
 
@@ -97,8 +137,8 @@ void update_nav_bar(UiScreenId active_screen) {
     // Handle subscreens - show parent tab as active
     if (active_screen == UiScreenId::EFFECT_EDIT) {
         active_idx = 1; // FX_CHAIN tab
-    } else if (active_screen == UiScreenId::SYSTEM) {
-        active_idx = 3; // FOOTSWITCH/SET tab
+    } else if (active_screen == UiScreenId::SYSTEM || active_screen == UiScreenId::FOOTSWITCH || active_screen == UiScreenId::SETTINGS) {
+        active_idx = 3; // SET tab
     }
     
     for (int i = 0; i < 4; i++) {
@@ -121,12 +161,7 @@ void update_nav_bar(UiScreenId active_screen) {
 static void show_screen(UiScreenId screen_id) {
     int idx = (int)screen_id;
     
-    // Handle subscreens by showing their parent tab
-    if (screen_id == UiScreenId::EFFECT_EDIT) {
-        idx = 1; // FX_CHAIN tab
-    }
-    
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 7; i++) {
         if (screen_containers[i]) {
             if (i == idx) {
                 lv_obj_clear_flag(screen_containers[i], LV_OBJ_FLAG_HIDDEN);
@@ -137,17 +172,14 @@ static void show_screen(UiScreenId screen_id) {
     }
 }
 
-void ui_app_init(void) {
+void ui_app_init(LGFX_CYD& display) {
     lv_init();
     
     // Initialize theme styles
     ui_theme_init();
     
-    // Initialize LovyanGFX display device
-    lcd_device = new LGFX_CYD();
-    lcd_device->init();
-    lcd_device->setRotation(VoxCydConfig::ScreenRotation);
-    lcd_device->fillScreen(TFT_BLACK);
+    // Store display reference
+    lcd_device = &display;
     
     // Initialize LVGL display buffer
     lv_disp_draw_buf_init(&draw_buf, buf1, buf2, VoxCydConfig::ScreenWidth * VoxCydConfig::LvglBufferLines);
@@ -162,6 +194,13 @@ void ui_app_init(void) {
     disp_drv.direct_mode = 0;
     lv_disp_drv_register(&disp_drv);
     
+    // Initialize input device (Touchpad)
+    static lv_indev_drv_t indev_drv;
+    lv_indev_drv_init(&indev_drv);
+    indev_drv.type = LV_INDEV_TYPE_POINTER;
+    indev_drv.read_cb = touchpad_read;
+    lv_indev_drv_register(&indev_drv);
+
     // Create content area (top portion, leaving space for nav bar)
     content_area = lv_obj_create(lv_scr_act());
     lv_obj_set_size(content_area, LV_PCT(100), 204); // 240 - 36 = 204
@@ -170,14 +209,16 @@ void ui_app_init(void) {
     lv_obj_set_style_border_width(content_area, 0, 0);
     lv_obj_align(content_area, LV_ALIGN_TOP_MID, 0, 0);
     
-    // Create screen containers (5 total: 4 main tabs + SYSTEM)
+    // Create screen containers
     screen_containers[0] = lv_obj_create(content_area); // PERF
     screen_containers[1] = lv_obj_create(content_area); // FX
     screen_containers[2] = lv_obj_create(content_area); // PRESET
     screen_containers[3] = lv_obj_create(content_area); // FOOTSWITCH
     screen_containers[4] = lv_obj_create(content_area); // SYSTEM
+    screen_containers[5] = lv_obj_create(content_area); // EFFECT_EDIT
+    screen_containers[6] = lv_obj_create(content_area); // SETTINGS
     
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 7; i++) {
         lv_obj_set_size(screen_containers[i], LV_PCT(100), LV_PCT(100));
         lv_obj_set_style_bg_color(screen_containers[i], COLOR_BG_DARK, 0);
         lv_obj_set_style_pad_all(screen_containers[i], 0, 0);
@@ -193,9 +234,11 @@ void ui_app_init(void) {
     presets_screen_init(screen_containers[2]);
     footswitch_screen_init(screen_containers[3]);
     system_screen_init(screen_containers[4]);
+    effect_edit_screen_init(screen_containers[5]);
+    settings_screen_init(screen_containers[6]);
     
-    // Create navigation bar
-    create_nav_bar(content_area);
+    // Create navigation bar (sibling to content_area on root)
+    create_nav_bar(lv_scr_act());
     
     // Set initial state and hydrate UI
     app_state.currentScreen = UiScreenId::PERFORMANCE;

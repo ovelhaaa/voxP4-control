@@ -16,11 +16,14 @@ static FootswitchConfig fsConfigs[NUM_FOOTSWITCHES];
 // States
 static FootswitchState fsStates[NUM_FOOTSWITCHES];
 
-// Debounce parameters (from SPECS.md)
-#define DEBOUNCE_STABLE_MS 15
-#define LONG_PRESS_MS 500
-#define DOUBLE_PRESS_WINDOW_MS 300
-#define POLL_INTERVAL_MS 2
+// Debounce parameters from Config
+#define DEBOUNCE_STABLE_MS VoxCydConfig::FootswitchDebounceMs
+#define LONG_PRESS_MS VoxCydConfig::FootswitchLongPressMs
+#define DOUBLE_PRESS_WINDOW_MS VoxCydConfig::FootswitchDoublePressMs
+#define POLL_INTERVAL_MS VoxCydConfig::FootswitchPollMs
+
+// Callback
+static FootswitchEventCallback globalCallback = nullptr;
 
 // Action names
 static const char* actionNames[] = {
@@ -41,9 +44,15 @@ void footswitch_manager_init(void) {
     for (int i = 0; i < NUM_FOOTSWITCHES; i++) {
         pinMode(fsPins[i], INPUT_PULLUP);
         
-        // Default configuration: momentary mode with toggle action
+        // Default configuration
         fsConfigs[i].mode = FS_MODE_MOMENTARY;
-        fsConfigs[i].pressAction = (FootswitchAction)(FS_ACTION_HARMONY_TOGGLE + i);
+
+        if (i == 0) {
+            fsConfigs[i].pressAction = FS_ACTION_HARMONY_TOGGLE;
+        } else {
+            fsConfigs[i].pressAction = FS_ACTION_REVERB_TOGGLE;
+        }
+
         fsConfigs[i].releaseAction = FS_ACTION_NONE;
         fsConfigs[i].longPressAction = FS_ACTION_NONE;
         fsConfigs[i].doublePressAction = FS_ACTION_NONE;
@@ -54,6 +63,7 @@ void footswitch_manager_init(void) {
         fsStates[i].pressTime = 0;
         fsStates[i].lastReleaseTime = 0;
         fsStates[i].pressCount = 0;
+        fsStates[i].longPressFired = false;
     }
 }
 
@@ -87,36 +97,45 @@ void footswitch_manager_poll(void) {
                 // Press detected
                 fs->isPressed = true;
                 fs->pressTime = currentTime;
+                fs->longPressFired = false;
+
+                if (globalCallback) {
+                    FootswitchEvent ev = { (uint8_t)i, FS_EVENT_PRESS };
+                    globalCallback(&ev);
+                }
                 
                 // Check for double press
                 if (currentTime - fs->lastReleaseTime < DOUBLE_PRESS_WINDOW_MS) {
                     fs->pressCount++;
-                    if (fs->pressCount >= 2 && fsConfigs[i].doublePressAction != FS_ACTION_NONE) {
-                        // Double press action triggered
+                    if (fs->pressCount >= 2) {
+                        if (globalCallback) {
+                            FootswitchEvent ev = { (uint8_t)i, FS_EVENT_DOUBLE_PRESS };
+                            globalCallback(&ev);
+                        }
                         fs->pressCount = 0;
                     }
                 } else {
                     fs->pressCount = 1;
                 }
-                
-                // Execute press action based on mode
-                if (fsConfigs[i].mode == FS_MODE_LATCHING) {
-                    // Toggle on press for latching mode
-                    // Actual toggle logic handled by UI/app layer
-                }
-                
             } else if (!rawState && fs->isPressed) {
                 // Release detected
                 fs->isPressed = false;
                 fs->lastReleaseTime = currentTime;
-                uint32_t pressDuration = currentTime - fs->pressTime;
                 
-                // Check for long press
-                if (pressDuration >= LONG_PRESS_MS && fsConfigs[i].longPressAction != FS_ACTION_NONE) {
-                    // Long press action triggered
-                } else if (fsConfigs[i].mode == FS_MODE_MOMENTARY && 
-                           fsConfigs[i].releaseAction != FS_ACTION_NONE) {
-                    // Release action for momentary mode
+                if (globalCallback) {
+                    FootswitchEvent ev = { (uint8_t)i, FS_EVENT_RELEASE };
+                    globalCallback(&ev);
+                }
+            }
+
+            // Check for long press while held
+            if (fs->isPressed && !fs->longPressFired) {
+                if (currentTime - fs->pressTime >= LONG_PRESS_MS) {
+                    fs->longPressFired = true;
+                    if (globalCallback) {
+                        FootswitchEvent ev = { (uint8_t)i, FS_EVENT_LONG_PRESS };
+                        globalCallback(&ev);
+                    }
                 }
             }
         }
@@ -149,4 +168,8 @@ const char* footswitch_action_name(FootswitchAction action) {
         return "UNKNOWN";
     }
     return actionNames[action];
+}
+
+void footswitch_set_event_callback(FootswitchEventCallback callback) {
+    globalCallback = callback;
 }

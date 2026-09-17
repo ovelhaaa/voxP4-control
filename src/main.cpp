@@ -21,7 +21,7 @@
 #include "control/FootswitchManager.h"
 
 // Instância global do display
-static LGFX_CYD lcd;
+LGFX_CYD lcd;
 
 // Flag para indicar inicialização completa
 static bool system_initialized = false;
@@ -70,16 +70,46 @@ void setup() {
     // Inicializar footswitches
     Serial.println("[INIT] Initializing footswitches...");
     footswitch_init();
+    footswitch_set_event_callback([](const FootswitchEvent* ev) {
+        // Forward to UI intent system or App layer
+        if (ev->type == FS_EVENT_PRESS) {
+            // Update footswitch highlight state optimistically
+            extern void performance_update_footswitch(int fsIndex, const char* label, bool pressed);
+            FootswitchConfig* cfg = footswitch_get_config(ev->index);
+            if (cfg) {
+                // Shorten labels like "HARMONY TOGGLE" to "HARMONY" for display
+                const char* name = footswitch_action_name(cfg->pressAction);
+                if (strstr(name, "HARMONY") != NULL) name = "HARMONY";
+                else if (strstr(name, "REVERB") != NULL) name = "REVERB";
+                else if (strstr(name, "DELAY") != NULL) name = "DELAY";
+
+                performance_update_footswitch(ev->index, name, true);
+            }
+        } else if (ev->type == FS_EVENT_RELEASE) {
+            extern void performance_update_footswitch(int fsIndex, const char* label, bool pressed);
+            FootswitchConfig* cfg = footswitch_get_config(ev->index);
+            if (cfg) {
+                const char* name = footswitch_action_name(cfg->pressAction);
+                if (strstr(name, "HARMONY") != NULL) name = "HARMONY";
+                else if (strstr(name, "REVERB") != NULL) name = "REVERB";
+                else if (strstr(name, "DELAY") != NULL) name = "DELAY";
+
+                performance_update_footswitch(ev->index, name, false);
+            }
+        }
+    });
     
     // Inicializar UI (LVGL)
     Serial.println("[INIT] Initializing LVGL UI...");
-    ui_app_init();
+    ui_app_init(lcd);
     
     Serial.println("[INIT] System ready!");
-    system_initialized = true;
     
-    // Limpar tela de boot
-    lcd.fillScreen(TFT_BLACK);
+    // Print memory info
+    Serial.printf("[MEM] Free heap: %u bytes\n", esp_get_free_heap_size());
+    Serial.printf("[MEM] Min free heap: %u bytes\n", esp_get_minimum_free_heap_size());
+
+    system_initialized = true;
 }
 
 /**

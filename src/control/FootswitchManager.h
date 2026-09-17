@@ -33,6 +33,19 @@ typedef struct {
     FootswitchAction doublePressAction;
 } FootswitchConfig;
 
+// Footswitch events
+typedef enum {
+    FS_EVENT_PRESS = 0,
+    FS_EVENT_RELEASE,
+    FS_EVENT_LONG_PRESS,
+    FS_EVENT_DOUBLE_PRESS
+} FootswitchEventType;
+
+typedef struct {
+    uint8_t index;
+    FootswitchEventType type;
+} FootswitchEvent;
+
 // Footswitch state
 typedef struct {
     bool isPressed;
@@ -40,7 +53,11 @@ typedef struct {
     uint32_t pressTime;
     uint32_t lastReleaseTime;
     int pressCount;
+    bool longPressFired;
 } FootswitchState;
+
+// Event callback type
+typedef void (*FootswitchEventCallback)(const FootswitchEvent* event);
 
 // Initialize footswitch manager
 void footswitch_manager_init(void);
@@ -59,6 +76,9 @@ bool footswitch_is_pressed(int fsIndex);
 
 // Get action name string
 const char* footswitch_action_name(FootswitchAction action);
+
+// Set event callback
+void footswitch_set_event_callback(FootswitchEventCallback callback);
 
 // Compatibility wrappers for main.cpp
 static inline void footswitch_init(void) { footswitch_manager_init(); }
