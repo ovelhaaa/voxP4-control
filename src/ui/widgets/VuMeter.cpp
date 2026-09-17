@@ -41,10 +41,10 @@ VuMeter_t* vu_meter_create(lv_obj_t* parent, int32_t x, int32_t y,
     lv_obj_set_style_radius(meter->container, RADIUS_S, 0);
     lv_obj_set_style_pad_all(meter->container, 2, 0);
     
-    // Barra horizontal
+    // Barra horizontal - reduzida para reservar espaço do label dB à direita
     meter->bar = lv_bar_create(meter->container);
-    lv_obj_set_size(meter->bar, 160, height - 4);
-    lv_obj_align(meter->bar, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_size(meter->bar, 140, height - 4);
+    lv_obj_align(meter->bar, LV_ALIGN_LEFT_MID, 0, 0);
     lv_bar_set_range(meter->bar, 0, 100);
     lv_bar_set_value(meter->bar, 0, LV_ANIM_OFF);
     

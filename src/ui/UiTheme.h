@@ -111,7 +111,7 @@ using VoxUiTheme::COLOR_FS_PRESSED;
 #define FONT_SMALL      &lv_font_montserrat_12
 #define FONT_BODY       &lv_font_montserrat_14
 #define FONT_EMPHASIS   &lv_font_montserrat_16
-#define FONT_HERO       &lv_font_montserrat_24
+#define FONT_HERO       &lv_font_montserrat_16  // Use 16px since 24px is not enabled (line 23: LV_FONT_MONTSERRAT_24 0)
 
 // Spacing tokens (pixels)
 #define SPACING_XS      4

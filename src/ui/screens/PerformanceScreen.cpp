@@ -77,7 +77,9 @@ void performance_screen_init(lv_obj_t* parent) {
     
     // Usar VuMeter widget horizontal (implementar como bar customizada)
     input_meter = vu_meter_create(input_row, 0, 0, 16, "");
-    lv_obj_set_size(vu_meter_get_container(input_meter), 180, 16);
+    if (input_meter) {
+        lv_obj_set_size(vu_meter_get_container(input_meter), 180, 16);
+    }
     
     input_row = lv_obj_create(meters_container);
     lv_obj_set_size(input_row, LV_PCT(100), 24);
@@ -93,7 +95,9 @@ void performance_screen_init(lv_obj_t* parent) {
     lv_obj_set_style_text_font(out_label, FONT_SMALL, 0);
     
     output_meter = vu_meter_create(input_row, 0, 0, 16, "");
-    lv_obj_set_size(vu_meter_get_container(output_meter), 180, 16);
+    if (output_meter) {
+        lv_obj_set_size(vu_meter_get_container(output_meter), 180, 16);
+    }
     
     // === PITCH SECTION (40px) ===
     lv_obj_t* pitch_container = lv_obj_create(performance_container);
@@ -176,7 +180,10 @@ void performance_screen_init(lv_obj_t* parent) {
     // FS1 e FS2 cards
     for (int i = 0; i < 2; i++) {
         fs_containers[i] = lv_obj_create(fs_container);
-        lv_obj_set_size(fs_containers[i], (LV_PCT(50) - SPACING_S), LV_PCT(100));
+        // Calcular largura em pixels baseado no container pai (320px - padding)
+        // 320 - 8(padding) = 312px disponíveis, dividido por 2 cards menos gap de 6px
+        // Cada card: (312 - 6) / 2 = 153px ≈ LV_PCT(48)
+        lv_obj_set_size(fs_containers[i], LV_PCT(48), LV_PCT(100));
         lv_obj_set_style_bg_color(fs_containers[i], COLOR_BG_SURFACE, 0);
         lv_obj_set_style_radius(fs_containers[i], RADIUS_S, 0);
         lv_obj_set_style_border_width(fs_containers[i], 0, 0);

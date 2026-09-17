@@ -1,21 +1,22 @@
-# Compiled and build artifacts
-*.o
-*.obj
-*.out
+```
+# Build artifacts
+.pio/
+.platformio/
+*.elf
+*.hex
+*.bin
+*.map
+*.lst
 
 # Dependencies
-venv/
-.venv/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+lib/
+mbedtls/
+libsodium/
 
 # Logs and temp files
 *.log
 *.tmp
 *.swp
-*.swo
 
 # Environment
 .env
@@ -25,63 +26,16 @@ __pycache__/
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# Build directories
-build/
-dist/
-target/
-.gradle/
+# OS
+.DS_Store
+Thumbs.db
 
-# Coverage
+# Coverage reports
 coverage/
 htmlcov/
 .coverage
 
-# Python specific
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-*.so
-*.egg-info/
-.eggs/
-
-# C/C++ specific
-*.o
-*.obj
-*.out
-*.a
-*.lib
-*.dll
-*.so
-*.dylib
-*.exe
-*.pdb
-*.ilk
-
-# Compressed files
-*.zip
-*.gz
-*.tar
-*.tgz
-*.bz2
-*.xz
-*.7z
-*.rar
-*.zst
-*.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
+# MyPy cache
+.mypy_cache/
+```
