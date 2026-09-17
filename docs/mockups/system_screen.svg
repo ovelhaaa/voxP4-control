@@ -1,47 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="240" height="320" viewBox="0 0 240 320" xmlns="http://www.w3.org/2000/svg">
+<svg width="320" height="240" xmlns="http://www.w3.org/2000/svg">
+  <!-- VoxP4 Control Surface - System Screen Mockup -->
+  <!-- Design System v2: Professional vocal processor aesthetic -->
+  
   <!-- Background -->
-  <rect width="240" height="320" fill="#121212"/>
+  <rect width="320" height="240" fill="#090B0F"/>
   
-  <!-- Header -->
-  <rect width="240" height="32" fill="#2A2A3A"/>
-  <text x="8" y="21" font-family="Arial" font-size="16" fill="white" font-weight="bold">SYSTEM</text>
+  <!-- Header (28px) -->
+  <rect width="320" height="28" fill="#1E2330"/>
+  <text x="12" y="19" font-family="Montserrat" font-size="16" font-weight="600" fill="#F2F5F7">SYSTEM INFO</text>
   
-  <!-- Connection Status Card -->
-  <rect x="8" y="40" width="224" height="50" rx="8" fill="#1E1E2E"/>
-  <text x="16" y="62" font-family="Arial" font-size="12" fill="#B0B0B0">VOXLINK STATUS</text>
-  <text x="16" y="80" font-family="Arial" font-size="14" fill="#66BB6A" font-weight="bold">● CONNECTED</text>
-  <text x="150" y="80" font-family="Arial" font-size="11" fill="#707070">921600 baud</text>
+  <!-- VoxLink Section (52px) -->
+  <rect x="8" y="36" width="304" height="52" rx="6" fill="#121620"/>
+  <text x="16" y="52" font-family="Montserrat" font-size="14" font-weight="600" fill="#06B6D4">VoxLink Status</text>
+  <text x="16" y="68" font-family="Montserrat" font-size="12" fill="#A5ADBA">P4 Firmware:</text>
+  <text x="200" y="68" font-family="Montserrat" font-size="12" fill="#F2F5F7">1.2.3</text>
+  <text x="16" y="82" font-family="Montserrat" font-size="12" fill="#A5ADBA">CYD Firmware:</text>
+  <text x="200" y="82" font-family="Montserrat" font-size="12" fill="#F2F5F7">2.1.0</text>
   
-  <!-- CPU Load -->
-  <rect x="8" y="96" width="224" height="40" rx="8" fill="#1E1E2E"/>
-  <text x="16" y="116" font-family="Arial" font-size="12" fill="#B0B0B0">CPU LOAD</text>
-  <rect x="100" y="106" width="120" height="16" rx="4" fill="#303030"/>
-  <rect x="100" y="106" width="48" height="16" rx="4" fill="#4CAF50"/>
-  <text x="228" y="118" font-family="Arial" font-size="11" fill="white" text-anchor="end">24%</text>
+  <!-- Audio Section (52px) -->
+  <rect x="8" y="92" width="304" height="52" rx="6" fill="#121620"/>
+  <text x="16" y="108" font-family="Montserrat" font-size="14" font-weight="600" fill="#06B6D4">Audio</text>
+  <text x="16" y="124" font-family="Montserrat" font-size="12" fill="#A5ADBA">Sample Rate:</text>
+  <text x="200" y="124" font-family="Montserrat" font-size="12" fill="#F2F5F7">48000 Hz</text>
+  <text x="16" y="138" font-family="Montserrat" font-size="12" fill="#A5ADBA">Block Size:</text>
+  <text x="200" y="138" font-family="Montserrat" font-size="12" fill="#F2F5F7">64</text>
   
-  <!-- Audio Buffer -->
-  <rect x="8" y="142" width="224" height="40" rx="8" fill="#1E1E2E"/>
-  <text x="16" y="162" font-family="Arial" font-size="12" fill="#B0B0B0">AUDIO BUFFER</text>
-  <text x="200" y="162" font-family="Arial" font-size="11" fill="#4CAF50">OK</text>
+  <!-- Performance Section (52px) -->
+  <rect x="8" y="148" width="304" height="52" rx="6" fill="#121620"/>
+  <text x="16" y="164" font-family="Montserrat" font-size="14" font-weight="600" fill="#06B6D4">Performance</text>
+  <text x="16" y="180" font-family="Montserrat" font-size="12" fill="#A5ADBA">CPU Load:</text>
+  <text x="200" y="180" font-family="Montserrat" font-size="12" fill="#F2F5F7">12.5%</text>
+  <text x="16" y="194" font-family="Montserrat" font-size="12" fill="#A5ADBA">Underruns:</text>
+  <text x="200" y="194" font-family="Montserrat" font-size="12" fill="#F2F5F7">0</text>
   
-  <!-- Frame Stats -->
-  <rect x="8" y="188" width="224" height="50" rx="8" fill="#1E1E2E"/>
-  <text x="16" y="208" font-family="Arial" font-size="12" fill="#B0B0B0">FRAME RATE</text>
-  <text x="16" y="226" font-family="Arial" font-size="14" fill="white">28 FPS</text>
-  <text x="120" y="226" font-family="Arial" font-size="11" fill="#707070">Target: 30 FPS</text>
+  <!-- Navigation Bar (36px) at bottom -->
+  <rect y="204" width="320" height="36" fill="#1E2330"/>
   
-  <!-- Device Info -->
-  <rect x="8" y="244" width="224" height="36" rx="8" fill="#2A2A3A"/>
-  <text x="16" y="260" font-family="Arial" font-size="10" fill="#707070">ESP32 CYD @ 240 MHz</text>
-  <text x="16" y="274" font-family="Arial" font-size="10" fill="#707070">LVGL 8.3 | Free Heap: 156 KB</text>
+  <!-- Tab PERF -->
+  <rect x="0" y="204" width="80" height="36" fill="#1E2330"/>
+  <text x="40" y="226" font-family="Montserrat" font-size="12" fill="#A5ADBA" text-anchor="middle">PERF</text>
   
-  <!-- Navigation Bar -->
-  <rect y="288" width="240" height="32" fill="#2A2A3A"/>
-  <rect x="240" y="288" width="48" height="32" fill="#1E1E2E" transform="translate(-48,0)"/>
-  <text x="24" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">PERF</text>
-  <text x="72" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">CHAIN</text>
-  <text x="120" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">EDIT</text>
-  <text x="168" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">FS</text>
-  <text x="216" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">PRESETS</text>
+  <!-- Tab FX -->
+  <rect x="80" y="204" width="80" height="36" fill="#1E2330"/>
+  <text x="120" y="226" font-family="Montserrat" font-size="12" fill="#A5ADBA" text-anchor="middle">FX</text>
+  
+  <!-- Tab PRESET -->
+  <rect x="160" y="204" width="80" height="36" fill="#1E2330"/>
+  <text x="200" y="226" font-family="Montserrat" font-size="12" fill="#A5ADBA" text-anchor="middle">PRESET</text>
+  
+  <!-- Tab SET (active - cyan indicator) -->
+  <rect x="240" y="204" width="80" height="36" fill="#1E2330"/>
+  <rect x="240" y="204" width="80" height="3" fill="#06B6D4"/>
+  <text x="280" y="226" font-family="Montserrat" font-size="12" fill="#F2F5F7" text-anchor="middle">SET</text>
 </svg>

@@ -2,12 +2,8 @@
 /**
  * VoxP4 CYD - VU Meter Widget
  * 
- * Widget HORIZONTAL para exibição de níveis de áudio (input/output)
- * Otimizado para Performance Screen 320x240
- * - Fast attack, controlled release
- * - Peak hold visual
- * - Zones coloridas (safe/warning/clip)
- * - Sem animações empilhadas para telemetria 20-30Hz
+ * Widget horizontal para exibição de níveis de áudio (input/output)
+ * Otimizado para 320x240 e performance com LVGL
  */
 
 #include "lvgl.h"
@@ -17,14 +13,9 @@ extern "C" {
 #endif
 
 typedef struct {
-    lv_obj_t* container;      // Container principal (flex row)
-    lv_obj_t* label;          // Label IN/OUT
-    lv_obj_t* bar_bg;         // Background/track da barra
-    lv_obj_t* bar;            // Barra indicadora (fill)
-    lv_obj_t* peak_marker;    // Marcador de pico
-    lv_obj_t* db_label;       // Valor numérico em dB
-    int32_t width;
-    int32_t height;
+    lv_obj_t* container;
+    lv_obj_t* bar;
+    lv_obj_t* db_label;
     float current_db;
     float peak_db;
     uint32_t peak_hold_time;
@@ -33,15 +24,21 @@ typedef struct {
 /**
  * Cria um VU Meter horizontal
  * @param parent objeto pai
- * @param x posição X
- * @param y posição Y
- * @param width largura total do widget
- * @param height altura do widget
- * @param label_text texto da etiqueta (ex: "IN", "OUT")
+ * @param x posição X (ignorado se usar flex)
+ * @param y posição Y (ignorado se usar flex)
+ * @param height altura do meter
+ * @param label_text texto da etiqueta (ex: "IN", "OUT") - pode ser NULL ou ""
  * @return ponteiro para estrutura VuMeter_t
  */
 VuMeter_t* vu_meter_create(lv_obj_t* parent, int32_t x, int32_t y, 
-                           int32_t width, int32_t height, const char* label_text);
+                           int32_t height, const char* label_text);
+
+/**
+ * Retorna o container do meter para ajustes de layout
+ * @param meter ponteiro para VuMeter_t
+ * @return lv_obj_t* container
+ */
+lv_obj_t* vu_meter_get_container(VuMeter_t* meter);
 
 /**
  * Atualiza o valor do meter em dB
@@ -55,13 +52,6 @@ void vu_meter_update(VuMeter_t* meter, float db);
  * @param meter ponteiro para VuMeter_t
  */
 void vu_meter_reset_peak(VuMeter_t* meter);
-
-/**
- * Define o tempo de hold do pico (ms)
- * @param meter ponteiro para VuMeter_t
- * @param hold_ms tempo em milissegundos
- */
-void vu_meter_set_peak_hold(VuMeter_t* meter, uint32_t hold_ms);
 
 #ifdef __cplusplus
 } /*extern "C"*/

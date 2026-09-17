@@ -4,14 +4,14 @@
 #include <lvgl.h>
 #include "board/CYD_Config.h"
 
-// Screen IDs
+// Screen IDs - main navigation tabs (0-3 for nav bar, 4+ for subscreens)
 enum class UiScreenId {
-    PERFORMANCE,
-    FX_CHAIN,
-    EFFECT_EDIT,
-    FOOTSWITCH,
-    PRESETS,
-    SYSTEM
+    PERFORMANCE = 0,
+    FX_CHAIN = 1,
+    PRESETS = 2,
+    FOOTSWITCH = 3,
+    SYSTEM = 4,
+    EFFECT_EDIT = 5  // Subscreen, not in main nav
 };
 
 // Application state
@@ -44,6 +44,7 @@ void ui_app_run(void);
 // Screen navigation
 void ui_navigate_to(UiScreenId screen);
 UiScreenId ui_get_current_screen(void);
+void update_nav_bar(UiScreenId active_screen);
 
 // State updates (called from main loop)
 void ui_update_link_state(bool connected);
