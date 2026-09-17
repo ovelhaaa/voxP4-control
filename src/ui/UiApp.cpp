@@ -1,8 +1,14 @@
 #include "UiApp.h"
 #include "UiTheme.h"
 #include "screens/PerformanceScreen.h"
+#include "screens/FxChainScreen.h"
+#include "screens/PresetsScreen.h"
+#include "screens/FootswitchScreen.h"
+#include "screens/SystemScreen.h"
 #include "board/LGFX_CYD.h"
 #include <lvgl.h>
+
+using namespace VoxUiTheme;
 
 // Helper to convert MIDI note number to note name string
 static const char* note_name_from_midi(int note) {
@@ -11,7 +17,14 @@ static const char* note_name_from_midi(int note) {
     return notes[note % 12];
 }
 
-static lv_obj_t* main_screen = nullptr;
+// Shell components
+static lv_obj_t* content_area = nullptr;
+static lv_obj_t* nav_bar = nullptr;
+static lv_obj_t* nav_tabs[4] = {nullptr, nullptr, nullptr, nullptr};
+static const char* nav_labels[] = {"PERF", "FX", "PRESET", "SET"};
+
+// Screen containers (4 main tabs)
+static lv_obj_t* screen_containers[5] = {nullptr, nullptr, nullptr, nullptr, nullptr}; // 0-3: main tabs, 4: SYSTEM
 static UiScreenId current_screen = UiScreenId::PERFORMANCE;
 static UiAppState app_state = {};
 
@@ -33,6 +46,95 @@ static void disp_flush(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* c
         lcd_device->endWrite();
     }
     lv_disp_flush_ready(disp);
+}
+
+// Navigation tab click callback
+static void nav_tab_clicked(lv_event_t* e) {
+    lv_obj_t* tab = lv_event_get_target(e);
+    int index = (int)(intptr_t)lv_obj_get_user_data(tab);
+    
+    if (index >= 0 && index < 4) {
+        ui_navigate_to(static_cast<UiScreenId>(index));
+    }
+}
+
+// Create navigation bar at bottom
+static void create_nav_bar(lv_obj_t* parent) {
+    nav_bar = lv_obj_create(parent);
+    lv_obj_set_size(nav_bar, LV_PCT(100), 36);
+    lv_obj_set_style_bg_color(nav_bar, COLOR_BG_NAV, 0);
+    lv_obj_set_style_radius(nav_bar, 0, 0);
+    lv_obj_set_style_border_width(nav_bar, 0, 0);
+    lv_obj_set_style_pad_all(nav_bar, 0, 0);
+    lv_obj_align(nav_bar, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_set_flex_flow(nav_bar, LV_FLEX_FLOW_ROW);
+    
+    for (int i = 0; i < 4; i++) {
+        nav_tabs[i] = lv_btn_create(nav_bar);
+        lv_obj_set_size(nav_tabs[i], LV_PCT(25), LV_PCT(100));
+        lv_obj_set_style_bg_color(nav_tabs[i], COLOR_BG_NAV, 0);
+        lv_obj_set_style_radius(nav_tabs[i], 0, 0);
+        lv_obj_set_style_border_width(nav_tabs[i], 0, 0);
+        lv_obj_set_flex_grow(nav_tabs[i], 1);
+        lv_obj_set_user_data(nav_tabs[i], (void*)(intptr_t)i);
+        lv_obj_add_event_cb(nav_tabs[i], nav_tab_clicked, LV_EVENT_CLICKED, NULL);
+        
+        lv_obj_t* label = lv_label_create(nav_tabs[i]);
+        lv_label_set_text(label, nav_labels[i]);
+        lv_obj_set_style_text_color(label, COLOR_TEXT_SECONDARY, 0);
+        lv_obj_set_style_text_font(label, FONT_SMALL, 0);
+        lv_obj_center(label);
+    }
+    
+    // Update active tab visual
+    update_nav_bar(current_screen);
+}
+
+// Update navigation bar to show active tab
+void update_nav_bar(UiScreenId active_screen) {
+    int active_idx = (int)active_screen;
+    
+    // Handle subscreens - show parent tab as active
+    if (active_screen == UiScreenId::EFFECT_EDIT) {
+        active_idx = 1; // FX_CHAIN tab
+    } else if (active_screen == UiScreenId::SYSTEM) {
+        active_idx = 3; // FOOTSWITCH/SET tab
+    }
+    
+    for (int i = 0; i < 4; i++) {
+        if (!nav_tabs[i]) continue;
+        
+        bool is_active = (i == active_idx);
+        lv_obj_set_style_bg_color(nav_tabs[i], is_active ? COLOR_BG_SURFACE : COLOR_BG_NAV, 0);
+        lv_obj_set_style_border_side(nav_tabs[i], is_active ? LV_BORDER_SIDE_TOP : LV_BORDER_SIDE_NONE, 0);
+        lv_obj_set_style_border_width(nav_tabs[i], is_active ? 3 : 0, 0);
+        lv_obj_set_style_border_color(nav_tabs[i], COLOR_ACCENT_PRIMARY, 0);
+        
+        lv_obj_t* label = lv_obj_get_child(nav_tabs[i], 0);
+        if (label) {
+            lv_obj_set_style_text_color(label, is_active ? COLOR_ACCENT_PRIMARY : COLOR_TEXT_SECONDARY, 0);
+        }
+    }
+}
+
+// Show/hide screen containers using LVGL 8.x API
+static void show_screen(UiScreenId screen_id) {
+    int idx = (int)screen_id;
+    
+    // Handle subscreens by showing their parent tab
+    if (screen_id == UiScreenId::EFFECT_EDIT) {
+        idx = 1; // FX_CHAIN tab
+    }
+    
+    for (int i = 0; i < 5; i++) {
+        if (screen_containers[i]) {
+            if (i == idx) {
+                lv_obj_clear_flag(screen_containers[i], LV_OBJ_FLAG_HIDDEN);
+            } else {
+                lv_obj_add_flag(screen_containers[i], LV_OBJ_FLAG_HIDDEN);
+            }
+        }
+    }
 }
 
 void ui_app_init(void) {
@@ -60,15 +162,40 @@ void ui_app_init(void) {
     disp_drv.direct_mode = 0;
     lv_disp_drv_register(&disp_drv);
     
-    // Create main screen container
-    main_screen = lv_obj_create(lv_scr_act());
-    lv_obj_set_size(main_screen, LV_PCT(100), LV_PCT(100));
-    lv_obj_set_style_bg_color(main_screen, lv_color_make(0x12, 0x12, 0x12), 0);
-    lv_obj_set_style_pad_all(main_screen, 0, 0);
-    lv_obj_set_style_border_width(main_screen, 0, 0);
+    // Create content area (top portion, leaving space for nav bar)
+    content_area = lv_obj_create(lv_scr_act());
+    lv_obj_set_size(content_area, LV_PCT(100), 204); // 240 - 36 = 204
+    lv_obj_set_style_bg_color(content_area, COLOR_BG_DARK, 0);
+    lv_obj_set_style_pad_all(content_area, 0, 0);
+    lv_obj_set_style_border_width(content_area, 0, 0);
+    lv_obj_align(content_area, LV_ALIGN_TOP_MID, 0, 0);
     
-    // Initialize performance screen (default)
-    performance_screen_init(main_screen);
+    // Create screen containers (5 total: 4 main tabs + SYSTEM)
+    screen_containers[0] = lv_obj_create(content_area); // PERF
+    screen_containers[1] = lv_obj_create(content_area); // FX
+    screen_containers[2] = lv_obj_create(content_area); // PRESET
+    screen_containers[3] = lv_obj_create(content_area); // FOOTSWITCH
+    screen_containers[4] = lv_obj_create(content_area); // SYSTEM
+    
+    for (int i = 0; i < 5; i++) {
+        lv_obj_set_size(screen_containers[i], LV_PCT(100), LV_PCT(100));
+        lv_obj_set_style_bg_color(screen_containers[i], COLOR_BG_DARK, 0);
+        lv_obj_set_style_pad_all(screen_containers[i], 0, 0);
+        lv_obj_set_style_border_width(screen_containers[i], 0, 0);
+        if (i != 0) {
+            lv_obj_add_flag(screen_containers[i], LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+    
+    // Initialize all screens
+    performance_screen_init(screen_containers[0]);
+    fx_chain_screen_init(screen_containers[1]);
+    presets_screen_init(screen_containers[2]);
+    footswitch_screen_init(screen_containers[3]);
+    system_screen_init(screen_containers[4]);
+    
+    // Create navigation bar
+    create_nav_bar(content_area);
     
     // Set initial state and hydrate UI
     app_state.currentScreen = UiScreenId::PERFORMANCE;
@@ -96,7 +223,12 @@ void ui_navigate_to(UiScreenId screen) {
     if (current_screen == screen) return;
     
     current_screen = screen;
-    // Screen switching logic will be implemented per screen module
+    
+    // Show the selected screen
+    show_screen(screen);
+    
+    // Update navigation bar visual
+    update_nav_bar(screen);
 }
 
 UiScreenId ui_get_current_screen(void) {

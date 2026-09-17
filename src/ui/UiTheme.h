@@ -41,6 +41,7 @@ constexpr lv_color_t COLOR_BG_DARK = LV_COLOR_MAKE(0x09, 0x0B, 0x0F);      // Ma
 constexpr lv_color_t COLOR_BG_SURFACE = LV_COLOR_MAKE(0x12, 0x16, 0x20);   // Card/surface background (#121620)
 constexpr lv_color_t COLOR_BG_ELEVATED = LV_COLOR_MAKE(0x19, 0x1E, 0x2A);  // Elevated surfaces (#191E2A)
 constexpr lv_color_t COLOR_BG_HEADER = LV_COLOR_MAKE(0x1E, 0x23, 0x30);    // Header bar (#1E2330)
+constexpr lv_color_t COLOR_BG_NAV = LV_COLOR_MAKE(0x0F, 0x12, 0x18);       // Navigation bar (#0F1218)
 
 // Accent colors - electric cyan/blue for active states
 constexpr lv_color_t COLOR_ACCENT_PRIMARY = LV_COLOR_MAKE(0x06, 0xB6, 0xD4);  // Primary accent cyan (#06B6D4)
