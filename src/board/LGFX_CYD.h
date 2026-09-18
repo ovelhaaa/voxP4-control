@@ -42,7 +42,18 @@ public:
 
             cfg.readable = true;
             cfg.bus_shared = false;
+
+            // Required panel configurations for this ST7789 variant
+            cfg.panel_width = 240;
+            cfg.panel_height = 320;
+            cfg.offset_x = 0;
+            cfg.offset_y = 0;
             cfg.offset_rotation = 0;
+            cfg.dummy_read_pixel = 8;
+            cfg.dummy_read_bits = 1;
+            cfg.invert = true;
+            cfg.rgb_order = false;
+            cfg.dlen_16bit = false;
 
             _panel_instance.config(cfg);
             _panel_instance.setRotation(VoxCydConfig::ScreenRotation);

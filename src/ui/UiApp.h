@@ -11,8 +11,29 @@ enum class UiScreenId {
     PRESETS = 2,
     FOOTSWITCH = 3,
     SYSTEM = 4,
-    EFFECT_EDIT = 5  // Subscreen, not in main nav
+    EFFECT_EDIT = 5, // Subscreen, not in main nav
+    SETTINGS = 6     // Subscreen for SET tab
 };
+
+// Action layer to decouple UI from State Authority
+enum class UiActionType {
+    ToggleEffect,
+    OpenEffect,
+    LoadPreset,
+    SavePreset,
+    SetFootswitchConfig,
+    GlobalBypass,
+    AllEffectsOn
+};
+
+struct UiAction {
+    UiActionType type;
+    uint16_t id;
+    int32_t value;
+};
+
+// UI Intent emitter
+void ui_emit_action(const UiAction& action);
 
 // Application state
 struct UiAppState {
@@ -37,8 +58,10 @@ struct UiAppState {
     bool voiced;
 };
 
+class LGFX_CYD;
+
 // UI initialization
-void ui_app_init(void);
+void ui_app_init(LGFX_CYD& display);
 void ui_app_run(void);
 
 // Screen navigation

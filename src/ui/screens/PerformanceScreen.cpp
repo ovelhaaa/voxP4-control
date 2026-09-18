@@ -1,4 +1,5 @@
 #include "PerformanceScreen.h"
+#include "../UiApp.h"
 #include "../UiTheme.h"
 #include "../widgets/VuMeter.h"
 #include "../widgets/EffectCard.h"
@@ -31,9 +32,9 @@ void performance_screen_init(lv_obj_t* parent) {
     lv_obj_set_style_border_width(performance_container, 0, 0);
     lv_obj_set_flex_flow(performance_container, LV_FLEX_FLOW_COLUMN);
     
-    // === HEADER (28px) ===
+    // === HEADER (26px) ===
     lv_obj_t* header = lv_obj_create(performance_container);
-    lv_obj_set_size(header, LV_PCT(100), 28);
+    lv_obj_set_size(header, LV_PCT(100), 26);
     lv_obj_set_style_bg_color(header, COLOR_BG_HEADER, 0);
     lv_obj_set_style_radius(header, 0, 0);
     lv_obj_set_style_border_width(header, 0, 0);
@@ -53,17 +54,17 @@ void performance_screen_init(lv_obj_t* parent) {
     lv_obj_set_style_text_color(link_indicator, COLOR_LINK_LOST, 0);
     lv_obj_set_style_text_font(link_indicator, FONT_BODY, 0);
     
-    // === METERS SECTION (52px) - Horizontal meters ===
+    // === METERS SECTION (42px) - Horizontal meters ===
     lv_obj_t* meters_container = lv_obj_create(performance_container);
-    lv_obj_set_size(meters_container, LV_PCT(100), 52);
+    lv_obj_set_size(meters_container, LV_PCT(100), 42);
     lv_obj_set_style_bg_color(meters_container, COLOR_BG_DARK, 0);
     lv_obj_set_style_border_width(meters_container, 0, 0);
-    lv_obj_set_style_pad_row(meters_container, SPACING_S, 0);
+    lv_obj_set_style_pad_row(meters_container, SPACING_XS, 0);
     lv_obj_set_flex_flow(meters_container, LV_FLEX_FLOW_COLUMN);
     
     // Input meter row - horizontal bar com label
     lv_obj_t* input_row = lv_obj_create(meters_container);
-    lv_obj_set_size(input_row, LV_PCT(100), 24);
+    lv_obj_set_size(input_row, LV_PCT(100), 20);
     lv_obj_set_style_bg_color(input_row, COLOR_BG_DARK, 0);
     lv_obj_set_style_border_width(input_row, 0, 0);
     lv_obj_set_style_pad_column(input_row, SPACING_S, 0);
@@ -76,13 +77,13 @@ void performance_screen_init(lv_obj_t* parent) {
     lv_obj_set_style_text_font(in_label, FONT_SMALL, 0);
     
     // Usar VuMeter widget horizontal (implementar como bar customizada)
-    input_meter = vu_meter_create(input_row, 0, 0, 16, "");
+    input_meter = vu_meter_create(input_row, 0, 0, 14, "");
     if (input_meter) {
-        lv_obj_set_size(vu_meter_get_container(input_meter), 180, 16);
+        lv_obj_set_size(vu_meter_get_container(input_meter), 180, 14);
     }
     
     input_row = lv_obj_create(meters_container);
-    lv_obj_set_size(input_row, LV_PCT(100), 24);
+    lv_obj_set_size(input_row, LV_PCT(100), 20);
     lv_obj_set_style_bg_color(input_row, COLOR_BG_DARK, 0);
     lv_obj_set_style_border_width(input_row, 0, 0);
     lv_obj_set_style_pad_column(input_row, SPACING_S, 0);
@@ -94,19 +95,19 @@ void performance_screen_init(lv_obj_t* parent) {
     lv_obj_set_style_text_color(out_label, COLOR_TEXT_MUTED, 0);
     lv_obj_set_style_text_font(out_label, FONT_SMALL, 0);
     
-    output_meter = vu_meter_create(input_row, 0, 0, 16, "");
+    output_meter = vu_meter_create(input_row, 0, 0, 14, "");
     if (output_meter) {
-        lv_obj_set_size(vu_meter_get_container(output_meter), 180, 16);
+        lv_obj_set_size(vu_meter_get_container(output_meter), 180, 14);
     }
     
-    // === PITCH SECTION (40px) ===
+    // === PITCH SECTION (38px) ===
     lv_obj_t* pitch_container = lv_obj_create(performance_container);
-    lv_obj_set_size(pitch_container, LV_PCT(100), 40);
+    lv_obj_set_size(pitch_container, LV_PCT(100), 38);
     lv_obj_set_style_bg_color(pitch_container, COLOR_BG_ELEVATED, 0);
     lv_obj_set_style_radius(pitch_container, RADIUS_M, 0);
     lv_obj_set_style_border_width(pitch_container, 1, 0);
     lv_obj_set_style_border_color(pitch_container, COLOR_BORDER_SUBTLE, 0);
-    lv_obj_set_style_pad_all(pitch_container, SPACING_M, 0);
+    lv_obj_set_style_pad_all(pitch_container, SPACING_S, 0);
     lv_obj_set_flex_flow(pitch_container, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(pitch_container, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     
@@ -134,9 +135,9 @@ void performance_screen_init(lv_obj_t* parent) {
     lv_obj_set_style_text_color(voiced_label, COLOR_TEXT_MUTED, 0);
     lv_obj_set_style_text_font(voiced_label, FONT_TINY, 0);
     
-    // === EFFECT CARDS (56px) ===
+    // === EFFECT CARDS (50px) ===
     lv_obj_t* effects_container = lv_obj_create(performance_container);
-    lv_obj_set_size(effects_container, LV_PCT(100), 56);
+    lv_obj_set_size(effects_container, LV_PCT(100), 50);
     lv_obj_set_style_bg_color(effects_container, COLOR_BG_DARK, 0);
     lv_obj_set_style_border_width(effects_container, 0, 0);
     lv_obj_set_style_pad_column(effects_container, SPACING_S, 0);
@@ -154,16 +155,18 @@ void performance_screen_init(lv_obj_t* parent) {
             effect_card_set_param(effect_cards[i], effect_default_params[i]);
             effect_card_set_enabled(effect_cards[i], false);
             
-            // Registrar callback para toggle on tap
+            // Emit an intent instead of acting as local authority
             lv_obj_add_flag(effect_cards[i]->card, LV_OBJ_FLAG_CLICKABLE);
+
+            // We pass the index as user data to identify the effect
+            lv_obj_set_user_data(effect_cards[i]->card, (void*)(intptr_t)i);
+
             lv_obj_add_event_cb(effect_cards[i]->card, [](lv_event_t* e) {
-                EffectCard_t* card = (EffectCard_t*)lv_event_get_user_data(e);
-                if (card) {
-                    bool new_state = !effect_card_is_enabled(card);
-                    effect_card_set_enabled(card, new_state);
-                    // Callback para UiApp será implementado
-                }
-            }, LV_EVENT_CLICKED, effect_cards[i]);
+                lv_obj_t* card = lv_event_get_target(e);
+                int effect_id = (int)(intptr_t)lv_obj_get_user_data(card);
+                UiAction action = { UiActionType::ToggleEffect, (uint16_t)effect_id, 0 };
+                ui_emit_action(action);
+            }, LV_EVENT_CLICKED, NULL);
         }
     }
     
@@ -191,16 +194,25 @@ void performance_screen_init(lv_obj_t* parent) {
         lv_obj_set_flex_flow(fs_containers[i], LV_FLEX_FLOW_COLUMN);
         lv_obj_set_flex_align(fs_containers[i], LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
         
+        // Container for label & name in a row for space saving
+        lv_obj_t* label_row = lv_obj_create(fs_containers[i]);
+        lv_obj_set_size(label_row, LV_PCT(100), LV_SIZE_CONTENT);
+        lv_obj_set_style_bg_color(label_row, COLOR_BG_SURFACE, 0);
+        lv_obj_set_style_border_width(label_row, 0, 0);
+        lv_obj_set_style_pad_all(label_row, 0, 0);
+        lv_obj_set_flex_flow(label_row, LV_FLEX_FLOW_ROW);
+        lv_obj_set_flex_align(label_row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
         // Label FS#
         char fs_num[8];
-        snprintf(fs_num, sizeof(fs_num), "FS%d", i + 1);
-        lv_obj_t* num_label = lv_label_create(fs_containers[i]);
+        snprintf(fs_num, sizeof(fs_num), "FS%d: ", i + 1);
+        lv_obj_t* num_label = lv_label_create(label_row);
         lv_label_set_text(num_label, fs_num);
         lv_obj_set_style_text_color(num_label, COLOR_TEXT_MUTED, 0);
         lv_obj_set_style_text_font(num_label, FONT_TINY, 0);
         
         // Label da ação
-        fs_labels[i] = lv_label_create(fs_containers[i]);
+        fs_labels[i] = lv_label_create(label_row);
         lv_label_set_text(fs_labels[i], i == 0 ? "HARMONY" : "REVERB");
         lv_obj_set_style_text_color(fs_labels[i], COLOR_TEXT_SECONDARY, 0);
         lv_obj_set_style_text_font(fs_labels[i], FONT_SMALL, 0);
