@@ -162,7 +162,8 @@ void performance_screen_init(lv_obj_t* parent) {
             lv_obj_set_user_data(effect_cards[i]->card, (void*)(intptr_t)i);
 
             lv_obj_add_event_cb(effect_cards[i]->card, [](lv_event_t* e) {
-                int effect_id = (int)(intptr_t)lv_event_get_user_data(e);
+                lv_obj_t* card = lv_event_get_target(e);
+                int effect_id = (int)(intptr_t)lv_obj_get_user_data(card);
                 UiAction action = { UiActionType::ToggleEffect, (uint16_t)effect_id, 0 };
                 ui_emit_action(action);
             }, LV_EVENT_CLICKED, NULL);

@@ -12,6 +12,8 @@
 
 using namespace VoxUiTheme;
 
+static UiAppState app_state = {};
+
 // Placeholder for action handling. In the future this will dispatch to VoxLink.
 void ui_emit_action(const UiAction& action) {
     // For now, we print to Serial and let the UI react optimistically or wait for state sync
@@ -19,9 +21,15 @@ void ui_emit_action(const UiAction& action) {
 
     // As a placeholder for optimistic UI updates:
     if (action.type == UiActionType::ToggleEffect) {
-        // Find effect id and invert state temporarily, waiting for real state sync
-        // For demonstration, we just log it.
-        // Serial.printf("UI Action: Toggle Effect %d\n", action.id);
+        bool enabled;
+        switch (action.id) {
+            case 0: enabled = app_state.harmonyEnabled; break;
+            case 1: enabled = app_state.reverbEnabled; break;
+            case 2: enabled = app_state.limiterEnabled; break;
+            case 3: enabled = app_state.delayEnabled; break;
+            default: return;
+        }
+        ui_update_effect_state(action.id, !enabled);
     } else if (action.type == UiActionType::OpenEffect) {
         // This is a local navigation action, not sent to P4
         effect_edit_load_effect(action.id);
@@ -45,7 +53,6 @@ static const char* nav_labels[] = {"PERF", "FX", "PRESET", "SET"};
 // Screen containers
 static lv_obj_t* screen_containers[7] = {nullptr};
 static UiScreenId current_screen = UiScreenId::PERFORMANCE;
-static UiAppState app_state = {};
 
 // LVGL display driver
 static lv_disp_drv_t disp_drv;
