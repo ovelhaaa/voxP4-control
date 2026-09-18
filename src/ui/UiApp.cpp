@@ -9,6 +9,8 @@
 #include "screens/SettingsScreen.h"
 #include "board/LGFX_CYD.h"
 #include <lvgl.h>
+#include <cstdio>
+#include <cctype>
 
 using namespace VoxUiTheme;
 
@@ -37,11 +39,13 @@ void ui_emit_action(const UiAction& action) {
     }
 }
 
-// Helper to convert MIDI note number to note name string
+// Helper to convert MIDI note number to note name string (e.g. "A3")
 static const char* note_name_from_midi(int note) {
     static const char* notes[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
-    if (note < 0 || note > 127) return "?";
-    return notes[note % 12];
+    static char buf[8];
+    if (note < 0 || note > 127) return "--";
+    snprintf(buf, sizeof(buf), "%s%d", notes[note % 12], note / 12 - 1);
+    return buf;
 }
 
 // Shell components
@@ -109,7 +113,7 @@ static void nav_tab_clicked(lv_event_t* e) {
 static void create_nav_bar(lv_obj_t* parent) {
     nav_bar = lv_obj_create(parent);
     lv_obj_set_size(nav_bar, LV_PCT(100), 36);
-    lv_obj_set_style_bg_color(nav_bar, COLOR_BG_NAV, 0);
+    lv_obj_set_style_bg_color(nav_bar, COLOR_NAV, 0);
     lv_obj_set_style_radius(nav_bar, 0, 0);
     lv_obj_set_style_border_width(nav_bar, 0, 0);
     lv_obj_set_style_pad_all(nav_bar, 0, 0);
@@ -119,16 +123,17 @@ static void create_nav_bar(lv_obj_t* parent) {
     for (int i = 0; i < 4; i++) {
         nav_tabs[i] = lv_btn_create(nav_bar);
         lv_obj_set_size(nav_tabs[i], LV_PCT(25), LV_PCT(100));
-        lv_obj_set_style_bg_color(nav_tabs[i], COLOR_BG_NAV, 0);
+        lv_obj_set_style_bg_color(nav_tabs[i], COLOR_NAV, 0);
         lv_obj_set_style_radius(nav_tabs[i], 0, 0);
         lv_obj_set_style_border_width(nav_tabs[i], 0, 0);
+        lv_obj_set_style_shadow_width(nav_tabs[i], 0, 0);
         lv_obj_set_flex_grow(nav_tabs[i], 1);
         lv_obj_set_user_data(nav_tabs[i], (void*)(intptr_t)i);
         lv_obj_add_event_cb(nav_tabs[i], nav_tab_clicked, LV_EVENT_CLICKED, NULL);
         
         lv_obj_t* label = lv_label_create(nav_tabs[i]);
         lv_label_set_text(label, nav_labels[i]);
-        lv_obj_set_style_text_color(label, COLOR_TEXT_SECONDARY, 0);
+        lv_obj_set_style_text_color(label, COLOR_TEXT_MUTED, 0);
         lv_obj_set_style_text_font(label, FONT_SMALL, 0);
         lv_obj_center(label);
     }
@@ -152,14 +157,14 @@ void update_nav_bar(UiScreenId active_screen) {
         if (!nav_tabs[i]) continue;
         
         bool is_active = (i == active_idx);
-        lv_obj_set_style_bg_color(nav_tabs[i], is_active ? COLOR_BG_SURFACE : COLOR_BG_NAV, 0);
+        lv_obj_set_style_bg_color(nav_tabs[i], is_active ? COLOR_BG : COLOR_NAV, 0);
         lv_obj_set_style_border_side(nav_tabs[i], is_active ? LV_BORDER_SIDE_TOP : LV_BORDER_SIDE_NONE, 0);
         lv_obj_set_style_border_width(nav_tabs[i], is_active ? 3 : 0, 0);
-        lv_obj_set_style_border_color(nav_tabs[i], COLOR_ACCENT_PRIMARY, 0);
+        lv_obj_set_style_border_color(nav_tabs[i], COLOR_ACCENT, 0);
         
         lv_obj_t* label = lv_obj_get_child(nav_tabs[i], 0);
         if (label) {
-            lv_obj_set_style_text_color(label, is_active ? COLOR_ACCENT_PRIMARY : COLOR_TEXT_SECONDARY, 0);
+            lv_obj_set_style_text_color(label, is_active ? COLOR_TEXT_PRIMARY : COLOR_TEXT_MUTED, 0);
         }
     }
 }
@@ -211,7 +216,7 @@ void ui_app_init(LGFX_CYD& display) {
     // Create content area (top portion, leaving space for nav bar)
     content_area = lv_obj_create(lv_scr_act());
     lv_obj_set_size(content_area, LV_PCT(100), 204); // 240 - 36 = 204
-    lv_obj_set_style_bg_color(content_area, COLOR_BG_DARK, 0);
+    lv_obj_set_style_bg_color(content_area, COLOR_BG, 0);
     lv_obj_set_style_pad_all(content_area, 0, 0);
     lv_obj_set_style_border_width(content_area, 0, 0);
     lv_obj_align(content_area, LV_ALIGN_TOP_MID, 0, 0);
@@ -227,7 +232,7 @@ void ui_app_init(LGFX_CYD& display) {
     
     for (int i = 0; i < 7; i++) {
         lv_obj_set_size(screen_containers[i], LV_PCT(100), LV_PCT(100));
-        lv_obj_set_style_bg_color(screen_containers[i], COLOR_BG_DARK, 0);
+        lv_obj_set_style_bg_color(screen_containers[i], COLOR_BG, 0);
         lv_obj_set_style_pad_all(screen_containers[i], 0, 0);
         lv_obj_set_style_border_width(screen_containers[i], 0, 0);
         if (i != 0) {
@@ -250,7 +255,7 @@ void ui_app_init(LGFX_CYD& display) {
     // Set initial state and hydrate UI
     app_state.currentScreen = UiScreenId::PERFORMANCE;
     app_state.linkUp = false;
-    strncpy(app_state.presetName, "Connecting...", sizeof(app_state.presetName) - 1);
+    strncpy(app_state.presetName, "P--  CONNECTING", sizeof(app_state.presetName) - 1);
     
     // Hydrate UI with current state
     performance_update_preset(app_state.presetName);
@@ -292,8 +297,12 @@ void ui_update_link_state(bool connected) {
 
 void ui_update_preset(uint16_t id, const char* name) {
     app_state.presetId = id;
-    strncpy(app_state.presetName, name, sizeof(app_state.presetName) - 1);
-    performance_update_preset(name);
+    char buf[40];
+    snprintf(buf, sizeof(buf), "P%02u  %s", (unsigned)id, name ? name : "");
+    for (char* p = buf; *p; ++p) *p = (char)toupper((unsigned char)*p);
+    strncpy(app_state.presetName, buf, sizeof(app_state.presetName) - 1);
+    app_state.presetName[sizeof(app_state.presetName) - 1] = '\0';
+    performance_update_preset(app_state.presetName);
 }
 
 void ui_update_effect_state(int effectId, bool enabled) {

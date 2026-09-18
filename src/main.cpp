@@ -18,6 +18,7 @@
 #include "board/CYD_Config.h"
 #include "board/LGFX_CYD.h"
 #include "ui/UiApp.h"
+#include "ui/UiTheme.h"
 #include "control/FootswitchManager.h"
 
 // Instância global do display
@@ -59,13 +60,21 @@ void setup() {
     }
     
     lcd.setRotation(VoxCydConfig::ScreenRotation);
-    lcd.fillScreen(TFT_BLACK);
-    lcd.setCursor(10, 10);
-    lcd.setTextColor(TFT_WHITE, TFT_BLACK);
+
+    // Themed boot splash: short, quiet, then replaced by the main UI.
+    lcd.fillScreen((uint16_t)lv_color_to16(COLOR_BG));
+    lcd.setTextDatum(lgfx::middle_center);
+    lcd.setTextColor((uint16_t)lv_color_to16(COLOR_TEXT_PRIMARY));
+    lcd.setTextSize(3);
+    lcd.drawString("VOXP4", 160, 92);
+    lcd.setTextColor((uint16_t)lv_color_to16(COLOR_ACCENT));
     lcd.setTextSize(2);
-    lcd.println("VoxP4 Control");
+    lcd.drawString("CONTROL", 160, 128);
+    lcd.fillRect(122, 150, 48, 3, (uint16_t)lv_color_to16(COLOR_ACCENT));
+    lcd.fillRect(172, 150, 26, 3, (uint16_t)lv_color_to16(COLOR_AUDIO));
+    lcd.setTextColor((uint16_t)lv_color_to16(COLOR_TEXT_MUTED));
     lcd.setTextSize(1);
-    lcd.println("Initializing...");
+    lcd.drawString("initializing...", 160, 176);
     
     // Inicializar footswitches
     Serial.println("[INIT] Initializing footswitches...");

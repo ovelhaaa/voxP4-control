@@ -1,159 +1,164 @@
 # VoxP4 Control Surface Mockups
 
-## Design System v2 - Professional Vocal Processor Interface
+## Design System v3 - Dark Industrial / Warm Orange / Turquoise Audio
 
 Esta coleção de mockups SVG representa a interface gráfica do **VoxP4-CYD Control Surface**, um controlador para processador vocal profissional baseado em ESP32 CYD (320×240 pixels, touchscreen resistivo).
 
-### Princípios de Design
+Todos os arquivos usam `viewBox="0 0 320 240"` e representam a UI real final
+(implementada em `src/ui/`), e não telas aspiracionais.
 
-A interface foi projetada para:
+### Identidade visual
 
-- **Leitura instantânea** em palco sob iluminação variável
-- **Hierarquia visual clara** com informação musical prioritária
-- **Toque seguro** com targets ≥40px para operação com dedos
-- **Estética profissional** flat, escura, com accent cyan elétrico
-- **Eficiência gráfica** para hardware embarcado (sem efeitos caros)
+- Base quase preta / charcoal, superfícies grafite.
+- Acento principal laranja queimado, reservado para **seleção, efeito ativo,
+  botão primário, toggle ativo, slider e foco**.
+- Turquesa reservado para **áudio ao vivo**: pitch, meters, telemetria.
+- Nenhuma área grande pintada de cor saturada; efeitos ativos usam apenas LED e
+  borda/fita de destaque.
+- Estética de hardware musical de palco, não de dashboard genérico.
 
-### Paleta de Cores (Design Tokens)
+### Paleta de Cores (Design Tokens em `src/ui/UiTheme.h`)
 
 | Token | Valor | Uso |
 |-------|-------|-----|
-| `COLOR_BG_DARK` | `#090B0F` | Background principal |
-| `COLOR_BG_SURFACE` | `#121620` | Cards e superfícies |
-| `COLOR_BG_ELEVATED` | `#191E2A` | Superfícies elevadas |
-| `COLOR_BG_HEADER` | `#1E2330` | Barra de header |
-| `COLOR_BG_NAV` | `#0F1218` | Barra de navegação |
-| `COLOR_ACCENT_PRIMARY` | `#06B6D4` | Accent primário (cyan) |
-| `COLOR_ACCENT_BRIGHT` | `#22D5F0` | Valores importantes |
-| `COLOR_ACCENT_CYAN` | `#00E5FF` | LED de efeitos ativos |
-| `COLOR_TEXT_PRIMARY` | `#F2F5F7` | Texto principal |
-| `COLOR_TEXT_SECONDARY` | `#A5ADBA` | Texto secundário |
-| `COLOR_TEXT_MUTED` | `#687181` | Texto desativado/muted |
-| `COLOR_METER_SAFE` | `#00E676` | Meters: -60 a -12dB |
-| `COLOR_METER_WARNING` | `#FFD740` | Meters: -12 a -3dB |
-| `COLOR_METER_CLIP` | `#FF5252` | Meters: -3 a 0dB |
-| `COLOR_LINK_OK` | `#66BB6A` | Link conectado |
-| `COLOR_LINK_LOST` | `#EF5350` | Link perdido |
-| `COLOR_FS_PRESSED` | `#FFA726` | Footswitch pressionado |
+| `COLOR_BG` | `#090A0E` | Background principal |
+| `COLOR_SURFACE` | `#14151B` | Cards e superfícies |
+| `COLOR_SURFACE_ELEV` | `#1C1D24` | Superfícies elevadas |
+| `COLOR_HEADER` | `#101116` | Arriba / header |
+| `COLOR_NAV` | `#101116` | Barra de navegação |
+| `COLOR_PANEL` | `#202128` | Painéis secundários / trilhas |
+| `COLOR_BORDER` | `#34343C` | Bordas |
+| `COLOR_SEPARATOR` | `#292A30` | Separadores discretos |
+| `COLOR_TEXT_PRIMARY` | `#F0EDE5` | Texto principal |
+| `COLOR_TEXT_SECONDARY` | `#B1ACA3` | Texto secundário |
+| `COLOR_TEXT_MUTED` | `#716E69` | Texto auxiliar / inativo |
+| `COLOR_TEXT_FAINT` | `#4A4947` | Texto muito apagado |
+| `COLOR_ACCENT` | `#F45126` | Acento laranja (seleção/active) |
+| `COLOR_ACCENT_BRIGHT` | `#FF6030` | Laranja claro (valores em foco) |
+| `COLOR_ACCENT_DARK` | `#B83A1C` | Laranja escuro (chips/ações) |
+| `COLOR_AUDIO` | `#20D6C7` | Turquesa de áudio |
+| `COLOR_AUDIO_BRIGHT` | `#55EFE2` | Turquesa claro (nota/level) |
+| `COLOR_AUDIO_DARK` | `#148E87` | Turquesa escuro (link/outline) |
+| `COLOR_WARNING` | `#E6A63A` | Aviso (meter warning) |
+| `COLOR_ERROR` | `#E65050` | Erro / clip |
+| `COLOR_DISABLED` | `#414147` | Desabilitado / LED apagado |
 
 ### Tipografia
 
-| Tamanho | Uso | Exemplo |
-|---------|-----|---------|
-| 24-32px | Hero (nota musical) | `A3` |
-| 16-20px | Valores importantes | `-8.2 dB` |
-| 13-16px | Labels primários | `HARMONY`, `REVERB` |
-| 11-13px | Labels secundários | `FS1`, `LINK` |
-| 10px | Diagnósticos (raro) | versões de firmware |
+Fontes Montserrat já compiladas no firmware (`10/12/14/16`).
+
+| Tam. | Uso | Exemplo |
+|------|-----|---------|
+| 16px | Hero / nota de pitch, títulos de destaque | `A3`, `FS1` |
+| 14px | Títulos e valores principais | `HARMONY`, `LEAD AIR` |
+| 12px | Controles e valores | `MOMENTARY`, `+3rd` |
+| 10px | Metadata e labels | `FS1`, `IN`, `VOXLINK` |
+
+Caixa alta é usada em labels, categorias e pequenas identificações; não em todo
+o conteúdo.
+
+### Layout
+
+- Margem externa: 4–6px.
+- Gaps: 2px (micro), 4px (comum), 6px (seções).
+- Corner radius: 3px (controles), 5px (cards).
+- Área de conteúdo: 320×204; barra de navegação: 320×36.
+- Targets de toque importantes: ~36–44px.
 
 ### Componentes Principais
 
-#### 1. Navigation Bar (36px height)
+#### 1. Navigation Bar (36px)
 - 4 tabs: **PERF | FX | PRESET | SET**
-- Tab ativa: border top 3px cyan + texto cyan
-- Target: 80×36px cada (ideal para toque)
+- Tab inativa: texto cinza (`COLOR_TEXT_MUTED`).
+- Tab ativa: texto off-white + linha superior laranja de 3px. Sem preenchimento
+  forte na tab ativa.
 
-#### 2. Header (28px height)
-- Nome do preset atual
-- Indicador de link (● LINK OK / ● LINK LOST)
-- Sem títulos genéricos ("VOXP4 PERFORMANCE")
+#### 2. Header (24px)
+- Preset atual tem prioridade visual.
+- Indicador de link: turquesa `● LINK` conectado, discreto quando desconectado.
 
-#### 3. VuMeter Horizontal (52px height × 2 rows)
-- Formato horizontal otimizado para 320px width
-- Zones coloridas: green → yellow → red
-- Peak hold marker vermelho
-- Valor numérico em dB à direita
-- Fast attack, controlled release
+#### 3. Pitch (40px)
+- Nota musical em destaque com turquesa (`A3`).
+- Frequência (`220.1 Hz`) e estado `VOICED`/`UNVOICED` à direita.
 
-#### 4. Pitch Display (40px height)
-- Nota musical em destaque (ex: `A3`)
-- Frequência abaixo (ex: `220.1 Hz`)
-- Status VOICED/UNVOICED
-- Diferença em cents (opcional)
+#### 4. VuMeter Horizontal (16px por linha)
+- Trilha escura, preenchimento turquesa.
+- Zona de aviso laranja e clip vermelho.
+- Valor numérico discreto à direita.
 
-#### 5. Effect Cards (56px height)
-- 4 cards: HARMONY, REVERB, DELAY, LIMITER
-- Estado ON: border cyan + LED cyan brilhante
-- Estado OFF: border sutil + LED cinza
-- NÃO transforma card inteiro em verde
-- Mostra 1 parâmetro relevante (ex: `+3rd`, `18%`)
+#### 5. Effect Cards (72×46)
+- Estado ON: LED laranja + borda laranja; OFF: borda separadora + LED apagado.
+- Nunca preenche o card inteiro de cor.
 
-#### 6. Footswitch Bar (36px height)
-- FS1 e FS2 lado a lado
-- Ação resumida abaixo do número
-- Highlight amber quando pressionado
+#### 6. Footswitch Summary (32px)
+- FS1/FS2 com ação resumida; pressionado usa laranja.
+
+#### 7. Parameter Row (Effect Edit)
+- Linha rotulada com leitura de valor, slider horizontal laranja e knob.
+- Seletor de enum em segmentos (`L / C / R`).
+- Lista de parâmetros rolável, preparada para múltiplas vozes de Harmony.
 
 ### Mockups Disponíveis
 
-| Arquivo | Descrição | Dimensões |
-|---------|-----------|-----------|
-| `performance_screen.svg` | Tela principal de performance | 320×240 |
-| `fx_chain_screen.svg` | Cadeia de efeitos | 320×240 |
-| `effect_edit_screen.svg` | Editor de parâmetros | 320×240 |
-| `footswitch_screen.svg` | Configuração de footswitches | 320×240 |
-| `presets_screen.svg` | Gerenciamento de presets | 320×240 |
-| `system_screen.svg` | Informações do sistema | 320×240 |
-| `boot_screen.svg` | Tela de boot/loading | 320×240 |
+| Arquivo | Descrição |
+|---------|-----------|
+| `boot_screen.svg` | Splash de boot (`VOXP4 / CONTROL`) |
+| `performance_screen.svg` | Tela principal ao vivo |
+| `fx_chain_screen.svg` | Rack de módulos + ações globais |
+| `effect_edit_screen.svg` | Editor de parâmetros |
+| `presets_screen.svg` | Browser de presets |
+| `footswitch_screen.svg` | Configuração de FS1/FS2 |
+| `settings_screen.svg` | Menu de settings |
+| `system_screen.svg` | Diagnóstico (rolável) |
 
-### Hierarquia Visual da Performance Screen
+### Hierarquia da Performance Screen
 
 ```
 ┌────────────────────────────────────┐
-│ PRESET NAME              LINK ●    │  ← Header 28px
+│ P03 LEAD AIR              ● LINK    │  Header 24
 ├────────────────────────────────────┤
-│ IN   [████████████░░]    -8.2 dB   │  ← Meters 52px
-│ OUT  [██████████████░]   -4.1 dB   │
+│ A3                    220.1 Hz      │  Pitch 40
+│                        VOICED       │
 ├────────────────────────────────────┤
-│          A3                        │  ← Pitch 40px
-│       220.1 Hz      VOICED         │
+│ IN  [██████████░░░░]         -12     │  Meters 34
+│ OUT [████████████░░]          -6     │
 ├────────────────────────────────────┤
-│ HARMONY   REVERB   DELAY   LIMIT   │  ← Effects 56px
-│   ●ON       ●ON      OFF     ●ON   │
+│ HARMONY  REVERB  DELAY  LIMITER     │  Effects 46
+│   ●ON      ●ON     OFF     ●ON      │
 ├────────────────────────────────────┤
-│ FS1 HARMONY      FS2 REVERB        │  ← Footswitch 36px
+│ FS1  HARMONY        FS2  REVERB     │  FS 32
 ├────────────────────────────────────┤
-│ PERF │  FX  │ PRESET │  SET        │  ← Nav 36px
+│   PERF   │  FX  │ PRESET │  SET     │  Nav 36
 └────────────────────────────────────┘
-Total: 240px (content 204px + nav 36px)
-```
-
-### Fluxo de Navegação
-
-```
-PERF (Performance) ─┬─ FX Chain ── Effect Edit
-                    ├─ Presets ─── Load/Save/Delete
-                    ├─ Footswitch ─ Mode/Action config
-                    └─ System ──── VoxLink/Audio/Errors
 ```
 
 ### Critérios de Aceitação Visual
 
-✅ Parece processador vocal musical (não demo LVGL genérica)
-✅ Hierarquia clara em <1 segundo de leitura
-✅ Informação musical > informação técnica
-✅ Efeitos ON visíveis sem grandes áreas verdes
-✅ Touch targets ≥40px para operação segura
-✅ Nada ultrapassa 320×240 viewport
-✅ Legível em condições de palco (alto contraste)
-✅ Consistente em todas as telas
+- Parece processador vocal musical, não demo LVGL genérica.
+- Hierarquia clara em menos de 1 segundo.
+- Laranja não domina a tela; turquesa sinaliza áudio.
+- Efeitos ON visíveis sem grandes áreas coloridas.
+- Nada ultrapassa 320×240.
+- Contraste adequado para palco.
+- Consistente em todas as telas; sem paleta antiga.
 
-### Validação Hardware
+### Validação
 
-- **Testado em**: ESP32 CYD (ST7789, 320×240, XPT2046)
-- **LVGL**: v8.4.0
-- **Fontes**: Montserrat 10/12/14/16/24 compiladas
-- **RAM usage**: ~30% (100KB / 320KB)
-- **Flash usage**: ~19% (640KB / 3.3MB)
+- **Build host verificado**: PlatformIO `esp32-cyd` (`espressif32@6.5.0`),
+  `SUCCESS` (RAM ~30.6%, Flash ~48.2%).
+- **Validação em hardware**: pendente. Ajustes finais de contraste, calibração
+  de toque e legibilidade sob luz de palco precisam de teste no CYD real.
 
 ### Notas de Implementação
 
-- SVGs são representações fiéis do que é renderizável em LVGL no ESP32
-- Sem gradientes complexos, sombras ou blur (caros para GPU embarcada)
-- Cores sólidas, borders simples, barras e indicadores geométricos
-- Atualizações de telemetria não recriam objetos LVGL
-- Screen manager com containers persistentes (show/hide via flags)
+- Cores e estilos centralizados em `src/ui/UiTheme.h` e `UiTheme.cpp`; as telas
+  não usam cores hardcoded.
+- SVGs são representações fiéis do renderizável em LVGL no ESP32.
+- Sem gradientes complexos, sombras ou blur.
+- Atualizações de telemetria não recriam objetos LVGL.
+- Screen manager com containers persistentes (show/hide).
 
 ---
 
-**VoxP4 Control Surface Design System v2**  
-*Flat, Dark, Musical, Stage-Ready*
+**VoxP4 Control Surface Design System v3**
+*Dark Industrial + Warm Orange + Turquoise Audio Feedback*

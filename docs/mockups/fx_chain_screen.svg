@@ -1,68 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="320" height="240" xmlns="http://www.w3.org/2000/svg">
-  <!-- VoxP4 Control Surface - FX Chain Screen Mockup -->
-  <!-- Design System v2: Professional vocal processor aesthetic -->
-  
-  <!-- Background -->
-  <rect width="320" height="240" fill="#090B0F"/>
-  
-  <!-- Header (28px) -->
-  <rect width="320" height="28" fill="#1E2330"/>
-  <text x="12" y="19" font-family="Montserrat" font-size="16" font-weight="600" fill="#F2F5F7">FX CHAIN</text>
-  
-  <!-- Effect Cards Row (72px) - HARMONY → REVERB → DELAY → LIMITER -->
-  <!-- Card 1: HARMONY (72x72) -->
-  <rect x="8" y="36" width="72" height="72" rx="6" fill="#121620" stroke="#292F3D" stroke-width="2"/>
-  <text x="44" y="54" font-family="Montserrat" font-size="12" fill="#A5ADBA" text-anchor="middle">HARMONY</text>
-  <circle cx="44" cy="68" r="4" fill="#64F0FF"/>
-  <text x="44" y="98" font-family="Montserrat" font-size="10" fill="#00E5FF" text-anchor="middle">+3rd</text>
-  
-  <!-- Card 2: REVERB (72x72) -->
-  <rect x="88" y="36" width="72" height="72" rx="6" fill="#121620" stroke="#292F3D" stroke-width="2"/>
-  <text x="124" y="54" font-family="Montserrat" font-size="12" fill="#A5ADBA" text-anchor="middle">REVERB</text>
-  <circle cx="124" cy="68" r="4" fill="#64F0FF"/>
-  <text x="124" y="98" font-family="Montserrat" font-size="10" fill="#00E5FF" text-anchor="middle">18%</text>
-  
-  <!-- Card 3: DELAY (72x72) -->
-  <rect x="168" y="36" width="72" height="72" rx="6" fill="#121620" stroke="#06B6D4" stroke-width="2"/>
-  <text x="204" y="54" font-family="Montserrat" font-size="12" fill="#A5ADBA" text-anchor="middle">DELAY</text>
-  <circle cx="204" cy="68" r="4" fill="#424242"/>
-  <text x="204" y="98" font-family="Montserrat" font-size="10" fill="#687181" text-anchor="middle">--</text>
-  
-  <!-- Card 4: LIMITER (72x72) -->
-  <rect x="248" y="36" width="72" height="72" rx="6" fill="#121620" stroke="#292F3D" stroke-width="2"/>
-  <text x="284" y="54" font-family="Montserrat" font-size="12" fill="#A5ADBA" text-anchor="middle">LIMITER</text>
-  <circle cx="284" cy="68" r="4" fill="#64F0FF"/>
-  <text x="284" y="98" font-family="Montserrat" font-size="10" fill="#00E5FF" text-anchor="middle">-3dB</text>
-  
-  <!-- Quick Actions Row (40px) -->
-  <rect x="8" y="116" width="304" height="40" fill="#090B0F"/>
-  
-  <!-- ALL ON Button -->
-  <rect x="20" y="120" width="70" height="32" rx="4" fill="#4CAF50"/>
-  <text x="55" y="141" font-family="Montserrat" font-size="12" font-weight="600" fill="#F2F5F7" text-anchor="middle">ALL ON</text>
-  
-  <!-- BYPASS Button -->
-  <rect x="98" y="120" width="70" height="32" rx="4" fill="#FFA726"/>
-  <text x="133" y="141" font-family="Montserrat" font-size="12" font-weight="600" fill="#F2F5F7" text-anchor="middle">BYPASS</text>
-  
-  <!-- Navigation Bar (36px) at bottom -->
-  <rect y="204" width="320" height="36" fill="#1E2330"/>
-  
-  <!-- Tab PERF -->
-  <rect x="0" y="204" width="80" height="36" fill="#1E2330"/>
-  <text x="40" y="226" font-family="Montserrat" font-size="12" fill="#A5ADBA" text-anchor="middle">PERF</text>
-  
-  <!-- Tab FX (active - cyan indicator) -->
-  <rect x="80" y="204" width="80" height="36" fill="#1E2330"/>
-  <rect x="80" y="204" width="80" height="3" fill="#06B6D4"/>
-  <text x="120" y="226" font-family="Montserrat" font-size="12" fill="#F2F5F7" text-anchor="middle">FX</text>
-  
-  <!-- Tab PRESET -->
-  <rect x="160" y="204" width="80" height="36" fill="#1E2330"/>
-  <text x="200" y="226" font-family="Montserrat" font-size="12" fill="#A5ADBA" text-anchor="middle">PRESET</text>
-  
-  <!-- Tab SET -->
-  <rect x="240" y="204" width="80" height="36" fill="#1E2330"/>
-  <text x="280" y="226" font-family="Montserrat" font-size="12" fill="#A5ADBA" text-anchor="middle">SET</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="320" height="240">
+  <style>
+    .bg{fill:#090A0E}.surface{fill:#14151B}.header{fill:#101116}.nav{fill:#101116}
+    .t1{fill:#F0EDE5}.t2{fill:#B1ACA3}.tm{fill:#716E69}
+    .acc{fill:#F45126}.accb{fill:#FF6030}.accd{fill:#B83A1C}
+    .aud{fill:#20D6C7}.audd{fill:#148E87}
+    .dis{fill:#414147}
+    text{font-family:Arial,Helvetica,sans-serif}
+  </style>
+
+  <rect width="320" height="240" class="bg"/>
+
+  <!-- HEADER -->
+  <rect x="4" y="4" width="312" height="24" rx="3" class="header"/>
+  <text x="12" y="20.5" class="t1" font-size="13" font-weight="bold">FX CHAIN</text>
+
+  <!-- MODULE RACK -->
+  <rect x="4" y="32" width="312" height="28" rx="3" class="surface" stroke="#F45126" stroke-width="1"/>
+  <circle cx="16" cy="46" r="3.5" class="acc"/>
+  <text x="27" y="50" class="t1" font-size="11">HARMONY</text>
+  <text x="112" y="50" class="t1" font-size="11">+3rd</text>
+  <text x="308" y="50" class="accb" font-size="9" text-anchor="end">ON</text>
+
+  <rect x="4" y="63" width="312" height="28" rx="3" class="surface" stroke="#F45126" stroke-width="1"/>
+  <circle cx="16" cy="77" r="3.5" class="acc"/>
+  <text x="27" y="81" class="t1" font-size="11">REVERB</text>
+  <text x="112" y="81" class="t1" font-size="11">18%</text>
+  <text x="308" y="81" class="accb" font-size="9" text-anchor="end">ON</text>
+
+  <rect x="4" y="94" width="312" height="28" rx="3" class="surface" stroke="#292A30" stroke-width="1"/>
+  <circle cx="16" cy="108" r="3.5" class="dis"/>
+  <text x="27" y="112" class="t2" font-size="11">DELAY</text>
+  <text x="112" y="112" class="tm" font-size="11">--</text>
+  <text x="308" y="112" class="tm" font-size="9" text-anchor="end">OFF</text>
+
+  <rect x="4" y="125" width="312" height="28" rx="3" class="surface" stroke="#F45126" stroke-width="1"/>
+  <circle cx="16" cy="139" r="3.5" class="acc"/>
+  <text x="27" y="143" class="t1" font-size="11">LIMITER</text>
+  <text x="112" y="143" class="t1" font-size="11">-3dB</text>
+  <text x="308" y="143" class="accb" font-size="9" text-anchor="end">ON</text>
+
+  <!-- GLOBAL ACTIONS -->
+  <rect x="27" y="168" width="130" height="32" rx="3" fill="none" stroke="#148E87" stroke-width="1"/>
+  <text x="92" y="188" class="aud" font-size="11" text-anchor="middle">ALL ON</text>
+
+  <rect x="163" y="168" width="130" height="32" rx="3" class="accd"/>
+  <text x="228" y="188" class="t1" font-size="11" text-anchor="middle">BYPASS</text>
+
+  <!-- NAVIGATION -->
+  <rect y="204" width="320" height="36" class="nav"/>
+  <rect x="80" y="204" width="80" height="3" class="acc"/>
+  <text x="40" y="228" class="tm" font-size="11" text-anchor="middle">PERF</text>
+  <text x="120" y="228" class="t1" font-size="11" font-weight="bold" text-anchor="middle">FX</text>
+  <text x="200" y="228" class="tm" font-size="11" text-anchor="middle">PRESET</text>
+  <text x="280" y="228" class="tm" font-size="11" text-anchor="middle">SET</text>
 </svg>

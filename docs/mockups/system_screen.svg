@@ -1,56 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="320" height="240" xmlns="http://www.w3.org/2000/svg">
-  <!-- VoxP4 Control Surface - System Screen Mockup -->
-  <!-- Design System v2: Professional vocal processor aesthetic -->
-  
-  <!-- Background -->
-  <rect width="320" height="240" fill="#090B0F"/>
-  
-  <!-- Header (28px) -->
-  <rect width="320" height="28" fill="#1E2330"/>
-  <text x="12" y="19" font-family="Montserrat" font-size="16" font-weight="600" fill="#F2F5F7">SYSTEM INFO</text>
-  
-  <!-- VoxLink Section (52px) -->
-  <rect x="8" y="36" width="304" height="52" rx="6" fill="#121620"/>
-  <text x="16" y="52" font-family="Montserrat" font-size="14" font-weight="600" fill="#06B6D4">VoxLink Status</text>
-  <text x="16" y="68" font-family="Montserrat" font-size="12" fill="#A5ADBA">P4 Firmware:</text>
-  <text x="200" y="68" font-family="Montserrat" font-size="12" fill="#F2F5F7">1.2.3</text>
-  <text x="16" y="82" font-family="Montserrat" font-size="12" fill="#A5ADBA">CYD Firmware:</text>
-  <text x="200" y="82" font-family="Montserrat" font-size="12" fill="#F2F5F7">2.1.0</text>
-  
-  <!-- Audio Section (52px) -->
-  <rect x="8" y="92" width="304" height="52" rx="6" fill="#121620"/>
-  <text x="16" y="108" font-family="Montserrat" font-size="14" font-weight="600" fill="#06B6D4">Audio</text>
-  <text x="16" y="124" font-family="Montserrat" font-size="12" fill="#A5ADBA">Sample Rate:</text>
-  <text x="200" y="124" font-family="Montserrat" font-size="12" fill="#F2F5F7">48000 Hz</text>
-  <text x="16" y="138" font-family="Montserrat" font-size="12" fill="#A5ADBA">Block Size:</text>
-  <text x="200" y="138" font-family="Montserrat" font-size="12" fill="#F2F5F7">64</text>
-  
-  <!-- Performance Section (52px) -->
-  <rect x="8" y="148" width="304" height="52" rx="6" fill="#121620"/>
-  <text x="16" y="164" font-family="Montserrat" font-size="14" font-weight="600" fill="#06B6D4">Performance</text>
-  <text x="16" y="180" font-family="Montserrat" font-size="12" fill="#A5ADBA">CPU Load:</text>
-  <text x="200" y="180" font-family="Montserrat" font-size="12" fill="#F2F5F7">12.5%</text>
-  <text x="16" y="194" font-family="Montserrat" font-size="12" fill="#A5ADBA">Underruns:</text>
-  <text x="200" y="194" font-family="Montserrat" font-size="12" fill="#F2F5F7">0</text>
-  
-  <!-- Navigation Bar (36px) at bottom -->
-  <rect y="204" width="320" height="36" fill="#1E2330"/>
-  
-  <!-- Tab PERF -->
-  <rect x="0" y="204" width="80" height="36" fill="#1E2330"/>
-  <text x="40" y="226" font-family="Montserrat" font-size="12" fill="#A5ADBA" text-anchor="middle">PERF</text>
-  
-  <!-- Tab FX -->
-  <rect x="80" y="204" width="80" height="36" fill="#1E2330"/>
-  <text x="120" y="226" font-family="Montserrat" font-size="12" fill="#A5ADBA" text-anchor="middle">FX</text>
-  
-  <!-- Tab PRESET -->
-  <rect x="160" y="204" width="80" height="36" fill="#1E2330"/>
-  <text x="200" y="226" font-family="Montserrat" font-size="12" fill="#A5ADBA" text-anchor="middle">PRESET</text>
-  
-  <!-- Tab SET (active - cyan indicator) -->
-  <rect x="240" y="204" width="80" height="36" fill="#1E2330"/>
-  <rect x="240" y="204" width="80" height="3" fill="#06B6D4"/>
-  <text x="280" y="226" font-family="Montserrat" font-size="12" fill="#F2F5F7" text-anchor="middle">SET</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="320" height="240">
+  <style>
+    .bg{fill:#090A0E}.header{fill:#101116}.nav{fill:#101116}
+    .t1{fill:#F0EDE5}.t2{fill:#B1ACA3}.tm{fill:#716E69}
+    .aud{fill:#20D6C7}.acc{fill:#F45126}.accd{fill:#B83A1C}
+    text{font-family:Arial,Helvetica,sans-serif}
+  </style>
+
+  <rect width="320" height="240" class="bg"/>
+
+  <!-- HEADER -->
+  <rect x="4" y="4" width="312" height="24" rx="3" class="header"/>
+  <text x="12" y="20.5" class="t1" font-size="13" font-weight="bold">SYSTEM</text>
+
+  <!-- VOXLINK -->
+  <text x="8" y="43" class="aud" font-size="9">VOXLINK</text>
+  <text x="8" y="56" class="t2" font-size="10">P4 FW</text>
+  <text x="312" y="56" class="t1" font-size="10" text-anchor="end">0.1.0</text>
+  <text x="8" y="67" class="t2" font-size="10">CYD FW</text>
+  <text x="312" y="67" class="t1" font-size="10" text-anchor="end">0.1.0</text>
+
+  <!-- AUDIO -->
+  <text x="8" y="80" class="aud" font-size="9">AUDIO</text>
+  <text x="8" y="92" class="t2" font-size="10">RATE</text>
+  <text x="312" y="92" class="t1" font-size="10" text-anchor="end">44 kHz</text>
+  <text x="8" y="103" class="t2" font-size="10">BLOCK</text>
+  <text x="312" y="103" class="t1" font-size="10" text-anchor="end">64</text>
+
+  <!-- PERFORMANCE -->
+  <text x="8" y="116" class="aud" font-size="9">PERFORMANCE</text>
+  <text x="8" y="128" class="t2" font-size="10">CPU</text>
+  <text x="312" y="128" class="t1" font-size="10" text-anchor="end">23 %</text>
+  <text x="8" y="139" class="t2" font-size="10">UNDERRUNS</text>
+  <text x="312" y="139" class="t1" font-size="10" text-anchor="end">0</text>
+
+  <!-- COMM -->
+  <text x="8" y="152" class="aud" font-size="9">COMM</text>
+  <text x="8" y="164" class="t2" font-size="10">UART ERR</text>
+  <text x="312" y="164" class="t1" font-size="10" text-anchor="end">0</text>
+  <text x="8" y="175" class="t2" font-size="10">CRC ERR</text>
+  <text x="312" y="175" class="t1" font-size="10" text-anchor="end">0</text>
+  <text x="8" y="186" class="t2" font-size="10">RECONNECT</text>
+  <text x="312" y="186" class="t1" font-size="10" text-anchor="end">0</text>
+
+  <!-- SYSTEM (partially visible, body scrolls) -->
+  <text x="8" y="199" class="aud" font-size="9">SYSTEM</text>
+
+  <!-- scrollbar hint -->
+  <rect x="316" y="36" width="2" height="70" rx="1" class="accd"/>
+
+  <!-- NAVIGATION -->
+  <rect y="204" width="320" height="36" class="nav"/>
+  <rect x="240" y="204" width="80" height="3" class="acc"/>
+  <text x="40" y="228" class="tm" font-size="11" text-anchor="middle">PERF</text>
+  <text x="120" y="228" class="tm" font-size="11" text-anchor="middle">FX</text>
+  <text x="200" y="228" class="tm" font-size="11" text-anchor="middle">PRESET</text>
+  <text x="280" y="228" class="t1" font-size="11" font-weight="bold" text-anchor="middle">SET</text>
 </svg>

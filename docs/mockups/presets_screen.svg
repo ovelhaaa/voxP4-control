@@ -1,60 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="240" height="320" viewBox="0 0 240 320" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="240" height="320" fill="#121212"/>
-  
-  <!-- Header -->
-  <rect width="240" height="32" fill="#2A2A3A"/>
-  <text x="8" y="21" font-family="Arial" font-size="16" fill="white" font-weight="bold">PRESET MANAGER</text>
-  
-  <!-- Current Preset Row -->
-  <rect x="8" y="40" width="224" height="28" rx="8" fill="#1E1E2E"/>
-  <text x="16" y="59" font-family="Arial" font-size="12" fill="#B0B0B0">CURRENT:</text>
-  <text x="140" y="59" font-family="Arial" font-size="14" fill="#64B5F6" font-weight="bold">P03 Lead Air</text>
-  
-  <!-- Preset List Container -->
-  <rect x="8" y="74" width="224" height="120" rx="8" fill="#1E1E2E"/>
-  
-  <!-- Preset Items -->
-  <rect x="12" y="80" width="216" height="24" rx="4" fill="#2A2A3A"/>
-  <text x="20" y="96" font-family="Arial" font-size="12" fill="white">P01 Clean Warm</text>
-  
-  <rect x="12" y="106" width="216" height="24" rx="4" fill="#2A2A3A"/>
-  <text x="20" y="122" font-family="Arial" font-size="12" fill="white">P02 Bright Chorus</text>
-  
-  <rect x="12" y="132" width="216" height="24" rx="4" fill="#64B5F6"/>
-  <text x="20" y="148" font-family="Arial" font-size="12" fill="black" font-weight="bold">P03 Lead Air</text>
-  
-  <rect x="12" y="158" width="216" height="24" rx="4" fill="#2A2A3A"/>
-  <text x="20" y="174" font-family="Arial" font-size="12" fill="white">P04 Heavy Harmony</text>
-  
-  <rect x="12" y="184" width="216" height="24" rx="4" fill="#2A2A3A"/>
-  <text x="20" y="200" font-family="Arial" font-size="12" fill="white">P05 Ambient Pad</text>
-  
-  <!-- Scroll indicator (faded items below) -->
-  <text x="20" y="224" font-family="Arial" font-size="12" fill="#707070">P06 Studio Vocal...</text>
-  
-  <!-- Action Buttons Row -->
-  <rect x="8" y="202" width="224" height="40" fill="#121212"/>
-  
-  <!-- LOAD Button -->
-  <rect x="16" y="208" width="90" height="36" rx="8" fill="#4CAF50"/>
-  <text x="61" y="231" font-family="Arial" font-size="12" fill="white" text-anchor="middle" font-weight="bold">LOAD</text>
-  
-  <!-- SAVE AS Button -->
-  <rect x="75" y="208" width="90" height="36" rx="8" fill="#2196F3"/>
-  <text x="120" y="231" font-family="Arial" font-size="12" fill="white" text-anchor="middle" font-weight="bold">SAVE AS</text>
-  
-  <!-- DELETE Button -->
-  <rect x="134" y="208" width="90" height="36" rx="8" fill="#EF5350"/>
-  <text x="179" y="231" font-family="Arial" font-size="12" fill="white" text-anchor="middle" font-weight="bold">DELETE</text>
-  
-  <!-- Navigation Bar -->
-  <rect y="288" width="240" height="32" fill="#2A2A3A"/>
-  <rect x="192" y="288" width="48" height="32" fill="#1E1E2E"/>
-  <text x="24" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">PERF</text>
-  <text x="72" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">CHAIN</text>
-  <text x="120" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">EDIT</text>
-  <text x="168" y="309" font-family="Arial" font-size="10" fill="#B0B0B0" text-anchor="middle">FS</text>
-  <text x="216" y="309" font-family="Arial" font-size="10" fill="white" font-weight="bold" text-anchor="middle">PRESETS</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="320" height="240">
+  <style>
+    .bg{fill:#090A0E}.surface{fill:#14151B}.elev{fill:#1C1D24}.header{fill:#101116}.nav{fill:#101116}
+    .t1{fill:#F0EDE5}.t2{fill:#B1ACA3}.tm{fill:#716E69}
+    .acc{fill:#F45126}.accb{fill:#FF6030}.accd{fill:#B83A1C}
+    text{font-family:Arial,Helvetica,sans-serif}
+  </style>
+
+  <rect width="320" height="240" class="bg"/>
+
+  <!-- HEADER -->
+  <rect x="4" y="4" width="312" height="24" rx="3" class="header"/>
+  <text x="12" y="20.5" class="t1" font-size="13" font-weight="bold">PRESETS</text>
+
+  <!-- CURRENT PRESET -->
+  <rect x="4" y="32" width="312" height="28" rx="3" class="elev" stroke="#B83A1C" stroke-width="1"/>
+  <text x="12" y="50" class="tm" font-size="9">CURRENT</text>
+  <text x="306" y="50" class="acc" font-size="11" text-anchor="end">P03  LEAD AIR</text>
+
+  <!-- PRESET LIST -->
+  <rect x="4" y="64" width="312" height="22" rx="3" class="surface" stroke="#292A30" stroke-width="1"/>
+  <text x="14" y="79" class="tm" font-size="9">01</text>
+  <text x="38" y="79" class="t2" font-size="11">CLEAN WARM</text>
+
+  <rect x="4" y="88" width="312" height="22" rx="3" class="surface" stroke="#292A30" stroke-width="1"/>
+  <text x="14" y="103" class="tm" font-size="9">02</text>
+  <text x="38" y="103" class="t2" font-size="11">BRIGHT CHORUS</text>
+
+  <rect x="4" y="112" width="312" height="22" rx="3" class="elev" stroke="#B83A1C" stroke-width="1"/>
+  <rect x="4" y="118" width="3" height="11" rx="1.5" class="acc"/>
+  <text x="14" y="127" class="tm" font-size="9">03</text>
+  <text x="38" y="127" class="accb" font-size="11">LEAD AIR</text>
+
+  <rect x="4" y="136" width="312" height="22" rx="3" class="surface" stroke="#292A30" stroke-width="1"/>
+  <text x="14" y="151" class="tm" font-size="9">04</text>
+  <text x="38" y="151" class="t2" font-size="11">HEAVY HARMONY</text>
+
+  <!-- scrollbar hint -->
+  <rect x="316" y="66" width="2" height="40" rx="1" class="accd"/>
+
+  <!-- ACTIONS (secondary) -->
+  <rect x="4" y="168" width="101" height="32" rx="3" fill="none" stroke="#F45126" stroke-width="1"/>
+  <text x="54" y="188" class="accb" font-size="11" text-anchor="middle">LOAD</text>
+
+  <rect x="109" y="168" width="101" height="32" rx="3" fill="none" stroke="#34343C" stroke-width="1"/>
+  <text x="159" y="188" class="t2" font-size="11" text-anchor="middle">SAVE AS</text>
+
+  <rect x="214" y="168" width="102" height="32" rx="3" fill="none" stroke="#34343C" stroke-width="1"/>
+  <text x="265" y="188" class="t2" font-size="11" text-anchor="middle">DELETE</text>
+
+  <!-- NAVIGATION -->
+  <rect y="204" width="320" height="36" class="nav"/>
+  <rect x="160" y="204" width="80" height="3" class="acc"/>
+  <text x="40" y="228" class="tm" font-size="11" text-anchor="middle">PERF</text>
+  <text x="120" y="228" class="tm" font-size="11" text-anchor="middle">FX</text>
+  <text x="200" y="228" class="t1" font-size="11" font-weight="bold" text-anchor="middle">PRESET</text>
+  <text x="280" y="228" class="tm" font-size="11" text-anchor="middle">SET</text>
 </svg>

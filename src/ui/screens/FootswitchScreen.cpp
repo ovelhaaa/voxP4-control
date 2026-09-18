@@ -1,220 +1,133 @@
 #include "FootswitchScreen.h"
 #include "../UiTheme.h"
+#include <cstdio>
 
-static lv_obj_t* fs_container = nullptr;
-static lv_obj_t* fs1_mode_label = nullptr;
-static lv_obj_t* fs2_mode_label = nullptr;
-static lv_obj_t* fs1_action_label = nullptr;
-static lv_obj_t* fs2_action_label = nullptr;
-static lv_obj_t* fs1_state_indicator = nullptr;
-static lv_obj_t* fs2_state_indicator = nullptr;
+static lv_obj_t* fs_cards[2] = {nullptr};
+static lv_obj_t* fs_leds[2] = {nullptr};
+static lv_obj_t* fs_state_labels[2] = {nullptr};
+static lv_obj_t* fs_mode_labels[2] = {nullptr};
+static lv_obj_t* fs_action_labels[2] = {nullptr};
 
-// Mode names
 static const char* mode_names[] = {"MOMENTARY", "LATCHING"};
 
-// Action names (subset of supported actions)
-static const char* action_names[] = {
-    "HARMONY TOGGLE",
-    "HARMONY MOMENTARY",
-    "REVERB TOGGLE",
-    "REVERB FREEZE",
-    "DELAY TOGGLE",
-    "TAP TEMPO",
-    "PRESET NEXT",
-    "PRESET PREV",
-    "GLOBAL BYPASS"
-};
-
 void footswitch_screen_init(lv_obj_t* parent) {
-    // Create main container with padding
-    fs_container = lv_obj_create(parent);
-    lv_obj_set_size(fs_container, LV_PCT(100), LV_PCT(100));
-    lv_obj_set_style_bg_color(fs_container, lv_color_make(0x12, 0x12, 0x12), 0);
-    lv_obj_set_style_pad_all(fs_container, 8, 0);
-    lv_obj_set_style_border_width(fs_container, 0, 0);
-    lv_obj_set_flex_flow(fs_container, LV_FLEX_FLOW_COLUMN);
-    
+    lv_obj_t* container = lv_obj_create(parent);
+    lv_obj_set_size(container, LV_PCT(100), LV_PCT(100));
+    lv_obj_set_style_bg_color(container, COLOR_BG, 0);
+    lv_obj_set_style_pad_all(container, SPACING_XS, 0);
+    lv_obj_set_style_pad_row(container, SPACING_XS, 0);
+    lv_obj_set_style_border_width(container, 0, 0);
+    lv_obj_set_flex_flow(container, LV_FLEX_FLOW_COLUMN);
+
     // === HEADER ===
-    lv_obj_t* header = lv_obj_create(fs_container);
-    lv_obj_set_size(header, LV_PCT(100), 32);
-    lv_obj_set_style_bg_color(header, lv_color_make(0x2A, 0x2A, 0x3A), 0);
-    lv_obj_set_style_radius(header, 0, 0);
+    lv_obj_t* header = lv_obj_create(container);
+    lv_obj_set_size(header, LV_PCT(100), 24);
+    lv_obj_set_style_bg_color(header, COLOR_HEADER, 0);
+    lv_obj_set_style_radius(header, RADIUS_S, 0);
     lv_obj_set_style_border_width(header, 0, 0);
-    lv_obj_set_style_pad_hor(header, 8, 0);
+    lv_obj_set_style_pad_hor(header, SPACING_M, 0);
+    lv_obj_set_style_pad_ver(header, 0, 0);
     lv_obj_set_flex_flow(header, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(header, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    
+
     lv_obj_t* title = lv_label_create(header);
-    lv_label_set_text(title, "FOOTSWITCH CONFIG");
-    lv_obj_set_style_text_color(title, lv_color_white(), 0);
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_16, 0);
-    
-    // === FS1 SECTION ===
-    lv_obj_t* fs1_card = lv_obj_create(fs_container);
-    lv_obj_set_size(fs1_card, LV_PCT(100), 80);
-    lv_obj_set_style_bg_color(fs1_card, lv_color_make(0x1E, 0x1E, 0x2E), 0);
-    lv_obj_set_style_radius(fs1_card, 8, 0);
-    lv_obj_set_style_border_width(fs1_card, 0, 0);
-    lv_obj_set_style_pad_all(fs1_card, 12, 0);
-    lv_obj_set_flex_flow(fs1_card, LV_FLEX_FLOW_COLUMN);
-    
-    // FS1 Header
-    lv_obj_t* fs1_header = lv_obj_create(fs1_card);
-    lv_obj_set_size(fs1_header, LV_PCT(100), 28);
-    lv_obj_set_style_bg_color(fs1_header, lv_color_make(0x2A, 0x2A, 0x3A), 0);
-    lv_obj_set_style_radius(fs1_header, 6, 0);
-    lv_obj_set_style_border_width(fs1_header, 0, 0);
-    lv_obj_set_flex_flow(fs1_header, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(fs1_header, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    
-    lv_obj_t* fs1_title = lv_label_create(fs1_header);
-    lv_label_set_text(fs1_title, "FS1");
-    lv_obj_set_style_text_color(fs1_title, lv_color_white(), 0);
-    lv_obj_set_style_text_font(fs1_title, &lv_font_montserrat_14, 0);
-    
-    fs1_state_indicator = lv_label_create(fs1_header);
-    lv_label_set_text(fs1_state_indicator, "RELEASED");
-    lv_obj_set_style_text_color(fs1_state_indicator, lv_color_make(0xB0, 0xB0, 0xB0), 0);
-    lv_obj_set_style_text_font(fs1_state_indicator, &lv_font_montserrat_12, 0);
-    
-    // FS1 Mode
-    lv_obj_t* fs1_mode_row = lv_obj_create(fs1_card);
-    lv_obj_set_size(fs1_mode_row, LV_PCT(100), 24);
-    lv_obj_set_style_bg_color(fs1_mode_row, lv_color_make(0x1E, 0x1E, 0x2E), 0);
-    lv_obj_set_style_border_width(fs1_mode_row, 0, 0);
-    lv_obj_set_flex_flow(fs1_mode_row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(fs1_mode_row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    
-    lv_obj_t* fs1_mode_title = lv_label_create(fs1_mode_row);
-    lv_label_set_text(fs1_mode_title, "MODE: ");
-    lv_obj_set_style_text_color(fs1_mode_title, lv_color_make(0xB0, 0xB0, 0xB0), 0);
-    lv_obj_set_style_text_font(fs1_mode_title, &lv_font_montserrat_12, 0);
-    
-    fs1_mode_label = lv_label_create(fs1_mode_row);
-    lv_label_set_text(fs1_mode_label, "MOMENTARY");
-    lv_obj_set_style_text_color(fs1_mode_label, lv_color_make(0x64, 0xB5, 0xF6), 0);
-    lv_obj_set_style_text_font(fs1_mode_label, &lv_font_montserrat_12, 0);
-    
-    // FS1 Action
-    lv_obj_t* fs1_action_row = lv_obj_create(fs1_card);
-    lv_obj_set_size(fs1_action_row, LV_PCT(100), 24);
-    lv_obj_set_style_bg_color(fs1_action_row, lv_color_make(0x1E, 0x1E, 0x2E), 0);
-    lv_obj_set_style_border_width(fs1_action_row, 0, 0);
-    lv_obj_set_flex_flow(fs1_action_row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(fs1_action_row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    
-    lv_obj_t* fs1_action_title = lv_label_create(fs1_action_row);
-    lv_label_set_text(fs1_action_title, "ACTION: ");
-    lv_obj_set_style_text_color(fs1_action_title, lv_color_make(0xB0, 0xB0, 0xB0), 0);
-    lv_obj_set_style_text_font(fs1_action_title, &lv_font_montserrat_12, 0);
-    
-    fs1_action_label = lv_label_create(fs1_action_row);
-    lv_label_set_text(fs1_action_label, "HARMONY TOGGLE");
-    lv_obj_set_style_text_color(fs1_action_label, lv_color_white(), 0);
-    lv_obj_set_style_text_font(fs1_action_label, &lv_font_montserrat_12, 0);
-    
-    // === FS2 SECTION ===
-    lv_obj_t* fs2_card = lv_obj_create(fs_container);
-    lv_obj_set_size(fs2_card, LV_PCT(100), 80);
-    lv_obj_set_style_bg_color(fs2_card, lv_color_make(0x1E, 0x1E, 0x2E), 0);
-    lv_obj_set_style_radius(fs2_card, 8, 0);
-    lv_obj_set_style_border_width(fs2_card, 0, 0);
-    lv_obj_set_style_pad_all(fs2_card, 12, 0);
-    lv_obj_set_flex_flow(fs2_card, LV_FLEX_FLOW_COLUMN);
-    
-    // FS2 Header
-    lv_obj_t* fs2_header = lv_obj_create(fs2_card);
-    lv_obj_set_size(fs2_header, LV_PCT(100), 28);
-    lv_obj_set_style_bg_color(fs2_header, lv_color_make(0x2A, 0x2A, 0x3A), 0);
-    lv_obj_set_style_radius(fs2_header, 6, 0);
-    lv_obj_set_style_border_width(fs2_header, 0, 0);
-    lv_obj_set_flex_flow(fs2_header, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(fs2_header, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    
-    lv_obj_t* fs2_title = lv_label_create(fs2_header);
-    lv_label_set_text(fs2_title, "FS2");
-    lv_obj_set_style_text_color(fs2_title, lv_color_white(), 0);
-    lv_obj_set_style_text_font(fs2_title, &lv_font_montserrat_14, 0);
-    
-    fs2_state_indicator = lv_label_create(fs2_header);
-    lv_label_set_text(fs2_state_indicator, "RELEASED");
-    lv_obj_set_style_text_color(fs2_state_indicator, lv_color_make(0xB0, 0xB0, 0xB0), 0);
-    lv_obj_set_style_text_font(fs2_state_indicator, &lv_font_montserrat_12, 0);
-    
-    // FS2 Mode
-    lv_obj_t* fs2_mode_row = lv_obj_create(fs2_card);
-    lv_obj_set_size(fs2_mode_row, LV_PCT(100), 24);
-    lv_obj_set_style_bg_color(fs2_mode_row, lv_color_make(0x1E, 0x1E, 0x2E), 0);
-    lv_obj_set_style_border_width(fs2_mode_row, 0, 0);
-    lv_obj_set_flex_flow(fs2_mode_row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(fs2_mode_row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    
-    lv_obj_t* fs2_mode_title = lv_label_create(fs2_mode_row);
-    lv_label_set_text(fs2_mode_title, "MODE: ");
-    lv_obj_set_style_text_color(fs2_mode_title, lv_color_make(0xB0, 0xB0, 0xB0), 0);
-    lv_obj_set_style_text_font(fs2_mode_title, &lv_font_montserrat_12, 0);
-    
-    fs2_mode_label = lv_label_create(fs2_mode_row);
-    lv_label_set_text(fs2_mode_label, "LATCHING");
-    lv_obj_set_style_text_color(fs2_mode_label, lv_color_make(0x64, 0xB5, 0xF6), 0);
-    lv_obj_set_style_text_font(fs2_mode_label, &lv_font_montserrat_12, 0);
-    
-    // FS2 Action
-    lv_obj_t* fs2_action_row = lv_obj_create(fs2_card);
-    lv_obj_set_size(fs2_action_row, LV_PCT(100), 24);
-    lv_obj_set_style_bg_color(fs2_action_row, lv_color_make(0x1E, 0x1E, 0x2E), 0);
-    lv_obj_set_style_border_width(fs2_action_row, 0, 0);
-    lv_obj_set_flex_flow(fs2_action_row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(fs2_action_row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    
-    lv_obj_t* fs2_action_title = lv_label_create(fs2_action_row);
-    lv_label_set_text(fs2_action_title, "ACTION: ");
-    lv_obj_set_style_text_color(fs2_action_title, lv_color_make(0xB0, 0xB0, 0xB0), 0);
-    lv_obj_set_style_text_font(fs2_action_title, &lv_font_montserrat_12, 0);
-    
-    fs2_action_label = lv_label_create(fs2_action_row);
-    lv_label_set_text(fs2_action_label, "REVERB TOGGLE");
-    lv_obj_set_style_text_color(fs2_action_label, lv_color_white(), 0);
-    lv_obj_set_style_text_font(fs2_action_label, &lv_font_montserrat_12, 0);
-    
-    // === HELP TEXT ===
-    lv_obj_t* help_label = lv_label_create(fs_container);
-    lv_label_set_text(help_label, "Tap to edit configuration. Long press to test.");
-    lv_obj_set_style_text_color(help_label, lv_color_make(0x70, 0x70, 0x70), 0);
-    lv_obj_set_style_text_font(help_label, &lv_font_montserrat_14, 0);
-    lv_obj_center(help_label);
+    lv_label_set_text(title, "FOOTSWITCH");
+    lv_obj_set_style_text_color(title, COLOR_TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_font(title, FONT_BODY, 0);
+
+    // === FS1 / FS2 MODULES ===
+    for (int i = 0; i < 2; i++) {
+        lv_obj_t* card = lv_obj_create(container);
+        lv_obj_set_size(card, LV_PCT(100), 80);
+        lv_obj_set_style_bg_color(card, COLOR_SURFACE, 0);
+        lv_obj_set_style_radius(card, RADIUS_M, 0);
+        lv_obj_set_style_border_width(card, 1, 0);
+        lv_obj_set_style_border_color(card, COLOR_SEPARATOR, 0);
+        lv_obj_set_style_pad_all(card, SPACING_M, 0);
+        lv_obj_set_flex_flow(card, LV_FLEX_FLOW_ROW);
+        lv_obj_set_flex_align(card, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+        lv_obj_t* left = lv_obj_create(card);
+        lv_obj_set_size(left, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+        lv_obj_set_style_bg_opa(left, LV_OPA_TRANSP, 0);
+        lv_obj_set_style_border_width(left, 0, 0);
+        lv_obj_set_style_pad_all(left, 0, 0);
+        lv_obj_set_style_pad_row(left, 2, 0);
+        lv_obj_set_flex_flow(left, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_flex_align(left, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+
+        char num[8];
+        snprintf(num, sizeof(num), "FS%d", i + 1);
+        lv_obj_t* num_label = lv_label_create(left);
+        lv_label_set_text(num_label, num);
+        lv_obj_set_style_text_color(num_label, COLOR_TEXT_PRIMARY, 0);
+        lv_obj_set_style_text_font(num_label, FONT_EMPHASIS, 0);
+
+        lv_obj_t* state_label = lv_label_create(left);
+        lv_label_set_text(state_label, "RELEASED");
+        lv_obj_set_style_text_color(state_label, COLOR_TEXT_MUTED, 0);
+        lv_obj_set_style_text_font(state_label, FONT_TINY, 0);
+
+        lv_obj_t* right = lv_obj_create(card);
+        lv_obj_set_size(right, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+        lv_obj_set_style_bg_opa(right, LV_OPA_TRANSP, 0);
+        lv_obj_set_style_border_width(right, 0, 0);
+        lv_obj_set_style_pad_all(right, 0, 0);
+        lv_obj_set_style_pad_row(right, 2, 0);
+        lv_obj_set_flex_flow(right, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_flex_align(right, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_END);
+
+        lv_obj_t* mode_label = lv_label_create(right);
+        lv_label_set_text(mode_label, i == 0 ? "MOMENTARY" : "LATCHING");
+        lv_obj_set_style_text_color(mode_label, COLOR_TEXT_SECONDARY, 0);
+        lv_obj_set_style_text_font(mode_label, FONT_SMALL, 0);
+
+        lv_obj_t* action_label = lv_label_create(right);
+        lv_label_set_text(action_label, i == 0 ? "HARMONY" : "REVERB");
+        lv_obj_set_style_text_color(action_label, COLOR_TEXT_PRIMARY, 0);
+        lv_obj_set_style_text_font(action_label, FONT_SMALL, 0);
+
+        lv_obj_t* led = lv_obj_create(card);
+        lv_obj_set_size(led, 8, 8);
+        lv_obj_align(led, LV_ALIGN_TOP_RIGHT, 0, 0);
+        lv_obj_set_style_bg_color(led, COLOR_DISABLED, 0);
+        lv_obj_set_style_radius(led, LV_RADIUS_CIRCLE, 0);
+        lv_obj_set_style_border_width(led, 0, 0);
+        lv_obj_set_style_pad_all(led, 0, 0);
+
+        fs_cards[i] = card;
+        fs_leds[i] = led;
+        fs_state_labels[i] = state_label;
+        fs_mode_labels[i] = mode_label;
+        fs_action_labels[i] = action_label;
+    }
 }
 
 void footswitch_update_config(int fsIndex, uint8_t mode, const char* actionName) {
-    if (fsIndex == 0) {
-        if (fs1_mode_label && mode < 2) {
-            lv_label_set_text(fs1_mode_label, mode_names[mode]);
-        }
-        if (fs1_action_label && actionName) {
-            lv_label_set_text(fs1_action_label, actionName);
-        }
-    } else if (fsIndex == 1) {
-        if (fs2_mode_label && mode < 2) {
-            lv_label_set_text(fs2_mode_label, mode_names[mode]);
-        }
-        if (fs2_action_label && actionName) {
-            lv_label_set_text(fs2_action_label, actionName);
-        }
+    if (fsIndex < 0 || fsIndex > 1) return;
+    if (mode < 2 && fs_mode_labels[fsIndex]) {
+        lv_label_set_text(fs_mode_labels[fsIndex], mode_names[mode]);
+    }
+    if (actionName && fs_action_labels[fsIndex]) {
+        lv_label_set_text(fs_action_labels[fsIndex], actionName);
     }
 }
 
 void footswitch_update_state(int fsIndex, bool pressed) {
-    if (fsIndex == 0) {
-        if (fs1_state_indicator) {
-            lv_label_set_text(fs1_state_indicator, pressed ? "PRESSED" : "RELEASED");
-            lv_obj_set_style_text_color(fs1_state_indicator, 
-                pressed ? lv_color_make(0xFF, 0xA7, 0x26) : lv_color_make(0xB0, 0xB0, 0xB0), 0);
-        }
-    } else if (fsIndex == 1) {
-        if (fs2_state_indicator) {
-            lv_label_set_text(fs2_state_indicator, pressed ? "PRESSED" : "RELEASED");
-            lv_obj_set_style_text_color(fs2_state_indicator, 
-                pressed ? lv_color_make(0xFF, 0xA7, 0x26) : lv_color_make(0xB0, 0xB0, 0xB0), 0);
-        }
+    if (fsIndex < 0 || fsIndex > 1) return;
+
+    if (fs_state_labels[fsIndex]) {
+        lv_label_set_text(fs_state_labels[fsIndex], pressed ? "PRESSED" : "RELEASED");
+        lv_obj_set_style_text_color(fs_state_labels[fsIndex],
+            pressed ? COLOR_ACCENT_BRIGHT : COLOR_TEXT_MUTED, 0);
+    }
+    if (fs_leds[fsIndex]) {
+        lv_obj_set_style_bg_color(fs_leds[fsIndex], pressed ? COLOR_ACCENT : COLOR_DISABLED, 0);
+    }
+    if (fs_cards[fsIndex]) {
+        lv_obj_set_style_border_color(fs_cards[fsIndex],
+            pressed ? COLOR_ACCENT : COLOR_SEPARATOR, 0);
+        lv_obj_set_style_bg_color(fs_cards[fsIndex],
+            pressed ? COLOR_SURFACE_ELEV : COLOR_SURFACE, 0);
     }
 }

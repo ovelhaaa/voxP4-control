@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="320" height="240">
+  <style>
+    .bg{fill:#090A0E}.surface{fill:#14151B}.header{fill:#101116}.nav{fill:#101116}
+    .t1{fill:#F0EDE5}.t2{fill:#B1ACA3}.tm{fill:#716E69}
+    .acc{fill:#F45126}
+    text{font-family:Arial,Helvetica,sans-serif}
+  </style>
+
+  <rect width="320" height="240" class="bg"/>
+
+  <!-- HEADER -->
+  <rect x="4" y="4" width="312" height="24" rx="3" class="header"/>
+  <text x="12" y="20.5" class="t1" font-size="13" font-weight="bold">SETTINGS</text>
+
+  <!-- FOOTSWITCHES -->
+  <rect x="4" y="32" width="312" height="72" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <text x="18" y="64" class="t1" font-size="13" font-weight="bold">FOOTSWITCHES</text>
+  <text x="18" y="82" class="tm" font-size="9">assign actions and behavior</text>
+  <text x="300" y="74" class="tm" font-size="16" text-anchor="end">&gt;</text>
+
+  <!-- SYSTEM -->
+  <rect x="4" y="110" width="312" height="72" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <text x="18" y="142" class="t1" font-size="13" font-weight="bold">SYSTEM</text>
+  <text x="18" y="160" class="tm" font-size="9">link, audio and diagnostics</text>
+  <text x="300" y="152" class="tm" font-size="16" text-anchor="end">&gt;</text>
+
+  <!-- NAVIGATION -->
+  <rect y="204" width="320" height="36" class="nav"/>
+  <rect x="240" y="204" width="80" height="3" class="acc"/>
+  <text x="40" y="228" class="tm" font-size="11" text-anchor="middle">PERF</text>
+  <text x="120" y="228" class="tm" font-size="11" text-anchor="middle">FX</text>
+  <text x="200" y="228" class="tm" font-size="11" text-anchor="middle">PRESET</text>
+  <text x="280" y="228" class="t1" font-size="11" font-weight="bold" text-anchor="middle">SET</text>
+</svg>
