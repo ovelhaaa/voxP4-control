@@ -21,6 +21,7 @@ typedef enum {
 
 typedef struct {
     lv_obj_t* card;
+    lv_obj_t* accent_rail;
     lv_obj_t* name_label;
     lv_obj_t* status_indicator;
     lv_obj_t* param_label;

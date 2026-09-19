@@ -98,7 +98,10 @@ static void disp_flush(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* c
     if (lcd_device) {
         lcd_device->startWrite();
         lcd_device->setAddrWindow(area->x1, area->y1, area->x2 - area->x1 + 1, area->y2 - area->y1 + 1);
-        lcd_device->writePixels((lgfx::rgb565_t*)color_p, lv_area_get_width(area) * lv_area_get_height(area), false);
+        // Must use the uint16_t overload: the void* overload treats the buffer
+        // as 3-byte RGB888, which garbles the RGB565 framebuffer.
+        lcd_device->writePixels(reinterpret_cast<const uint16_t*>(color_p),
+                               lv_area_get_width(area) * lv_area_get_height(area), true);
         lcd_device->endWrite();
     }
     lv_disp_flush_ready(disp);

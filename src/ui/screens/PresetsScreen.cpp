@@ -7,7 +7,8 @@
 #define PRESET_MAX_ROWS 16
 
 static lv_obj_t* preset_list = nullptr;
-static lv_obj_t* current_preset_label = nullptr;
+static lv_obj_t* current_num_label = nullptr;
+static lv_obj_t* current_name_label = nullptr;
 
 static lv_obj_t* preset_rows[PRESET_MAX_ROWS] = {nullptr};
 static lv_obj_t* preset_bars[PRESET_MAX_ROWS] = {nullptr};
@@ -20,16 +21,18 @@ static void apply_selection(int index) {
     selected_index = index;
     for (int i = 0; i < preset_row_count; i++) {
         bool sel = (i == index);
+        // Selected state uses only: elevated surface + orange side rail +
+        // off-white name. No orange border and no orange text (fewer signals).
         if (preset_rows[i]) {
             lv_obj_set_style_bg_color(preset_rows[i], sel ? COLOR_SURFACE_ELEV : COLOR_SURFACE, 0);
-            lv_obj_set_style_border_color(preset_rows[i], sel ? COLOR_ACCENT_DARK : COLOR_SEPARATOR, 0);
+            lv_obj_set_style_border_color(preset_rows[i], COLOR_SEPARATOR, 0);
         }
         if (preset_bars[i]) {
             if (sel) lv_obj_clear_flag(preset_bars[i], LV_OBJ_FLAG_HIDDEN);
             else lv_obj_add_flag(preset_bars[i], LV_OBJ_FLAG_HIDDEN);
         }
         if (preset_names[i]) {
-            lv_obj_set_style_text_color(preset_names[i], sel ? COLOR_ACCENT_BRIGHT : COLOR_TEXT_SECONDARY, 0);
+            lv_obj_set_style_text_color(preset_names[i], sel ? COLOR_TEXT_PRIMARY : COLOR_TEXT_SECONDARY, 0);
         }
     }
 }
@@ -57,6 +60,7 @@ static lv_obj_t* add_preset_row(int index, const char* name) {
     lv_obj_add_flag(row, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_user_data(row, (void*)(intptr_t)index);
     lv_obj_add_event_cb(row, preset_row_clicked, LV_EVENT_CLICKED, NULL);
+    ui_apply_pressed(row, COLOR_SURFACE_ELEV, COLOR_BORDER);
 
     lv_obj_t* bar = lv_obj_create(row);
     lv_obj_set_size(bar, 3, 14);
@@ -87,21 +91,23 @@ static lv_obj_t* add_preset_row(int index, const char* name) {
     return row;
 }
 
-static lv_obj_t* create_action_button(lv_obj_t* parent, const char* text, bool accent) {
+static lv_obj_t* create_action_button(lv_obj_t* parent, const char* text,
+                                       lv_color_t border, lv_color_t text_color) {
     lv_obj_t* btn = lv_btn_create(parent);
     lv_obj_set_height(btn, 32);
     lv_obj_set_flex_grow(btn, 1);
     lv_obj_set_style_bg_opa(btn, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(btn, 1, 0);
-    lv_obj_set_style_border_color(btn, accent ? COLOR_ACCENT : COLOR_SEPARATOR, 0);
+    lv_obj_set_style_border_color(btn, border, 0);
     lv_obj_set_style_radius(btn, RADIUS_S, 0);
     lv_obj_set_style_shadow_width(btn, 0, 0);
+    ui_apply_pressed(btn, COLOR_SURFACE_ELEV, border);
 
     lv_obj_t* label = lv_label_create(btn);
     lv_label_set_text(label, text);
     lv_obj_center(label);
     lv_obj_set_style_text_font(label, FONT_SMALL, 0);
-    lv_obj_set_style_text_color(label, accent ? COLOR_ACCENT_BRIGHT : COLOR_TEXT_SECONDARY, 0);
+    lv_obj_set_style_text_color(label, text_color, 0);
     return btn;
 }
 
@@ -130,26 +136,34 @@ void presets_screen_init(lv_obj_t* parent) {
     lv_obj_set_style_text_color(title, COLOR_TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(title, FONT_BODY, 0);
 
-    // === CURRENT PRESET ===
+    // === CURRENT PRESET: number in accent, name off-white, label discreet ===
     lv_obj_t* current_row = lv_obj_create(container);
-    lv_obj_set_size(current_row, LV_PCT(100), 28);
+    lv_obj_set_size(current_row, LV_PCT(100), 30);
     lv_obj_set_style_bg_color(current_row, COLOR_SURFACE_ELEV, 0);
     lv_obj_set_style_radius(current_row, RADIUS_S, 0);
     lv_obj_set_style_border_width(current_row, 1, 0);
-    lv_obj_set_style_border_color(current_row, COLOR_ACCENT_DARK, 0);
+    lv_obj_set_style_border_color(current_row, COLOR_SEPARATOR, 0);
     lv_obj_set_style_pad_hor(current_row, SPACING_M, 0);
+    lv_obj_set_style_pad_column(current_row, SPACING_S, 0);
     lv_obj_set_flex_flow(current_row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(current_row, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_align(current_row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+    current_num_label = lv_label_create(current_row);
+    lv_label_set_text(current_num_label, "--");
+    lv_obj_set_style_text_color(current_num_label, COLOR_ACCENT, 0);
+    lv_obj_set_style_text_font(current_num_label, FONT_EMPHASIS, 0);
+    lv_obj_set_width(current_num_label, 30);
+
+    current_name_label = lv_label_create(current_row);
+    lv_label_set_text(current_name_label, "--");
+    lv_obj_set_style_text_color(current_name_label, COLOR_TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_font(current_name_label, FONT_BODY, 0);
+    lv_obj_set_flex_grow(current_name_label, 1);
 
     lv_obj_t* current_title = lv_label_create(current_row);
     lv_label_set_text(current_title, "CURRENT");
-    lv_obj_set_style_text_color(current_title, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_color(current_title, COLOR_TEXT_FAINT, 0);
     lv_obj_set_style_text_font(current_title, FONT_TINY, 0);
-
-    current_preset_label = lv_label_create(current_row);
-    lv_label_set_text(current_preset_label, "P--  --");
-    lv_obj_set_style_text_color(current_preset_label, COLOR_ACCENT, 0);
-    lv_obj_set_style_text_font(current_preset_label, FONT_SMALL, 0);
 
     // === PRESET LIST (scrollable) ===
     preset_list = lv_obj_create(container);
@@ -182,19 +196,19 @@ void presets_screen_init(lv_obj_t* parent) {
     lv_obj_set_flex_flow(action_row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(action_row, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    lv_obj_t* load_btn = create_action_button(action_row, "LOAD", true);
+    lv_obj_t* load_btn = create_action_button(action_row, "LOAD", COLOR_ACCENT, COLOR_ACCENT_BRIGHT);
     lv_obj_add_event_cb(load_btn, [](lv_event_t* e) {
         UiAction action = { UiActionType::LoadPreset, (uint16_t)(selected_index + 1), 0 };
         ui_emit_action(action);
     }, LV_EVENT_CLICKED, NULL);
 
-    lv_obj_t* save_btn = create_action_button(action_row, "SAVE AS", false);
+    lv_obj_t* save_btn = create_action_button(action_row, "SAVE AS", COLOR_SEPARATOR, COLOR_TEXT_SECONDARY);
     lv_obj_add_event_cb(save_btn, [](lv_event_t* e) {
         UiAction action = { UiActionType::SavePreset, (uint16_t)(selected_index + 1), 0 };
         ui_emit_action(action);
     }, LV_EVENT_CLICKED, NULL);
 
-    create_action_button(action_row, "DELETE", false);
+    create_action_button(action_row, "DELETE", COLOR_SEPARATOR, COLOR_TEXT_MUTED);
 }
 
 void presets_update_list(const char** presetNames, int count) {
@@ -220,9 +234,12 @@ void presets_select_preset(int index) {
 
 void presets_update_current(int currentId, const char* currentName) {
     current_preset_id = currentId;
-    if (current_preset_label && currentName) {
-        char buf[48];
-        snprintf(buf, sizeof(buf), "P%02d  %s", currentId, currentName);
-        lv_label_set_text(current_preset_label, buf);
+    if (current_num_label) {
+        char num[8];
+        snprintf(num, sizeof(num), "%02d", currentId);
+        lv_label_set_text(current_num_label, num);
+    }
+    if (current_name_label && currentName) {
+        lv_label_set_text(current_name_label, currentName);
     }
 }

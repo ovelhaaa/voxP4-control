@@ -121,6 +121,7 @@ static lv_obj_t* create_param_enum(lv_obj_t* parent, const char* label, const ch
         lv_obj_set_style_border_width(btn, 1, 0);
         lv_obj_set_style_bg_color(btn, active ? COLOR_SURFACE_ELEV : COLOR_PANEL, 0);
         lv_obj_set_style_border_color(btn, active ? COLOR_ACCENT : COLOR_SEPARATOR, 0);
+        ui_apply_pressed(btn, COLOR_SURFACE_ELEV, active ? COLOR_ACCENT : COLOR_BORDER);
 
         lv_obj_t* opt = lv_label_create(btn);
         lv_label_set_text(opt, options[i]);
@@ -155,11 +156,13 @@ void effect_edit_screen_init(lv_obj_t* parent) {
 
     lv_obj_t* back_btn = lv_btn_create(header);
     lv_obj_set_size(back_btn, 32, 22);
+    lv_obj_set_ext_click_area(back_btn, 6);
     lv_obj_set_style_bg_color(back_btn, COLOR_SURFACE, 0);
     lv_obj_set_style_border_width(back_btn, 1, 0);
     lv_obj_set_style_border_color(back_btn, COLOR_SEPARATOR, 0);
     lv_obj_set_style_radius(back_btn, RADIUS_S, 0);
     lv_obj_set_style_shadow_width(back_btn, 0, 0);
+    ui_apply_pressed(back_btn, COLOR_SURFACE_ELEV, COLOR_BORDER);
     lv_obj_t* back_label = lv_label_create(back_btn);
     lv_label_set_text(back_label, "<");
     lv_obj_center(back_label);
@@ -178,8 +181,10 @@ void effect_edit_screen_init(lv_obj_t* parent) {
 
     enable_btn = lv_btn_create(header);
     lv_obj_set_size(enable_btn, 44, 22);
+    lv_obj_set_ext_click_area(enable_btn, 6);
     lv_obj_set_style_radius(enable_btn, RADIUS_S, 0);
     lv_obj_set_style_shadow_width(enable_btn, 0, 0);
+    ui_apply_pressed(enable_btn, COLOR_SURFACE_ELEV, COLOR_ACCENT);
     enable_label = lv_label_create(enable_btn);
     lv_label_set_text(enable_label, "OFF");
     lv_obj_center(enable_label);

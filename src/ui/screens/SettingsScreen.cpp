@@ -5,7 +5,7 @@
 static lv_obj_t* create_menu_entry(lv_obj_t* parent, const char* title, const char* subtitle,
                                    UiScreenId target) {
     lv_obj_t* entry = lv_obj_create(parent);
-    lv_obj_set_size(entry, LV_PCT(100), 72);
+    lv_obj_set_size(entry, LV_PCT(100), 66);
     lv_obj_set_style_bg_color(entry, COLOR_SURFACE, 0);
     lv_obj_set_style_radius(entry, RADIUS_M, 0);
     lv_obj_set_style_border_width(entry, 1, 0);
@@ -15,6 +15,7 @@ static lv_obj_t* create_menu_entry(lv_obj_t* parent, const char* title, const ch
     lv_obj_set_flex_flow(entry, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(entry, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_add_flag(entry, LV_OBJ_FLAG_CLICKABLE);
+    ui_apply_pressed(entry, COLOR_SURFACE_ELEV, COLOR_BORDER);
     lv_obj_set_user_data(entry, (void*)(intptr_t)target);
     lv_obj_add_event_cb(entry, [](lv_event_t* e) {
         lv_obj_t* obj = lv_event_get_target(e);

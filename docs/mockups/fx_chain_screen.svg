@@ -15,50 +15,49 @@
   <rect x="4" y="4" width="312" height="24" rx="3" class="header"/>
   <text x="12" y="20.5" class="t1" font-size="13" font-weight="bold">FX CHAIN</text>
 
-  <!-- MODULE RACK (4 modules, y 45..129) -->
+  <!-- MODULE RACK: neutral outlines, active = top accent rail + LED + strong text -->
   <!-- HARMONY ON -->
-  <rect x="4" y="45" width="74" height="84" rx="5" class="surface" stroke="#B83A1C" stroke-width="1"/>
-  <circle cx="13" cy="56.5" r="4" class="acc"/>
-  <text x="21" y="61" class="t1" font-size="9">HARMONY</text>
-  <line x1="9" y1="67" x2="73" y2="67" stroke="#292A30" stroke-width="1"/>
-  <text x="41" y="98" class="t1" font-size="16" font-weight="bold" text-anchor="middle">+3rd</text>
-  <line x1="9" y1="106" x2="73" y2="106" stroke="#292A30" stroke-width="1"/>
+  <rect x="4" y="45" width="74" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <path d="M6 48 h70 a2 2 0 0 1 2 2 v1 h-74 v-1 a2 2 0 0 1 2 -2 z" class="acc"/>
+  <circle cx="16" cy="58.5" r="4" class="acc"/>
+  <text x="26" y="62" class="t1" font-size="9">HARMONY</text>
+  <text x="41" y="92" class="t1" font-size="16" font-weight="bold" text-anchor="middle">+3rd</text>
+  <line x1="9" y1="107" x2="73" y2="107" stroke="#292A30" stroke-width="1"/>
   <text x="41" y="121" class="t2" font-size="9" text-anchor="middle">KEY AUTO</text>
 
   <!-- REVERB ON -->
-  <rect x="83" y="45" width="74" height="84" rx="5" class="surface" stroke="#B83A1C" stroke-width="1"/>
-  <circle cx="92" cy="56.5" r="4" class="acc"/>
-  <text x="100" y="61" class="t1" font-size="9">REVERB</text>
-  <line x1="88" y1="67" x2="152" y2="67" stroke="#292A30" stroke-width="1"/>
-  <text x="120" y="98" class="t1" font-size="16" font-weight="bold" text-anchor="middle">18%</text>
-  <line x1="88" y1="106" x2="152" y2="106" stroke="#292A30" stroke-width="1"/>
+  <rect x="83" y="45" width="74" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <path d="M85 48 h70 a2 2 0 0 1 2 2 v1 h-74 v-1 a2 2 0 0 1 2 -2 z" class="acc"/>
+  <circle cx="95" cy="58.5" r="4" class="acc"/>
+  <text x="105" y="62" class="t1" font-size="9">REVERB</text>
+  <text x="120" y="92" class="t1" font-size="16" font-weight="bold" text-anchor="middle">18%</text>
+  <line x1="88" y1="107" x2="152" y2="107" stroke="#292A30" stroke-width="1"/>
   <text x="120" y="121" class="t2" font-size="9" text-anchor="middle">PLATE</text>
 
   <!-- DELAY OFF -->
   <rect x="163" y="45" width="74" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
-  <circle cx="172" cy="56.5" r="4" class="dis"/>
-  <text x="180" y="61" class="t2" font-size="9">DELAY</text>
-  <line x1="168" y1="67" x2="232" y2="67" stroke="#292A30" stroke-width="1"/>
-  <text x="200" y="98" class="tm" font-size="16" font-weight="bold" text-anchor="middle">--</text>
-  <line x1="168" y1="106" x2="232" y2="106" stroke="#292A30" stroke-width="1"/>
+  <circle cx="175" cy="58.5" r="4" class="dis"/>
+  <text x="185" y="62" class="t2" font-size="9">DELAY</text>
+  <text x="200" y="92" class="tm" font-size="16" font-weight="bold" text-anchor="middle">--</text>
+  <line x1="168" y1="107" x2="232" y2="107" stroke="#292A30" stroke-width="1"/>
   <text x="200" y="121" class="tf" font-size="9" text-anchor="middle">1/4</text>
 
   <!-- LIMITER ON -->
-  <rect x="242" y="45" width="74" height="84" rx="5" class="surface" stroke="#B83A1C" stroke-width="1"/>
-  <circle cx="251" cy="56.5" r="4" class="acc"/>
-  <text x="259" y="61" class="t1" font-size="9">LIMITER</text>
-  <line x1="247" y1="67" x2="311" y2="67" stroke="#292A30" stroke-width="1"/>
-  <text x="279" y="98" class="t1" font-size="16" font-weight="bold" text-anchor="middle">-3 dB</text>
-  <line x1="247" y1="106" x2="311" y2="106" stroke="#292A30" stroke-width="1"/>
+  <rect x="242" y="45" width="74" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <path d="M244 48 h70 a2 2 0 0 1 2 2 v1 h-74 v-1 a2 2 0 0 1 2 -2 z" class="acc"/>
+  <circle cx="254" cy="58.5" r="4" class="acc"/>
+  <text x="264" y="62" class="t1" font-size="9">LIMITER</text>
+  <text x="279" y="92" class="t1" font-size="16" font-weight="bold" text-anchor="middle">-3 dB</text>
+  <line x1="247" y1="107" x2="311" y2="107" stroke="#292A30" stroke-width="1"/>
   <text x="279" y="121" class="t2" font-size="9" text-anchor="middle">THRESHOLD</text>
 
   <!-- DIVIDER above global actions -->
   <line x1="4" y1="145" x2="316" y2="145" stroke="#292A30" stroke-width="1"/>
 
-  <!-- GLOBAL ACTIONS (y 152..200) -->
+  <!-- GLOBAL ACTIONS -->
   <rect x="6" y="152" width="150" height="48" rx="3" fill="none" stroke="#148E87" stroke-width="1"/>
   <text x="81" y="172" class="aud" font-size="14" font-weight="bold" text-anchor="middle">ALL ON</text>
-  <text x="81" y="187" class="tm" font-size="9" text-anchor="middle">ENABLE ALL EFFECTS</text>
+  <text x="81" y="187" class="tf" font-size="9" text-anchor="middle">ENABLE ALL EFFECTS</text>
 
   <rect x="164" y="152" width="150" height="48" rx="3" class="surface" stroke="#F45126" stroke-width="1"/>
   <text x="239" y="172" class="t1" font-size="14" font-weight="bold" text-anchor="middle">BYPASS</text>

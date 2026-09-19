@@ -14,10 +14,10 @@ static lv_obj_t* reconnect_label = nullptr;
 static lv_obj_t* heap_free_label = nullptr;
 static lv_obj_t* uptime_label = nullptr;
 
-static lv_obj_t* add_section(lv_obj_t* parent, const char* title) {
+static lv_obj_t* add_section(lv_obj_t* parent, const char* title, lv_color_t color) {
     lv_obj_t* label = lv_label_create(parent);
     lv_label_set_text(label, title);
-    lv_obj_set_style_text_color(label, COLOR_AUDIO, 0);
+    lv_obj_set_style_text_color(label, color, 0);
     lv_obj_set_style_text_font(label, FONT_TINY, 0);
     lv_obj_set_style_pad_top(label, SPACING_XS, 0);
     return label;
@@ -81,24 +81,24 @@ void system_screen_init(lv_obj_t* parent) {
     lv_obj_set_scroll_dir(body, LV_DIR_VER);
     lv_obj_set_scrollbar_mode(body, LV_SCROLLBAR_MODE_AUTO);
 
-    add_section(body, "VOXLINK");
+    add_section(body, "VOXLINK", COLOR_AUDIO);
     p4_fw_label = add_value_row(body, "P4 FW");
     cyd_fw_label = add_value_row(body, "CYD FW");
 
-    add_section(body, "AUDIO");
+    add_section(body, "AUDIO", COLOR_AUDIO);
     sample_rate_label = add_value_row(body, "RATE");
     block_size_label = add_value_row(body, "BLOCK");
 
-    add_section(body, "PERFORMANCE");
+    add_section(body, "PERFORMANCE", COLOR_TEXT_SECONDARY);
     cpu_load_label = add_value_row(body, "CPU");
     underruns_label = add_value_row(body, "UNDERRUNS");
 
-    add_section(body, "COMM");
+    add_section(body, "COMM", COLOR_TEXT_SECONDARY);
     uart_errors_label = add_value_row(body, "UART ERR");
     crc_errors_label = add_value_row(body, "CRC ERR");
     reconnect_label = add_value_row(body, "RECONNECT");
 
-    add_section(body, "SYSTEM");
+    add_section(body, "SYSTEM", COLOR_TEXT_SECONDARY);
     heap_free_label = add_value_row(body, "HEAP");
     uptime_label = add_value_row(body, "UPTIME");
 }

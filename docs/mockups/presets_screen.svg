@@ -2,7 +2,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="320" height="240">
   <style>
     .bg{fill:#090A0E}.surface{fill:#14151B}.elev{fill:#1C1D24}.header{fill:#101116}.nav{fill:#101116}
-    .t1{fill:#F0EDE5}.t2{fill:#B1ACA3}.tm{fill:#716E69}
+    .t1{fill:#F0EDE5}.t2{fill:#B1ACA3}.tm{fill:#716E69}.tf{fill:#4A4947}
     .acc{fill:#F45126}.accb{fill:#FF6030}.accd{fill:#B83A1C}
     text{font-family:Arial,Helvetica,sans-serif}
   </style>
@@ -13,41 +13,42 @@
   <rect x="4" y="4" width="312" height="24" rx="3" class="header"/>
   <text x="12" y="20.5" class="t1" font-size="13" font-weight="bold">PRESETS</text>
 
-  <!-- CURRENT PRESET -->
-  <rect x="4" y="32" width="312" height="28" rx="3" class="elev" stroke="#B83A1C" stroke-width="1"/>
-  <text x="12" y="50" class="tm" font-size="9">CURRENT</text>
-  <text x="306" y="50" class="acc" font-size="11" text-anchor="end">P03  LEAD AIR</text>
+  <!-- CURRENT PRESET: number accent + name off-white + discreet label -->
+  <rect x="4" y="32" width="312" height="30" rx="3" class="elev" stroke="#292A30" stroke-width="1"/>
+  <text x="14" y="53" class="acc" font-size="15" font-weight="bold">03</text>
+  <text x="48" y="53" class="t1" font-size="13">LEAD AIR</text>
+  <text x="306" y="53" class="tf" font-size="9" text-anchor="end">CURRENT</text>
 
-  <!-- PRESET LIST -->
-  <rect x="4" y="64" width="312" height="22" rx="3" class="surface" stroke="#292A30" stroke-width="1"/>
-  <text x="14" y="79" class="tm" font-size="9">01</text>
-  <text x="38" y="79" class="t2" font-size="11">CLEAN WARM</text>
+  <!-- PRESET LIST: selected = elevated + side rail + off-white name -->
+  <rect x="4" y="66" width="312" height="22" rx="3" class="surface" stroke="#292A30" stroke-width="1"/>
+  <text x="14" y="81" class="tm" font-size="9">01</text>
+  <text x="38" y="81" class="t2" font-size="11">CLEAN WARM</text>
 
-  <rect x="4" y="88" width="312" height="22" rx="3" class="surface" stroke="#292A30" stroke-width="1"/>
-  <text x="14" y="103" class="tm" font-size="9">02</text>
-  <text x="38" y="103" class="t2" font-size="11">BRIGHT CHORUS</text>
+  <rect x="4" y="90" width="312" height="22" rx="3" class="surface" stroke="#292A30" stroke-width="1"/>
+  <text x="14" y="105" class="tm" font-size="9">02</text>
+  <text x="38" y="105" class="t2" font-size="11">BRIGHT CHORUS</text>
 
-  <rect x="4" y="112" width="312" height="22" rx="3" class="elev" stroke="#B83A1C" stroke-width="1"/>
-  <rect x="4" y="118" width="3" height="11" rx="1.5" class="acc"/>
-  <text x="14" y="127" class="tm" font-size="9">03</text>
-  <text x="38" y="127" class="accb" font-size="11">LEAD AIR</text>
+  <rect x="4" y="114" width="312" height="22" rx="3" class="elev" stroke="#292A30" stroke-width="1"/>
+  <rect x="4" y="120" width="3" height="11" rx="1.5" class="acc"/>
+  <text x="14" y="129" class="tm" font-size="9">03</text>
+  <text x="38" y="129" class="t1" font-size="11">LEAD AIR</text>
 
-  <rect x="4" y="136" width="312" height="22" rx="3" class="surface" stroke="#292A30" stroke-width="1"/>
-  <text x="14" y="151" class="tm" font-size="9">04</text>
-  <text x="38" y="151" class="t2" font-size="11">HEAVY HARMONY</text>
+  <rect x="4" y="138" width="312" height="22" rx="3" class="surface" stroke="#292A30" stroke-width="1"/>
+  <text x="14" y="153" class="tm" font-size="9">04</text>
+  <text x="38" y="153" class="t2" font-size="11">HEAVY HARMONY</text>
 
   <!-- scrollbar hint -->
-  <rect x="316" y="66" width="2" height="40" rx="1" class="accd"/>
+  <rect x="316" y="68" width="2" height="40" rx="1" class="accd"/>
 
-  <!-- ACTIONS (secondary) -->
+  <!-- ACTIONS: LOAD primary, others secondary/neutral -->
   <rect x="4" y="168" width="101" height="32" rx="3" fill="none" stroke="#F45126" stroke-width="1"/>
   <text x="54" y="188" class="accb" font-size="11" text-anchor="middle">LOAD</text>
 
-  <rect x="109" y="168" width="101" height="32" rx="3" fill="none" stroke="#34343C" stroke-width="1"/>
+  <rect x="109" y="168" width="101" height="32" rx="3" fill="none" stroke="#292A30" stroke-width="1"/>
   <text x="159" y="188" class="t2" font-size="11" text-anchor="middle">SAVE AS</text>
 
-  <rect x="214" y="168" width="102" height="32" rx="3" fill="none" stroke="#34343C" stroke-width="1"/>
-  <text x="265" y="188" class="t2" font-size="11" text-anchor="middle">DELETE</text>
+  <rect x="214" y="168" width="102" height="32" rx="3" fill="none" stroke="#292A30" stroke-width="1"/>
+  <text x="265" y="188" class="tm" font-size="11" text-anchor="middle">DELETE</text>
 
   <!-- NAVIGATION -->
   <rect y="204" width="320" height="36" class="nav"/>

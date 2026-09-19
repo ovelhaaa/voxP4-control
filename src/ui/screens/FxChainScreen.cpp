@@ -8,9 +8,11 @@
 #define FX_ACTION_H 48
 
 // Each effect is presented as a hardware-like processing module, not a settings
-// row. The card is a single large touch target that opens the effect editor.
+// row. Active state is shown by a top accent rail + LED + stronger text, on a
+// neutral card outline. The whole card is one large touch target.
 typedef struct {
     lv_obj_t* card;
+    lv_obj_t* rail;
     lv_obj_t* led;
     lv_obj_t* name;
     lv_obj_t* value;
@@ -46,16 +48,41 @@ static void create_module(lv_obj_t* parent, int index, const char* name) {
     lv_obj_set_style_border_width(card, 1, 0);
     lv_obj_set_style_border_color(card, COLOR_SEPARATOR, 0);
     lv_obj_set_style_radius(card, RADIUS_M, 0);
-    lv_obj_set_style_pad_all(card, 5, 0);
-    lv_obj_set_style_pad_row(card, 4, 0);
+    lv_obj_set_style_clip_corner(card, true, 0);
+    lv_obj_set_style_pad_all(card, 0, 0);
     lv_obj_set_flex_flow(card, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(card, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_add_flag(card, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_user_data(card, (void*)(intptr_t)index);
     lv_obj_add_event_cb(card, module_clicked, LV_EVENT_CLICKED, NULL);
+    ui_apply_pressed(card, COLOR_SURFACE_ELEV, COLOR_BORDER);
+
+    // Top accent rail: lit when the module is active. Kept in the layout even
+    // when OFF (blended into the surface) so the value never shifts position.
+    lv_obj_t* rail = lv_obj_create(card);
+    lv_obj_set_size(rail, LV_PCT(100), 3);
+    lv_obj_clear_flag(rail, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(rail, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(rail, COLOR_SURFACE, 0);
+    lv_obj_set_style_border_width(rail, 0, 0);
+    lv_obj_set_style_radius(rail, RADIUS_M, 0);
+    lv_obj_set_style_pad_all(rail, 0, 0);
+
+    // Padded content
+    lv_obj_t* body = lv_obj_create(card);
+    lv_obj_set_size(body, LV_PCT(100), LV_PCT(100));
+    lv_obj_set_flex_grow(body, 1);
+    lv_obj_clear_flag(body, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(body, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(body, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(body, 0, 0);
+    lv_obj_set_style_pad_all(body, SPACING_XS, 0);
+    lv_obj_set_style_pad_row(body, SPACING_XS, 0);
+    lv_obj_set_flex_flow(body, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(body, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     // Top row: status LED + effect name
-    lv_obj_t* top = lv_obj_create(card);
+    lv_obj_t* top = lv_obj_create(body);
     lv_obj_set_size(top, LV_PCT(100), LV_SIZE_CONTENT);
     lv_obj_clear_flag(top, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(top, LV_OBJ_FLAG_SCROLLABLE);
@@ -80,10 +107,8 @@ static void create_module(lv_obj_t* parent, int index, const char* name) {
     lv_obj_set_style_text_font(name_label, FONT_TINY, 0);
     lv_obj_set_style_text_color(name_label, COLOR_TEXT_SECONDARY, 0);
 
-    make_line(card);
-
-    // Dominant readout, vertically centered in the available space
-    lv_obj_t* value_box = lv_obj_create(card);
+    // Dominant readout, vertically centered in the free space
+    lv_obj_t* value_box = lv_obj_create(body);
     lv_obj_set_width(value_box, LV_PCT(100));
     lv_obj_set_flex_grow(value_box, 1);
     lv_obj_clear_flag(value_box, LV_OBJ_FLAG_CLICKABLE);
@@ -99,21 +124,22 @@ static void create_module(lv_obj_t* parent, int index, const char* name) {
     lv_obj_set_style_text_font(value_label, FONT_EMPHASIS, 0);
     lv_obj_set_style_text_color(value_label, COLOR_TEXT_MUTED, 0);
 
-    make_line(card);
+    make_line(body);
 
-    lv_obj_t* meta_label = lv_label_create(card);
+    lv_obj_t* meta_label = lv_label_create(body);
     lv_label_set_text(meta_label, "--");
     lv_obj_set_style_text_font(meta_label, FONT_TINY, 0);
     lv_obj_set_style_text_color(meta_label, COLOR_TEXT_FAINT, 0);
 
     fx_modules[index].card = card;
+    fx_modules[index].rail = rail;
     fx_modules[index].led = led;
     fx_modules[index].name = name_label;
     fx_modules[index].value = value_label;
     fx_modules[index].meta = meta_label;
 }
 
-// Global action: title + optional subtitle, cheap outline/fill treatment.
+// Global action: title + subtitle, outline treatment with a subtle pressed state.
 static lv_obj_t* create_global_action(lv_obj_t* parent, const char* title, const char* subtitle,
                                       lv_color_t border, lv_color_t title_color, bool filled) {
     lv_obj_t* btn = lv_btn_create(parent);
@@ -124,6 +150,7 @@ static lv_obj_t* create_global_action(lv_obj_t* parent, const char* title, const
     lv_obj_set_style_border_color(btn, border, 0);
     lv_obj_set_style_bg_color(btn, COLOR_SURFACE, 0);
     lv_obj_set_style_bg_opa(btn, filled ? LV_OPA_COVER : LV_OPA_TRANSP, 0);
+    ui_apply_pressed(btn, COLOR_SURFACE_ELEV, border);
 
     lv_obj_t* col = lv_obj_create(btn);
     lv_obj_set_size(col, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -145,7 +172,7 @@ static lv_obj_t* create_global_action(lv_obj_t* parent, const char* title, const
     lv_obj_t* subtitle_label = lv_label_create(col);
     lv_label_set_text(subtitle_label, subtitle);
     lv_obj_set_style_text_font(subtitle_label, FONT_TINY, 0);
-    lv_obj_set_style_text_color(subtitle_label, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_color(subtitle_label, filled ? COLOR_TEXT_MUTED : COLOR_TEXT_FAINT, 0);
 
     return btn;
 }
@@ -225,8 +252,9 @@ void fx_chain_update_effect_state(int effectId, bool enabled,
 
     FxModule_t& m = fx_modules[effectId];
 
-    // ON: small orange cue. OFF: dimmed hierarchy. Never a filled card.
-    lv_obj_set_style_border_color(m.card, enabled ? COLOR_ACCENT_DARK : COLOR_SEPARATOR, 0);
+    // ON is communicated by rail + LED + stronger text only. The card outline
+    // stays neutral so the rack does not read as four outlined boxes.
+    lv_obj_set_style_bg_color(m.rail, enabled ? COLOR_ACCENT : COLOR_SURFACE, 0);
     lv_obj_set_style_bg_color(m.led, enabled ? COLOR_ACCENT : COLOR_DISABLED, 0);
     lv_obj_set_style_text_color(m.name, enabled ? COLOR_TEXT_PRIMARY : COLOR_TEXT_SECONDARY, 0);
     lv_obj_set_style_text_color(m.value, enabled ? COLOR_TEXT_PRIMARY : COLOR_TEXT_MUTED, 0);

@@ -97,4 +97,7 @@ lv_style_t* ui_style_get_text_primary(void);
 lv_style_t* ui_style_get_text_secondary(void);
 lv_style_t* ui_style_get_text_muted(void);
 
+// Instant, cheap pressed-state feedback. No animation, shadow or scale.
+void ui_apply_pressed(lv_obj_t* obj, lv_color_t bg, lv_color_t border);
+
 #endif  // UI_THEME_H

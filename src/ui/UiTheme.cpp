@@ -87,3 +87,10 @@ lv_style_t* ui_style_get_text_secondary(void) {
 lv_style_t* ui_style_get_text_muted(void) {
     return &style_text_muted;
 }
+
+void ui_apply_pressed(lv_obj_t* obj, lv_color_t bg, lv_color_t border) {
+    if (!obj) return;
+    lv_obj_set_style_bg_color(obj, bg, LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_STATE_PRESSED);
+    lv_obj_set_style_border_color(obj, border, LV_STATE_PRESSED);
+}

@@ -28,14 +28,14 @@
   <text x="312" y="103" class="t1" font-size="10" text-anchor="end">64</text>
 
   <!-- PERFORMANCE -->
-  <text x="8" y="116" class="aud" font-size="9">PERFORMANCE</text>
+  <text x="8" y="116" class="t2" font-size="9">PERFORMANCE</text>
   <text x="8" y="128" class="t2" font-size="10">CPU</text>
   <text x="312" y="128" class="t1" font-size="10" text-anchor="end">23 %</text>
   <text x="8" y="139" class="t2" font-size="10">UNDERRUNS</text>
   <text x="312" y="139" class="t1" font-size="10" text-anchor="end">0</text>
 
   <!-- COMM -->
-  <text x="8" y="152" class="aud" font-size="9">COMM</text>
+  <text x="8" y="152" class="t2" font-size="9">COMM</text>
   <text x="8" y="164" class="t2" font-size="10">UART ERR</text>
   <text x="312" y="164" class="t1" font-size="10" text-anchor="end">0</text>
   <text x="8" y="175" class="t2" font-size="10">CRC ERR</text>
@@ -44,7 +44,7 @@
   <text x="312" y="186" class="t1" font-size="10" text-anchor="end">0</text>
 
   <!-- SYSTEM (partially visible, body scrolls) -->
-  <text x="8" y="199" class="aud" font-size="9">SYSTEM</text>
+  <text x="8" y="199" class="t2" font-size="9">SYSTEM</text>
 
   <!-- scrollbar hint -->
   <rect x="316" y="36" width="2" height="70" rx="1" class="accd"/>

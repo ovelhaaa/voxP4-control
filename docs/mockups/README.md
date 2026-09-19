@@ -13,8 +13,8 @@ Todos os arquivos usam `viewBox="0 0 320 240"` e representam a UI real final
 - Acento principal laranja queimado, reservado para **seleção, efeito ativo,
   botão primário, toggle ativo, slider e foco**.
 - Turquesa reservado para **áudio ao vivo**: pitch, meters, telemetria.
-- Nenhuma área grande pintada de cor saturada; efeitos ativos usam apenas LED e
-  borda/fita de destaque.
+- Nenhuma área grande pintada de cor saturada; efeitos ativos usam apenas rail,
+  LED e texto mais forte.
 - Estética de hardware musical de palco, não de dashboard genérico.
 
 ### Paleta de Cores (Design Tokens em `src/ui/UiTheme.h`)
@@ -87,16 +87,31 @@ o conteúdo.
 - Valor numérico discreto à direita.
 
 #### 5. Effect Cards (72×46)
-- Estado ON: LED laranja + borda laranja; OFF: borda separadora + LED apagado.
+- Estado ON: LED laranja + rail de accent no topo; OFF: borda neutra + LED apagado.
 - Nunca preenche o card inteiro de cor.
 
-#### 6. Footswitch Summary (32px)
+#### 6. FX Chain Modules (74×84)
+- Quatro módulos lado a lado; a borda permanece sempre neutra
+  (`COLOR_SEPARATOR`), evitando a leitura de "quatro caixas contornadas".
+- ON é comunicado por rail laranja no topo + LED + texto mais forte.
+- Valor principal domina (`FONT_EMPHASIS`); metadata discreta embaixo.
+
+#### 7. Footswitch Summary (32px)
 - FS1/FS2 com ação resumida; pressionado usa laranja.
 
-#### 7. Parameter Row (Effect Edit)
+#### 8. Parameter Row (Effect Edit)
 - Linha rotulada com leitura de valor, slider horizontal laranja e knob.
 - Seletor de enum em segmentos (`L / C / R`).
 - Lista de parâmetros rolável, preparada para múltiplas vozes de Harmony.
+
+### Interação
+
+- Todos os controles clicáveis têm estado `LV_STATE_PRESSED` imediato e barato
+  (fundo levemente elevado e/ou borda mais forte), sem animação, sombra ou scale.
+- A seleção de preset usa poucos sinais: superfície elevada + rail lateral
+  laranja + nome off-white (sem borda e sem texto laranja simultâneos).
+- O preset atual usa número em laranja, nome off-white e label `CURRENT`
+  discreto.
 
 ### Mockups Disponíveis
 

@@ -2,7 +2,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="320" height="240">
   <style>
     .bg{fill:#090A0E}.surface{fill:#14151B}.header{fill:#101116}.nav{fill:#101116}
-    .t1{fill:#F0EDE5}.t2{fill:#B1ACA3}.tm{fill:#716E69}
+    .t1{fill:#F0EDE5}.t2{fill:#B1ACA3}.tm{fill:#716E69}.tf{fill:#4A4947}
     .acc{fill:#F45126}.dis{fill:#414147}
     text{font-family:Arial,Helvetica,sans-serif}
   </style>
@@ -15,19 +15,23 @@
 
   <!-- FS1 -->
   <rect x="4" y="32" width="312" height="80" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
-  <circle cx="303" cy="42" r="4" class="dis"/>
-  <text x="20" y="66" class="t1" font-size="16" font-weight="bold">FS1</text>
-  <text x="20" y="82" class="tm" font-size="9">RELEASED</text>
-  <text x="300" y="64" class="t2" font-size="11" text-anchor="end">MOMENTARY</text>
-  <text x="300" y="84" class="t1" font-size="11" text-anchor="end">HARMONY</text>
+  <circle cx="14" cy="62" r="4" class="dis"/>
+  <text x="28" y="68" class="t1" font-size="16" font-weight="bold">FS1</text>
+  <text x="12" y="86" class="tm" font-size="9">RELEASED</text>
+  <text x="150" y="67" class="tf" font-size="9">MODE</text>
+  <text x="150" y="84" class="t2" font-size="11">MOMENTARY</text>
+  <text x="240" y="67" class="tf" font-size="9">ACTION</text>
+  <text x="240" y="84" class="t1" font-size="11">HARMONY</text>
 
   <!-- FS2 -->
   <rect x="4" y="116" width="312" height="80" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
-  <circle cx="303" cy="126" r="4" class="dis"/>
-  <text x="20" y="150" class="t1" font-size="16" font-weight="bold">FS2</text>
-  <text x="20" y="166" class="tm" font-size="9">RELEASED</text>
-  <text x="300" y="148" class="t2" font-size="11" text-anchor="end">LATCHING</text>
-  <text x="300" y="168" class="t1" font-size="11" text-anchor="end">REVERB</text>
+  <circle cx="14" cy="146" r="4" class="dis"/>
+  <text x="28" y="152" class="t1" font-size="16" font-weight="bold">FS2</text>
+  <text x="12" y="170" class="tm" font-size="9">RELEASED</text>
+  <text x="150" y="151" class="tf" font-size="9">MODE</text>
+  <text x="150" y="168" class="t2" font-size="11">LATCHING</text>
+  <text x="240" y="151" class="tf" font-size="9">ACTION</text>
+  <text x="240" y="168" class="t1" font-size="11">REVERB</text>
 
   <!-- NAVIGATION -->
   <rect y="204" width="320" height="36" class="nav"/>
