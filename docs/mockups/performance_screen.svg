@@ -42,7 +42,7 @@
   <rect x="4.5" y="114.5" width="71" height="2.5" class="acc"/>
   <text x="11" y="127" class="t1" font-size="8" font-weight="bold">HARMONY</text>
   <circle cx="68" cy="124" r="3.5" class="acc"/>
-  <text x="11" y="152" class="t1" font-size="11">+3rd</text>
+  <text x="11" y="152" class="t1" font-size="11">0 st</text>
 
   <!-- REVERB ON -->
   <rect x="80" y="114" width="72" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
@@ -51,18 +51,19 @@
   <circle cx="144" cy="124" r="3.5" class="acc"/>
   <text x="87" y="152" class="t1" font-size="11">18%</text>
 
-  <!-- DELAY OFF -->
+  <!-- DELAY ON -->
   <rect x="156" y="114" width="72" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
-  <text x="163" y="127" class="t2" font-size="8" font-weight="bold">DELAY</text>
-  <circle cx="220" cy="124" r="3.5" class="dis"/>
-  <text x="163" y="152" class="tm" font-size="11">--</text>
+  <rect x="156.5" y="114.5" width="71" height="2.5" class="acc"/>
+  <text x="163" y="127" class="t1" font-size="8" font-weight="bold">DELAY</text>
+  <circle cx="220" cy="124" r="3.5" class="acc"/>
+  <text x="163" y="152" class="t1" font-size="11">250 ms</text>
 
   <!-- LIMITER ON -->
   <rect x="232" y="114" width="72" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
   <rect x="232.5" y="114.5" width="71" height="2.5" class="acc"/>
   <text x="239" y="127" class="t1" font-size="8" font-weight="bold">LIMITER</text>
   <circle cx="296" cy="124" r="3.5" class="acc"/>
-  <text x="239" y="152" class="t1" font-size="11">-3 dB</text>
+  <text x="239" y="152" class="t1" font-size="11">-3.0 dB</text>
 
   <!-- FOOTSWITCH SUMMARY -->
   <rect x="4" y="164" width="152" height="32" rx="3" class="surface" stroke="#292A30" stroke-width="1"/>

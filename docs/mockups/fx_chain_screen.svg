@@ -21,9 +21,9 @@
   <path d="M6 48 h70 a2 2 0 0 1 2 2 v1 h-74 v-1 a2 2 0 0 1 2 -2 z" class="acc"/>
   <circle cx="16" cy="58.5" r="4" class="acc"/>
   <text x="26" y="62" class="t1" font-size="9">HARMONY</text>
-  <text x="41" y="92" class="t1" font-size="16" font-weight="bold" text-anchor="middle">+3rd</text>
+  <text x="41" y="92" class="t1" font-size="16" font-weight="bold" text-anchor="middle">0 st</text>
   <line x1="9" y1="107" x2="73" y2="107" stroke="#292A30" stroke-width="1"/>
-  <text x="41" y="121" class="t2" font-size="9" text-anchor="middle">KEY AUTO</text>
+  <text x="41" y="121" class="t2" font-size="9" text-anchor="middle">FIXED</text>
 
   <!-- REVERB ON -->
   <rect x="83" y="45" width="74" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
@@ -32,24 +32,25 @@
   <text x="105" y="62" class="t1" font-size="9">REVERB</text>
   <text x="120" y="92" class="t1" font-size="16" font-weight="bold" text-anchor="middle">18%</text>
   <line x1="88" y1="107" x2="152" y2="107" stroke="#292A30" stroke-width="1"/>
-  <text x="120" y="121" class="t2" font-size="9" text-anchor="middle">PLATE</text>
+  <text x="120" y="121" class="t2" font-size="9" text-anchor="middle">2.0 s</text>
 
-  <!-- DELAY OFF -->
+  <!-- DELAY ON -->
   <rect x="163" y="45" width="74" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
-  <circle cx="175" cy="58.5" r="4" class="dis"/>
-  <text x="185" y="62" class="t2" font-size="9">DELAY</text>
-  <text x="200" y="92" class="tm" font-size="16" font-weight="bold" text-anchor="middle">--</text>
+  <path d="M165 48 h70 a2 2 0 0 1 2 2 v1 h-74 v-1 a2 2 0 0 1 2 -2 z" class="acc"/>
+  <circle cx="175" cy="58.5" r="4" class="acc"/>
+  <text x="185" y="62" class="t1" font-size="9">DELAY</text>
+  <text x="200" y="92" class="t1" font-size="15" font-weight="bold" text-anchor="middle">250 ms</text>
   <line x1="168" y1="107" x2="232" y2="107" stroke="#292A30" stroke-width="1"/>
-  <text x="200" y="121" class="tf" font-size="9" text-anchor="middle">1/4</text>
+  <text x="200" y="121" class="t2" font-size="9" text-anchor="middle">R 375</text>
 
   <!-- LIMITER ON -->
   <rect x="242" y="45" width="74" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
   <path d="M244 48 h70 a2 2 0 0 1 2 2 v1 h-74 v-1 a2 2 0 0 1 2 -2 z" class="acc"/>
   <circle cx="254" cy="58.5" r="4" class="acc"/>
   <text x="264" y="62" class="t1" font-size="9">LIMITER</text>
-  <text x="279" y="92" class="t1" font-size="16" font-weight="bold" text-anchor="middle">-3 dB</text>
+  <text x="279" y="92" class="t1" font-size="15" font-weight="bold" text-anchor="middle">-3.0 dB</text>
   <line x1="247" y1="107" x2="311" y2="107" stroke="#292A30" stroke-width="1"/>
-  <text x="279" y="121" class="t2" font-size="9" text-anchor="middle">THRESHOLD</text>
+  <text x="279" y="121" class="t2" font-size="9" text-anchor="middle">HARM BUS</text>
 
   <!-- DIVIDER above global actions -->
   <line x1="4" y1="145" x2="316" y2="145" stroke="#292A30" stroke-width="1"/>
@@ -61,11 +62,11 @@
 
   <rect x="164" y="152" width="150" height="48" rx="3" class="surface" stroke="#F45126" stroke-width="1"/>
   <text x="239" y="172" class="t1" font-size="14" font-weight="bold" text-anchor="middle">BYPASS</text>
-  <text x="239" y="187" class="tm" font-size="9" text-anchor="middle">DISABLE ALL EFFECTS</text>
+  <text x="239" y="187" class="tm" font-size="9" text-anchor="middle">GLOBAL BYPASS</text>
 
   <!-- NAVIGATION (FX active) -->
   <rect y="204" width="320" height="36" class="nav"/>
-  <rect x="80" y="204" width="80" height="3" class="acc"/>
+  <rect x="80" y="204" width="80" height="2" class="acc"/>
   <text x="40" y="228" class="tm" font-size="11" text-anchor="middle">PERF</text>
   <text x="120" y="228" class="t1" font-size="11" font-weight="bold" text-anchor="middle">FX</text>
   <text x="200" y="228" class="tm" font-size="11" text-anchor="middle">PRESET</text>

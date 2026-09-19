@@ -102,10 +102,16 @@ o conteúdo.
 #### 7. Footswitch Summary (32px)
 - FS1/FS2 com ação resumida; pressionado usa laranja.
 
-#### 8. Parameter Row (Effect Edit)
-- Linha rotulada com leitura de valor, slider horizontal laranja e knob.
-- Seletor de enum em segmentos (`L / C / R`).
-- Lista de parâmetros rolável, preparada para múltiplas vozes de Harmony.
+#### 8. Effect Editor (M5, data-driven)
+- O body é reconstruído a partir de descritores por efeito; header/back/enable
+  são persistentes.
+- Controles: `Slider`, `Toggle`, `Segmented` (2–3 opções) e `Stepper`
+  (`[-] valor [+]`) para enums de 12 valores (KEY/SCALE).
+- Harmony muda de layout conforme MODE (FIXED / DIATONIC / MIDI); uma única voz
+  (sem `VOICE 1`).
+- Sem placeholders falsos: nada de `PLATE`, `1/4` ou `KEY AUTO`.
+- LIMITER representa o **Harmony bus limiter** (subtitle `HARMONY BUS`); o master
+  limiter não aparece aqui.
 
 ### Interação
 
@@ -123,7 +129,10 @@ o conteúdo.
 | `boot_screen.svg` | Splash de boot (`VOXP4 / CONTROL`) |
 | `performance_screen.svg` | Tela principal ao vivo |
 | `fx_chain_screen.svg` | Rack de módulos + ações globais |
-| `effect_edit_screen.svg` | Editor de parâmetros |
+| `effect_edit_screen.svg` | Editor HARMONY (MODE=DIATONIC) |
+| `effect_edit_reverb_screen.svg` | Editor REVERB |
+| `effect_edit_delay_screen.svg` | Editor DELAY |
+| `effect_edit_limiter_screen.svg` | Editor LIMITER (harmony bus) |
 | `presets_screen.svg` | Browser de presets |
 | `footswitch_screen.svg` | Configuração de FS1/FS2 |
 | `settings_screen.svg` | Menu de settings |
@@ -162,9 +171,10 @@ o conteúdo.
 
 ### Validação
 
-- **Build verificado**: PlatformIO `esp32-cyd` (`espressif32@6.5.0`),
-  `SUCCESS` (RAM 15.6%, Flash 42.6%); `esp32-cyd-debug` `SUCCESS`
-  (RAM 15.6%, Flash 42.8%).
+- **Build verificado (M5)**: PlatformIO `esp32-cyd` (`espressif32@6.5.0`),
+  `SUCCESS` (RAM 15.7%, Flash 43.2%); `esp32-cyd-debug` `SUCCESS`
+  (RAM 15.7%, Flash 43.4%). Testes host do modelo: `pio test -e native`
+  17/17 PASS.
 - Features LVGL não usadas foram desabilitadas (`MENU`, `WIN`, `TILEVIEW`,
   `SPAN`, `LIST`, `BTNMATRIX`+`MSGBOX`, `IMAGE`, `GRADIENT_SIMPLE`, `GRID`),
   reduzindo o Flash em ~17 KB.
