@@ -152,6 +152,85 @@ void test_effect_lookup(void) {
                           (int)ui_effect_of(UiParamId::LimiterThresholdDb));
 }
 
+// --- VoxLink ABI mapping (generated contract constants) --------------------
+void test_voxlink_id_mapping(void) {
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_HARMONY_MODE,
+                            ui_param_voxlink_id(UiParamId::HarmonyMode));
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_HARMONY_INTERVAL,
+                            ui_param_voxlink_id(UiParamId::HarmonyInterval));
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_HARMONY_VOICE1_NON_SCALE_POLICY,
+                            ui_param_voxlink_id(UiParamId::HarmonyNonScalePolicy));
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_REVERB_WET,
+                            ui_param_voxlink_id(UiParamId::ReverbWet));
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_DELAY_FEEDBACK,
+                            ui_param_voxlink_id(UiParamId::DelayFeedback));
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_HARMONY_LIMITER_THRESHOLD_DB,
+                            ui_param_voxlink_id(UiParamId::LimiterThresholdDb));
+    // Every declared UiParamId must be bound to a non-zero wire id.
+    for (size_t i = 0; i < kUiParamCount; i++) {
+        TEST_ASSERT_NOT_EQUAL(0u,
+                              ui_param_voxlink_id((UiParamId)i));
+    }
+}
+
+void test_effect_enable_mapping(void) {
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_HARMONY_ENABLE,
+                            ui_effect_enable_voxlink_id(UiEffectId::Harmony));
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_REVERB_ENABLE,
+                            ui_effect_enable_voxlink_id(UiEffectId::Reverb));
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_DELAY_ENABLE,
+                            ui_effect_enable_voxlink_id(UiEffectId::Delay));
+    // LIMITER is the harmony bus limiter, never the master ceiling.
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_HARMONY_LIMITER_ENABLE,
+                            ui_effect_enable_voxlink_id(UiEffectId::Limiter));
+    TEST_ASSERT_NOT_EQUAL(VOXP4_PARAM_LIMITER_CEILING,
+                          ui_effect_enable_voxlink_id(UiEffectId::Limiter));
+}
+
+void test_generated_constants(void) {
+    TEST_ASSERT_EQUAL_INT(49, (int)VOXP4_PARAM_COUNT);
+    TEST_ASSERT_TRUE(kUiParamCount > 0);
+    TEST_ASSERT_TRUE(kUiParamCount <= VOXP4_PARAM_COUNT);
+    TEST_ASSERT_EQUAL_HEX16(0x10u, VOXP4_VOXLINK_VERSION);
+}
+
+// --- Non-scale enum / delay range / uiStep ---------------------------------
+void test_non_scale_enum(void) {
+    const UiParamDescriptor& d =
+        desc(UiParamId::HarmonyNonScalePolicy);
+    TEST_ASSERT_EQUAL_INT(3, d.optionCount);
+    TEST_ASSERT_EQUAL_STRING("NEAREST", d.options[0]);
+    TEST_ASSERT_EQUAL_STRING("CHROMATIC", d.options[1]);
+    TEST_ASSERT_EQUAL_STRING("BYPASS", d.options[2]);
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, d.minValue);
+    TEST_ASSERT_EQUAL_FLOAT(2.0f, d.maxValue);
+}
+
+void test_delay_feedback_range(void) {
+    const UiParamDescriptor& d = desc(UiParamId::DelayFeedback);
+    TEST_ASSERT_EQUAL_FLOAT(-0.95f, d.minValue);
+    TEST_ASSERT_EQUAL_FLOAT(0.95f, d.maxValue);
+    TEST_ASSERT_EQUAL_FLOAT(-0.95f,
+                            ui_clamp_parameter(d, -1.5f));
+    TEST_ASSERT_EQUAL_FLOAT(0.95f, ui_clamp_parameter(d, 1.5f));
+}
+
+void test_uistep_quantization(void) {
+    // UI step is coarser than the wire step; it must still stay in range.
+    const UiParamDescriptor& level = desc(UiParamId::HarmonyLevel);
+    TEST_ASSERT_EQUAL_FLOAT(0.01f, level.uiStep);
+    TEST_ASSERT_EQUAL_FLOAT(0.12f, ui_clamp_parameter(level, 0.123f));
+    TEST_ASSERT_EQUAL_FLOAT(1.0f, ui_clamp_parameter(level, 1.5f));
+}
+
+void test_effect_default_enabled(void) {
+    // Mirrors the VoxLink registry *.enable defaults.
+    TEST_ASSERT_FALSE(ui_effect_default_enabled(UiEffectId::Harmony));
+    TEST_ASSERT_TRUE(ui_effect_default_enabled(UiEffectId::Reverb));
+    TEST_ASSERT_TRUE(ui_effect_default_enabled(UiEffectId::Delay));
+    TEST_ASSERT_TRUE(ui_effect_default_enabled(UiEffectId::Limiter));
+}
+
 // --- Effect summaries ------------------------------------------------------
 void test_summary_reverb(void) {
     set(UiParamId::ReverbWet, 0.35f);
@@ -226,6 +305,13 @@ int main(int, char**) {
     RUN_TEST(test_mode_descriptor_selection);
     RUN_TEST(test_scale_options);
     RUN_TEST(test_effect_lookup);
+    RUN_TEST(test_voxlink_id_mapping);
+    RUN_TEST(test_effect_enable_mapping);
+    RUN_TEST(test_generated_constants);
+    RUN_TEST(test_non_scale_enum);
+    RUN_TEST(test_delay_feedback_range);
+    RUN_TEST(test_uistep_quantization);
+    RUN_TEST(test_effect_default_enabled);
     RUN_TEST(test_summary_reverb);
     RUN_TEST(test_summary_delay);
     RUN_TEST(test_summary_harmony_fixed);
