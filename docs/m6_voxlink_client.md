@@ -29,7 +29,7 @@ ui_app_run                       Serial2 TX <-- take_tx  |
   reads `Serial2`, runs `client.tick()`, writes `Serial2`, drains client events
   into the UI event queue, and publishes a capability/status snapshot.
 * `intentQueue` (16) UI -> client task.
-* `uiEventQueue` (32) client task -> UI.
+* `uiEventQueue` (80) client task -> UI.
 * Capability/status snapshot is copied under a spinlock for UI reads.
 * No dynamic allocation, no `std::vector`/`std::string` on the hot path.
 
@@ -118,7 +118,10 @@ the pending request.
 
 Counters: `frames_rx/tx`, `bytes_rx/tx`, `crc_errors`, `length_errors`,
 `version_errors`, `unknown_messages`, `unknown_params`, `parse_errors`,
-`timeouts`, `nacks`, `queue_full`, `reconnects`, `tx_drops`. The System screen
+`timeouts`, `nacks`, `queue_full`, `queue_full_retries`,
+`queue_full_exhausted`, `reconnects`, `tx_drops`, `event_drops`,
+`pending_full`, `caps_overflow`, `snapshot_overflow` (plus `ui_queue_drops` in
+the glue). The System screen
 shows link state, baud, RX/TX and error counters, refreshed at 2 Hz.
 `DEBUG_BUILD` may log handshake milestones; release logs nothing per frame.
 
@@ -127,6 +130,50 @@ shows link state, baud, RX/TX and error counters, refreshed at 2 Hz.
 Without a P4 the UI starts with descriptor defaults, link shows OFF, and the
 user may navigate/edit. Local edits are visual only and are **not** replayed on
 connect; the first `GET_STATE` replaces everything.
+
+## M6.1 transport hardening
+
+Correctness fixes made before the first physical bring-up:
+
+* **Queues / event capacity.** The client event ring holds `kEventCapacity - 1`
+  usable slots (head==tail means empty). It is now 80 slots (79 usable), and the
+  FreeRTOS bridge queue is 80 deep, so a full 49-parameter snapshot plus
+  `LinkActive` (50 events) always fits. `event_drops` counts internal drops; the
+  glue counts `ui_queue_drops` when `xQueueSend` fails. `LinkActive` is emitted
+  last, after all snapshot values.
+* **TX ring.** `tx_used()`/`tx_free()` centralize the head/tail arithmetic; the
+  usable capacity is `kTxCapacity - 1`. `tx_push` rejects a frame that does not
+  fit and increments `tx_drops`, never letting head reach tail (full==empty).
+* **Pending lifecycle.** A `Pending` records `(type, id, tag, value, retries)`
+  and an `acked` flag. `ACK` only marks `acked` (protocol acceptance); a
+  `SetParam` stays pending until `PARAM_CHANGED`, `NACK` or timeout. `GetParam`
+  is finalized by `PARAM_VALUE`. ACK/NACK matching requires **both** reference
+  type and sequence, so a heartbeat ACK (seq 0) can never touch a SET/GET that
+  also used seq 0.
+* **No-op write.** A direct `PARAM_CHANGED` with the same revision and matching
+  pending seq is accepted (`direct`), so an idempotent SET still confirms.
+  Asynchronous `PARAM_CHANGED`/`PARAM_VALUE` obey revision ordering and stale
+  (older) values are ignored.
+* **QUEUE_FULL retry.** Continuous floats keep the latest value and retry on the
+  next coalescing window, bounded by `kMaxQueueFullRetries` (3). Discrete values
+  (bools/enums/ints, including effect enables) use a small retry table, latest
+  wins per id, with a ~30 ms backoff; after the budget is exhausted a
+  `ParamRevert` is emitted so the UI never stays `LocalPending` forever.
+  Counters: `queue_full`, `queue_full_retries`, `queue_full_exhausted`.
+* **Pending pool saturation.** Requests reserve a pending slot and a free seq
+  before transmitting; if none is available the request is dropped
+  (`pending_full`) and no untracked frame is sent. A TX failure after reserving
+  releases the pending immediately (no ghost request waiting for timeout).
+* **CAPS validity.** `HELLO_ACK` only fills `HelloInfo`; `caps().valid` becomes
+  true strictly after a valid `CAPS_END`. `start_handshake()` clears the
+  previous inventory so a reconnect never uses stale capabilities. Oversized
+  `CAPS_BEGIN`/`STATE_BEGIN` (`count > 64`) are rejected with
+  `caps_overflow`/`snapshot_overflow` instead of being truncated.
+* **Liveness.** `last_rx_ms` is refreshed only by a valid parsed frame, never by
+  raw bytes or bad-CRC frames, so continuous garbage cannot keep the link alive.
+* **System / debug.** System shows link/baud/RX/TX and error counters at 2 Hz.
+  `DEBUG_BUILD` logs only abnormal saturation events (event queue full, pending
+  pool full, tx ring full, caps/snapshot overflow, retries exhausted).
 
 ## Limitations / pending
 
