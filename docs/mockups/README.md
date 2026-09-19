@@ -70,8 +70,8 @@ o conteúdo.
 #### 1. Navigation Bar (36px)
 - 4 tabs: **PERF | FX | PRESET | SET**
 - Tab inativa: texto cinza (`COLOR_TEXT_MUTED`).
-- Tab ativa: texto off-white + linha superior laranja de 3px. Sem preenchimento
-  forte na tab ativa.
+- Tab ativa: texto off-white + linha superior laranja de 2px. Sem preenchimento
+  forte na tab ativa; pressionado usa superfície levemente elevada.
 
 #### 2. Header (24px)
 - Preset atual tem prioridade visual.
@@ -82,12 +82,15 @@ o conteúdo.
 - Frequência (`220.1 Hz`) e estado `VOICED`/`UNVOICED` à direita.
 
 #### 4. VuMeter Horizontal (16px por linha)
-- Trilha escura, preenchimento turquesa.
-- Zona de aviso laranja e clip vermelho.
+- Trilha escura; a barra permanece turquesa em todos os níveis.
+- Warning/clip são sinalizados por um pequeno marcador à direita (LED de clip
+  com hold curto), não recolorindo a barra inteira.
 - Valor numérico discreto à direita.
 
 #### 5. Effect Cards (72×46)
-- Estado ON: LED laranja + rail de accent no topo; OFF: borda neutra + LED apagado.
+- Estado ON: LED laranja + rail de accent no topo, totalmente dentro do card
+  (clip corner) e alinhado à linguagem dos módulos da FX Chain.
+- A borda do card permanece neutra (`COLOR_SEPARATOR`) em ON e OFF.
 - Nunca preenche o card inteiro de cor.
 
 #### 6. FX Chain Modules (74×84)
@@ -159,8 +162,12 @@ o conteúdo.
 
 ### Validação
 
-- **Build host verificado**: PlatformIO `esp32-cyd` (`espressif32@6.5.0`),
-  `SUCCESS` (RAM ~30.6%, Flash ~48.2%).
+- **Build verificado**: PlatformIO `esp32-cyd` (`espressif32@6.5.0`),
+  `SUCCESS` (RAM 15.6%, Flash 42.6%); `esp32-cyd-debug` `SUCCESS`
+  (RAM 15.6%, Flash 42.8%).
+- Features LVGL não usadas foram desabilitadas (`MENU`, `WIN`, `TILEVIEW`,
+  `SPAN`, `LIST`, `BTNMATRIX`+`MSGBOX`, `IMAGE`, `GRADIENT_SIMPLE`, `GRID`),
+  reduzindo o Flash em ~17 KB.
 - **Validação em hardware**: pendente. Ajustes finais de contraste, calibração
   de toque e legibilidade sob luz de palco precisam de teste no CYD real.
 

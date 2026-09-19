@@ -40,19 +40,21 @@
   <!-- scrollbar hint -->
   <rect x="316" y="68" width="2" height="40" rx="1" class="accd"/>
 
-  <!-- ACTIONS: LOAD primary, others secondary/neutral -->
-  <rect x="4" y="168" width="101" height="32" rx="3" fill="none" stroke="#F45126" stroke-width="1"/>
-  <text x="54" y="188" class="accb" font-size="11" text-anchor="middle">LOAD</text>
+  <!-- ACTIONS: LOAD active; SAVE AS / DELETE disabled (no backend) -->
+  <rect x="4" y="166" width="101" height="36" rx="3" fill="none" stroke="#F45126" stroke-width="1"/>
+  <text x="54" y="189" class="accb" font-size="11" text-anchor="middle">LOAD</text>
 
-  <rect x="109" y="168" width="101" height="32" rx="3" fill="none" stroke="#292A30" stroke-width="1"/>
-  <text x="159" y="188" class="t2" font-size="11" text-anchor="middle">SAVE AS</text>
+  <g opacity="0.45">
+    <rect x="109" y="166" width="101" height="36" rx="3" fill="none" stroke="#414147" stroke-width="1"/>
+    <text x="159" y="189" class="tm" font-size="11" text-anchor="middle">SAVE AS</text>
 
-  <rect x="214" y="168" width="102" height="32" rx="3" fill="none" stroke="#292A30" stroke-width="1"/>
-  <text x="265" y="188" class="tm" font-size="11" text-anchor="middle">DELETE</text>
+    <rect x="214" y="166" width="102" height="36" rx="3" fill="none" stroke="#414147" stroke-width="1"/>
+    <text x="265" y="189" class="tm" font-size="11" text-anchor="middle">DELETE</text>
+  </g>
 
   <!-- NAVIGATION -->
   <rect y="204" width="320" height="36" class="nav"/>
-  <rect x="160" y="204" width="80" height="3" class="acc"/>
+  <rect x="160" y="204" width="80" height="2" class="acc"/>
   <text x="40" y="228" class="tm" font-size="11" text-anchor="middle">PERF</text>
   <text x="120" y="228" class="tm" font-size="11" text-anchor="middle">FX</text>
   <text x="200" y="228" class="t1" font-size="11" font-weight="bold" text-anchor="middle">PRESET</text>

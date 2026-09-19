@@ -37,14 +37,16 @@
   <text x="312" y="106" class="t2" font-size="9" text-anchor="end">-6</text>
 
   <!-- EFFECT CARDS -->
-  <!-- HARMONY ON -->
-  <rect x="4" y="114" width="72" height="46" rx="5" class="surface" stroke="#F45126" stroke-width="1"/>
+  <!-- HARMONY ON: neutral outline + top accent rail + LED -->
+  <rect x="4" y="114" width="72" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <rect x="4.5" y="114.5" width="71" height="2.5" class="acc"/>
   <text x="11" y="127" class="t1" font-size="8" font-weight="bold">HARMONY</text>
   <circle cx="68" cy="124" r="3.5" class="acc"/>
   <text x="11" y="152" class="t1" font-size="11">+3rd</text>
 
   <!-- REVERB ON -->
-  <rect x="80" y="114" width="72" height="46" rx="5" class="surface" stroke="#F45126" stroke-width="1"/>
+  <rect x="80" y="114" width="72" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <rect x="80.5" y="114.5" width="71" height="2.5" class="acc"/>
   <text x="87" y="127" class="t1" font-size="8" font-weight="bold">REVERB</text>
   <circle cx="144" cy="124" r="3.5" class="acc"/>
   <text x="87" y="152" class="t1" font-size="11">18%</text>
@@ -56,7 +58,8 @@
   <text x="163" y="152" class="tm" font-size="11">--</text>
 
   <!-- LIMITER ON -->
-  <rect x="232" y="114" width="72" height="46" rx="5" class="surface" stroke="#F45126" stroke-width="1"/>
+  <rect x="232" y="114" width="72" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <rect x="232.5" y="114.5" width="71" height="2.5" class="acc"/>
   <text x="239" y="127" class="t1" font-size="8" font-weight="bold">LIMITER</text>
   <circle cx="296" cy="124" r="3.5" class="acc"/>
   <text x="239" y="152" class="t1" font-size="11">-3 dB</text>
@@ -72,7 +75,7 @@
 
   <!-- NAVIGATION -->
   <rect y="204" width="320" height="36" class="nav"/>
-  <rect x="0" y="204" width="80" height="3" class="acc"/>
+  <rect x="0" y="204" width="80" height="2" class="acc"/>
   <text x="40" y="228" class="t1" font-size="11" font-weight="bold" text-anchor="middle">PERF</text>
   <text x="120" y="228" class="tm" font-size="11" text-anchor="middle">FX</text>
   <text x="200" y="228" class="tm" font-size="11" text-anchor="middle">PRESET</text>
