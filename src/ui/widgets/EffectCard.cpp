@@ -26,29 +26,33 @@ EffectCard_t* effect_card_create(lv_obj_t* parent, int32_t x, int32_t y,
     lv_obj_set_style_bg_color(card->card, COLOR_SURFACE, 0);
     lv_obj_set_style_border_color(card->card, COLOR_SEPARATOR, 0);
     lv_obj_set_style_border_width(card->card, 1, 0);
-    lv_obj_set_style_pad_all(card->card, SPACING_XS, 0);
+    lv_obj_set_style_pad_all(card->card, 0, 0);
     lv_obj_set_style_radius(card->card, RADIUS_M, 0);
+    // Clip so the top rail stays fully inside the rounded card, matching the
+    // FX Chain module language.
+    lv_obj_set_style_clip_corner(card->card, true, 0);
     ui_apply_pressed(card->card, COLOR_SURFACE_ELEV, COLOR_BORDER);
 
     // Top accent rail: lit when active, blended into the surface when off.
+    // Flush to the top edge and fully inside the card.
     card->accent_rail = lv_obj_create(card->card);
     lv_obj_set_size(card->accent_rail, LV_PCT(100), 2);
-    lv_obj_align(card->accent_rail, LV_ALIGN_TOP_MID, 0, -SPACING_XS);
+    lv_obj_align(card->accent_rail, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_clear_flag(card->accent_rail, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_style_bg_color(card->accent_rail, COLOR_SURFACE, 0);
     lv_obj_set_style_border_width(card->accent_rail, 0, 0);
-    lv_obj_set_style_radius(card->accent_rail, RADIUS_S, 0);
+    lv_obj_set_style_radius(card->accent_rail, 0, 0);
     lv_obj_set_style_pad_all(card->accent_rail, 0, 0);
 
     card->name_label = lv_label_create(card->card);
     lv_label_set_text(card->name_label, effect_names[effect_type]);
-    lv_obj_align(card->name_label, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_obj_align(card->name_label, LV_ALIGN_TOP_LEFT, SPACING_XS, 4);
     lv_obj_set_style_text_font(card->name_label, FONT_TINY, 0);
     lv_obj_set_style_text_color(card->name_label, COLOR_TEXT_SECONDARY, 0);
     
     card->status_indicator = lv_obj_create(card->card);
     lv_obj_set_size(card->status_indicator, 7, 7);
-    lv_obj_align(card->status_indicator, LV_ALIGN_TOP_RIGHT, 0, 1);
+    lv_obj_align(card->status_indicator, LV_ALIGN_TOP_RIGHT, -SPACING_XS, 5);
     lv_obj_set_style_bg_color(card->status_indicator, COLOR_DISABLED, 0);
     lv_obj_set_style_border_width(card->status_indicator, 0, 0);
     lv_obj_set_style_radius(card->status_indicator, LV_RADIUS_CIRCLE, 0);
@@ -56,7 +60,7 @@ EffectCard_t* effect_card_create(lv_obj_t* parent, int32_t x, int32_t y,
     
     card->param_label = lv_label_create(card->card);
     lv_label_set_text(card->param_label, "--");
-    lv_obj_align(card->param_label, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+    lv_obj_align(card->param_label, LV_ALIGN_BOTTOM_LEFT, SPACING_XS, -3);
     lv_obj_set_style_text_font(card->param_label, FONT_SMALL, 0);
     lv_obj_set_style_text_color(card->param_label, COLOR_TEXT_MUTED, 0);
     

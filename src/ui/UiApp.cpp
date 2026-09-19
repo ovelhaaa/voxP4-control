@@ -8,13 +8,31 @@
 #include "screens/EffectEditScreen.h"
 #include "screens/SettingsScreen.h"
 #include "board/LGFX_CYD.h"
+#include "control/FootswitchManager.h"
 #include <lvgl.h>
 #include <cstdio>
 #include <cctype>
+#include <cstring>
+#if defined(DEBUG_BUILD)
+#include <Arduino.h>
+#endif
 
 using namespace VoxUiTheme;
 
 static UiAppState app_state = {};
+
+// Footswitch snapshot kept by the App layer so a physical event never needs to
+// consult a screen. Labels are derived once from the FootswitchManager config.
+static char fs_short_label[2][16] = {"--", "--"};
+static bool fs_pressed[2] = {false, false};
+
+#if defined(DEBUG_BUILD)
+static void ui_log_heap(const char* stage) {
+    Serial.printf("[UI] %s created, heap: %u (min %u)\n", stage,
+                  (unsigned)esp_get_free_heap_size(),
+                  (unsigned)esp_get_minimum_free_heap_size());
+}
+#endif
 
 // Canonical effect display metadata. Keep this list in sync with the effect
 // index order used everywhere: 0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER.
@@ -47,21 +65,56 @@ static bool effect_enabled_from_state(int effectId) {
     }
 }
 
-// Placeholder for action handling. In the future this will dispatch to VoxLink.
+// Action dispatcher for view intent. This is the boundary between screens and
+// state authority. Until VoxLink is wired, actions update local optimistic
+// state, which is fanned out to every screen that represents the same thing.
 void ui_emit_action(const UiAction& action) {
-    // This provides a clear boundary between view intent and state authority.
-    // Until VoxLink is wired, actions update the local optimistic state, which
-    // is then fanned out to every screen that represents an effect.
-    if (action.type == UiActionType::ToggleEffect) {
-        if (action.id >= 4) return;
-        ui_update_effect_state(action.id, !effect_enabled_from_state(action.id));
-    } else if (action.type == UiActionType::OpenEffect) {
-        // Local navigation action, not sent to P4.
-        effect_edit_load_effect(action.id);
-        if (action.id < 4) {
-            effect_edit_set_enabled(action.id, effect_enabled_from_state(action.id));
-        }
-        ui_navigate_to(UiScreenId::EFFECT_EDIT);
+    switch (action.type) {
+        case UiActionType::ToggleEffect:
+            if (action.id >= 4) return;
+            ui_update_effect_state(action.id, !effect_enabled_from_state(action.id));
+            break;
+
+        case UiActionType::OpenEffect:
+            // Local navigation action, not sent to P4.
+            effect_edit_load_effect(action.id);
+            if (action.id < 4) {
+                effect_edit_set_enabled(action.id, effect_enabled_from_state(action.id));
+            }
+            ui_navigate_to(UiScreenId::EFFECT_EDIT);
+            break;
+
+        case UiActionType::AllEffectsOn:
+            // LOCAL TEMPORARY: no backend yet. This is an optimistic local
+            // change, fanned out through ui_update_effect_state so Performance,
+            // FX Chain and Effect Edit stay consistent.
+            for (int i = 0; i < 4; i++) {
+                ui_update_effect_state(i, true);
+            }
+            break;
+
+        case UiActionType::GlobalBypass:
+            // LOCAL TEMPORARY: flips a dedicated flag only. Individual effect
+            // enabled states are intentionally untouched. A real global bypass
+            // must come from the backend (VoxLink).
+            app_state.globalBypass = !app_state.globalBypass;
+            fx_chain_set_bypass(app_state.globalBypass);
+            break;
+
+        case UiActionType::LoadPreset:
+            // LOCAL TEMPORARY placeholder: selected preset becomes current.
+            if (action.id > 0) app_state.selectedPresetId = action.id;
+            ui_load_selected_preset();
+            break;
+
+        case UiActionType::SavePreset:
+            // No persistence backend yet. Control is disabled in the UI; this
+            // guard exists only so a stray event can never fake a save.
+            break;
+
+        case UiActionType::SetFootswitchConfig:
+            // Reserved for a future milestone.
+            break;
     }
 }
 
@@ -157,6 +210,8 @@ static void create_nav_bar(lv_obj_t* parent) {
         lv_obj_set_style_border_width(nav_tabs[i], 0, 0);
         lv_obj_set_style_shadow_width(nav_tabs[i], 0, 0);
         lv_obj_set_flex_grow(nav_tabs[i], 1);
+        // Subtle pressed feedback; the active tab is indicated by a top rail.
+        ui_apply_pressed(nav_tabs[i], COLOR_SURFACE_ELEV, COLOR_BORDER);
         lv_obj_set_user_data(nav_tabs[i], (void*)(intptr_t)i);
         lv_obj_add_event_cb(nav_tabs[i], nav_tab_clicked, LV_EVENT_CLICKED, NULL);
         
@@ -186,9 +241,11 @@ void update_nav_bar(UiScreenId active_screen) {
         if (!nav_tabs[i]) continue;
         
         bool is_active = (i == active_idx);
-        lv_obj_set_style_bg_color(nav_tabs[i], is_active ? COLOR_BG : COLOR_NAV, 0);
+        // All tabs share the nav background; only the top rail and the text
+        // colour distinguish the active tab (no special permanent fill).
+        lv_obj_set_style_bg_color(nav_tabs[i], COLOR_NAV, 0);
         lv_obj_set_style_border_side(nav_tabs[i], is_active ? LV_BORDER_SIDE_TOP : LV_BORDER_SIDE_NONE, 0);
-        lv_obj_set_style_border_width(nav_tabs[i], is_active ? 3 : 0, 0);
+        lv_obj_set_style_border_width(nav_tabs[i], is_active ? 2 : 0, 0);
         lv_obj_set_style_border_color(nav_tabs[i], COLOR_ACCENT, 0);
         
         lv_obj_t* label = lv_obj_get_child(nav_tabs[i], 0);
@@ -269,32 +326,76 @@ void ui_app_init(LGFX_CYD& display) {
         }
     }
     
-    // Initialize all screens
+    // Initialize all screens. DEBUG_BUILD prints the heap cost of each screen
+    // once (never from the main loop).
+#if defined(DEBUG_BUILD)
+    Serial.printf("[UI] heap before screens: %u\n",
+                  (unsigned)esp_get_free_heap_size());
+#endif
     performance_screen_init(screen_containers[0]);
+#if defined(DEBUG_BUILD)
+    ui_log_heap("Performance");
+#endif
     fx_chain_screen_init(screen_containers[1]);
+#if defined(DEBUG_BUILD)
+    ui_log_heap("FX Chain");
+#endif
     presets_screen_init(screen_containers[2]);
+#if defined(DEBUG_BUILD)
+    ui_log_heap("Presets");
+#endif
     footswitch_screen_init(screen_containers[3]);
+#if defined(DEBUG_BUILD)
+    ui_log_heap("Footswitch");
+#endif
     system_screen_init(screen_containers[4]);
+#if defined(DEBUG_BUILD)
+    ui_log_heap("System");
+#endif
     effect_edit_screen_init(screen_containers[5]);
+#if defined(DEBUG_BUILD)
+    ui_log_heap("Effect Edit");
+#endif
     settings_screen_init(screen_containers[6]);
-    
+#if defined(DEBUG_BUILD)
+    ui_log_heap("Settings");
+#endif
+
     // Create navigation bar (sibling to content_area on root)
     create_nav_bar(lv_scr_act());
-    
+#if defined(DEBUG_BUILD)
+    ui_log_heap("Nav bar");
+#endif
+
     // Set initial state and hydrate UI
     app_state.currentScreen = UiScreenId::PERFORMANCE;
     app_state.linkUp = false;
-    strncpy(app_state.presetName, "P--  CONNECTING", sizeof(app_state.presetName) - 1);
-    
+    app_state.globalBypass = false;
+    app_state.selectedPresetId = 0;
+    app_state.presetName[0] = '\0';
+
     // Hydrate UI with current state
-    performance_update_preset(app_state.presetName);
     performance_update_link(app_state.linkUp);
     for (int i = 0; i < 4; i++) {
         ui_update_effect_state(i, effect_enabled_from_state(i));
     }
+
+    // Footswitch config comes from the real FootswitchManager, never hardcoded.
+    for (int i = 0; i < 2; i++) {
+        FootswitchConfig* cfg = footswitch_get_config(i);
+        if (cfg) {
+            ui_update_footswitch_config(i, (uint8_t)cfg->mode, (uint8_t)cfg->pressAction);
+        }
+    }
+
+    // Establish a coherent local current preset (placeholder until a preset
+    // backend exists). This fans out to Performance and Presets together.
+    ui_update_preset(3, presets_get_name(2));
+
     performance_update_meters(app_state.inputPeakDb, app_state.outputPeakDb);
     const char* noteName = note_name_from_midi(app_state.detectedNote);
     performance_update_pitch(app_state.pitchFreqHz, noteName, app_state.voiced);
+    fx_chain_set_bypass(app_state.globalBypass);
 }
 
 void ui_app_run(void) {
@@ -324,13 +425,67 @@ void ui_update_link_state(bool connected) {
 }
 
 void ui_update_preset(uint16_t id, const char* name) {
-    app_state.presetId = id;
+    app_state.currentPresetId = id;
+    // A load is authoritative, so the selection follows the newly loaded preset.
+    app_state.selectedPresetId = id;
+
+    const char* safe_name = (name && name[0]) ? name : "--";
     char buf[40];
-    snprintf(buf, sizeof(buf), "P%02u  %s", (unsigned)id, name ? name : "");
+    snprintf(buf, sizeof(buf), "P%02u  %s", (unsigned)id, safe_name);
     for (char* p = buf; *p; ++p) *p = (char)toupper((unsigned char)*p);
     strncpy(app_state.presetName, buf, sizeof(app_state.presetName) - 1);
     app_state.presetName[sizeof(app_state.presetName) - 1] = '\0';
+
+    // Fan out one logical preset change to every representation.
     performance_update_preset(app_state.presetName);
+    presets_update_current(id, safe_name);
+    presets_select_preset((int)id - 1);
+}
+
+void ui_select_preset(int index) {
+    if (index < 0) return;
+    // Selection only. It must NOT change the current preset.
+    app_state.selectedPresetId = (uint16_t)(index + 1);
+    presets_select_preset(index);
+}
+
+void ui_load_selected_preset(void) {
+    const uint16_t id = app_state.selectedPresetId;
+    ui_update_preset(id, presets_get_name((int)id - 1));
+}
+
+bool ui_is_global_bypass(void) {
+    return app_state.globalBypass;
+}
+
+const char* ui_footswitch_short_label(uint8_t action) {
+    const char* full = footswitch_action_name((FootswitchAction)action);
+    if (full == nullptr) return "NONE";
+    if (strstr(full, "HARMONY")) return "HARMONY";
+    if (strstr(full, "REVERB")) return "REVERB";
+    if (strstr(full, "DELAY")) return "DELAY";
+    if (strstr(full, "TAP TEMPO")) return "TAP";
+    if (strstr(full, "PRESET NEXT")) return "NEXT";
+    if (strstr(full, "PRESET PREV")) return "PREV";
+    if (strstr(full, "GLOBAL BYPASS")) return "BYPASS";
+    return "NONE";
+}
+
+void ui_update_footswitch_config(int index, uint8_t mode, uint8_t action) {
+    if (index < 0 || index > 1) return;
+    snprintf(fs_short_label[index], sizeof(fs_short_label[index]), "%s",
+             ui_footswitch_short_label(action));
+    // Fan out config to the Footswitch screen and the Performance summary.
+    footswitch_update_config(index, mode, fs_short_label[index]);
+    performance_update_footswitch(index, fs_short_label[index], fs_pressed[index]);
+}
+
+void ui_update_footswitch_state(int index, bool pressed) {
+    if (index < 0 || index > 1) return;
+    fs_pressed[index] = pressed;
+    // Fan out one physical event to every representation.
+    performance_update_footswitch(index, fs_short_label[index], pressed);
+    footswitch_update_state(index, pressed);
 }
 
 void ui_update_effect_state(int effectId, bool enabled) {

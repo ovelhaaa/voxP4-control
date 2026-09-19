@@ -124,12 +124,10 @@ void footswitch_screen_init(lv_obj_t* parent) {
         lv_obj_set_flex_flow(right, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(right, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-        lv_obj_t* mode_label = create_field(right, "MODE",
-                                            i == 0 ? "MOMENTARY" : "LATCHING",
-                                            COLOR_TEXT_SECONDARY);
-        lv_obj_t* action_label = create_field(right, "ACTION",
-                                              i == 0 ? "HARMONY" : "REVERB",
-                                              COLOR_TEXT_PRIMARY);
+        // Neutral until the App feeds the real FootswitchManager config; never
+        // hardcode mode/action here.
+        lv_obj_t* mode_label = create_field(right, "MODE", "--", COLOR_TEXT_MUTED);
+        lv_obj_t* action_label = create_field(right, "ACTION", "--", COLOR_TEXT_MUTED);
 
         fs_cards[i] = card;
         fs_leds[i] = led;

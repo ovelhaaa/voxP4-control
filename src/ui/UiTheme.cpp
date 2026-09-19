@@ -94,3 +94,28 @@ void ui_apply_pressed(lv_obj_t* obj, lv_color_t bg, lv_color_t border) {
     lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_STATE_PRESSED);
     lv_obj_set_style_border_color(obj, border, LV_STATE_PRESSED);
 }
+
+void ui_apply_disabled(lv_obj_t* obj) {
+    if (!obj) return;
+
+    // Not interactive at all.
+    lv_obj_clear_flag(obj, LV_OBJ_FLAG_CLICKABLE);
+
+    // Neutral, low-contrast treatment.
+    lv_obj_set_style_bg_opa(obj, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_color(obj, COLOR_DISABLED, 0);
+    lv_obj_set_style_opa(obj, LV_OPA_50, 0);
+
+    // Kill any pressed feedback that may have been registered earlier.
+    lv_obj_set_style_bg_opa(obj, LV_OPA_TRANSP, LV_STATE_PRESSED);
+    lv_obj_set_style_border_color(obj, COLOR_DISABLED, LV_STATE_PRESSED);
+
+    // Mute direct child labels so the control reads as unavailable.
+    uint32_t child_count = lv_obj_get_child_cnt(obj);
+    for (uint32_t i = 0; i < child_count; i++) {
+        lv_obj_t* child = lv_obj_get_child(obj, i);
+        if (lv_obj_check_type(child, &lv_label_class)) {
+            lv_obj_set_style_text_color(child, COLOR_TEXT_MUTED, 0);
+        }
+    }
+}

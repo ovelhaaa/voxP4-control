@@ -80,31 +80,17 @@ void setup() {
     Serial.println("[INIT] Initializing footswitches...");
     footswitch_init();
     footswitch_set_event_callback([](const FootswitchEvent* ev) {
-        // Forward to UI intent system or App layer
-        if (ev->type == FS_EVENT_PRESS) {
-            // Update footswitch highlight state optimistically
-            extern void performance_update_footswitch(int fsIndex, const char* label, bool pressed);
-            FootswitchConfig* cfg = footswitch_get_config(ev->index);
-            if (cfg) {
-                // Shorten labels like "HARMONY TOGGLE" to "HARMONY" for display
-                const char* name = footswitch_action_name(cfg->pressAction);
-                if (strstr(name, "HARMONY") != NULL) name = "HARMONY";
-                else if (strstr(name, "REVERB") != NULL) name = "REVERB";
-                else if (strstr(name, "DELAY") != NULL) name = "DELAY";
-
-                performance_update_footswitch(ev->index, name, true);
-            }
-        } else if (ev->type == FS_EVENT_RELEASE) {
-            extern void performance_update_footswitch(int fsIndex, const char* label, bool pressed);
-            FootswitchConfig* cfg = footswitch_get_config(ev->index);
-            if (cfg) {
-                const char* name = footswitch_action_name(cfg->pressAction);
-                if (strstr(name, "HARMONY") != NULL) name = "HARMONY";
-                else if (strstr(name, "REVERB") != NULL) name = "REVERB";
-                else if (strstr(name, "DELAY") != NULL) name = "DELAY";
-
-                performance_update_footswitch(ev->index, name, false);
-            }
+        // Forward physical events to the App layer. main.cpp must not know
+        // about screen functions or label formatting.
+        switch (ev->type) {
+            case FS_EVENT_PRESS:
+                ui_update_footswitch_state(ev->index, true);
+                break;
+            case FS_EVENT_RELEASE:
+                ui_update_footswitch_state(ev->index, false);
+                break;
+            default:
+                break;
         }
     });
     

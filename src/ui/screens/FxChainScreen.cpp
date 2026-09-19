@@ -20,6 +20,16 @@ typedef struct {
 } FxModule_t;
 
 static FxModule_t fx_modules[4] = {};
+static lv_obj_t* bypass_button = nullptr;
+
+// Global bypass is a local flag only in this milestone; this updates its visual
+// state without touching individual effect enabled states.
+void fx_chain_set_bypass(bool active) {
+    if (!bypass_button) return;
+    lv_obj_set_style_bg_color(bypass_button, active ? COLOR_ACCENT_DARK : COLOR_SURFACE, 0);
+    lv_obj_set_style_bg_opa(bypass_button, active ? LV_OPA_COVER : LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_color(bypass_button, COLOR_ACCENT, 0);
+}
 
 static void module_clicked(lv_event_t* e) {
     lv_obj_t* card = lv_event_get_target(e);
@@ -238,9 +248,9 @@ void fx_chain_screen_init(lv_obj_t* parent) {
         ui_emit_action(action);
     }, LV_EVENT_CLICKED, NULL);
 
-    lv_obj_t* bypass_btn = create_global_action(actions_row, "BYPASS", "DISABLE ALL EFFECTS",
-                                                COLOR_ACCENT, COLOR_TEXT_PRIMARY, true);
-    lv_obj_add_event_cb(bypass_btn, [](lv_event_t* e) {
+    bypass_button = create_global_action(actions_row, "BYPASS", "GLOBAL BYPASS",
+                                         COLOR_ACCENT, COLOR_TEXT_PRIMARY, true);
+    lv_obj_add_event_cb(bypass_button, [](lv_event_t* e) {
         UiAction action = { UiActionType::GlobalBypass, 0, 0 };
         ui_emit_action(action);
     }, LV_EVENT_CLICKED, NULL);

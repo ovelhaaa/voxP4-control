@@ -172,7 +172,8 @@ void performance_screen_init(lv_obj_t* parent) {
         lv_obj_set_style_text_font(num_label, FONT_TINY, 0);
 
         fs_labels[i] = lv_label_create(fs_containers[i]);
-        lv_label_set_text(fs_labels[i], i == 0 ? "HARMONY" : "REVERB");
+        // Neutral until the App feeds the real FootswitchManager config.
+        lv_label_set_text(fs_labels[i], "--");
         lv_obj_set_style_text_color(fs_labels[i], COLOR_TEXT_SECONDARY, 0);
         lv_obj_set_style_text_font(fs_labels[i], FONT_SMALL, 0);
     }

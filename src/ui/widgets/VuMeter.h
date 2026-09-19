@@ -16,9 +16,11 @@ typedef struct {
     lv_obj_t* container;
     lv_obj_t* bar;
     lv_obj_t* db_label;
+    lv_obj_t* clip_led;
     float current_db;
     float peak_db;
     uint32_t peak_hold_time;
+    uint32_t clip_hold_until;
 } VuMeter_t;
 
 /**

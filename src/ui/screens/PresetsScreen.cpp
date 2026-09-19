@@ -13,9 +13,16 @@ static lv_obj_t* current_name_label = nullptr;
 static lv_obj_t* preset_rows[PRESET_MAX_ROWS] = {nullptr};
 static lv_obj_t* preset_bars[PRESET_MAX_ROWS] = {nullptr};
 static lv_obj_t* preset_names[PRESET_MAX_ROWS] = {nullptr};
+static const char* preset_name_refs[PRESET_MAX_ROWS] = {nullptr};
 static int preset_row_count = 0;
 static int selected_index = -1;
 static int current_preset_id = 0;
+
+// Default local preset names (placeholder until a preset backend exists).
+static const char* kSamplePresets[] = {
+    "CLEAN WARM", "BRIGHT CHORUS", "LEAD AIR", "HEAVY HARMONY",
+    "AMBIENT PAD", "STUDIO VOCAL", "LIVE BOOST", "SOFT REVERB"
+};
 
 static void apply_selection(int index) {
     selected_index = index;
@@ -40,14 +47,17 @@ static void apply_selection(int index) {
 static void preset_row_clicked(lv_event_t* e) {
     lv_obj_t* row = lv_event_get_target(e);
     int index = (int)(intptr_t)lv_obj_get_user_data(row);
-    apply_selection(index);
+    // Route selection through the App so selection state has one authority.
+    // This must NOT load the preset.
+    ui_select_preset(index);
 }
 
 static lv_obj_t* add_preset_row(int index, const char* name) {
     if (index < 0 || index >= PRESET_MAX_ROWS) return nullptr;
 
     lv_obj_t* row = lv_obj_create(preset_list);
-    lv_obj_set_size(row, LV_PCT(100), 24);
+    // Touch-friendly row height for a resistive panel; the list scrolls.
+    lv_obj_set_size(row, LV_PCT(100), 28);
     lv_obj_set_style_bg_color(row, COLOR_SURFACE, 0);
     lv_obj_set_style_radius(row, RADIUS_S, 0);
     lv_obj_set_style_border_width(row, 1, 0);
@@ -88,13 +98,15 @@ static lv_obj_t* add_preset_row(int index, const char* name) {
     preset_rows[index] = row;
     preset_bars[index] = bar;
     preset_names[index] = name_label;
+    preset_name_refs[index] = name;
     return row;
 }
 
 static lv_obj_t* create_action_button(lv_obj_t* parent, const char* text,
                                        lv_color_t border, lv_color_t text_color) {
     lv_obj_t* btn = lv_btn_create(parent);
-    lv_obj_set_height(btn, 32);
+    lv_obj_set_height(btn, 36);
+    lv_obj_set_ext_click_area(btn, 4);
     lv_obj_set_flex_grow(btn, 1);
     lv_obj_set_style_bg_opa(btn, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(btn, 1, 0);
@@ -177,18 +189,14 @@ void presets_screen_init(lv_obj_t* parent) {
     lv_obj_set_scroll_dir(preset_list, LV_DIR_VER);
     lv_obj_set_scrollbar_mode(preset_list, LV_SCROLLBAR_MODE_AUTO);
 
-    static const char* sample_presets[] = {
-        "CLEAN WARM", "BRIGHT CHORUS", "LEAD AIR", "HEAVY HARMONY",
-        "AMBIENT PAD", "STUDIO VOCAL", "LIVE BOOST", "SOFT REVERB"
-    };
     for (int i = 0; i < 8; i++) {
-        add_preset_row(preset_row_count++, sample_presets[i]);
+        add_preset_row(preset_row_count++, kSamplePresets[i]);
     }
     apply_selection(2);
 
     // === ACTIONS (secondary to the list) ===
     lv_obj_t* action_row = lv_obj_create(container);
-    lv_obj_set_size(action_row, LV_PCT(100), 32);
+    lv_obj_set_size(action_row, LV_PCT(100), 38);
     lv_obj_set_style_bg_color(action_row, COLOR_BG, 0);
     lv_obj_set_style_border_width(action_row, 0, 0);
     lv_obj_set_style_pad_all(action_row, 0, 0);
@@ -196,19 +204,25 @@ void presets_screen_init(lv_obj_t* parent) {
     lv_obj_set_flex_flow(action_row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(action_row, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
+    // LOAD is the only preset action with local behaviour in this milestone.
     lv_obj_t* load_btn = create_action_button(action_row, "LOAD", COLOR_ACCENT, COLOR_ACCENT_BRIGHT);
     lv_obj_add_event_cb(load_btn, [](lv_event_t* e) {
         UiAction action = { UiActionType::LoadPreset, (uint16_t)(selected_index + 1), 0 };
         ui_emit_action(action);
     }, LV_EVENT_CLICKED, NULL);
 
-    lv_obj_t* save_btn = create_action_button(action_row, "SAVE AS", COLOR_SEPARATOR, COLOR_TEXT_SECONDARY);
-    lv_obj_add_event_cb(save_btn, [](lv_event_t* e) {
-        UiAction action = { UiActionType::SavePreset, (uint16_t)(selected_index + 1), 0 };
-        ui_emit_action(action);
-    }, LV_EVENT_CLICKED, NULL);
+    // SAVE AS and DELETE have no persistence backend: they are deliberately
+    // disabled so they cannot look falsely functional.
+    lv_obj_t* save_btn = create_action_button(action_row, "SAVE AS", COLOR_SEPARATOR, COLOR_TEXT_MUTED);
+    ui_apply_disabled(save_btn);
 
-    create_action_button(action_row, "DELETE", COLOR_SEPARATOR, COLOR_TEXT_MUTED);
+    lv_obj_t* delete_btn = create_action_button(action_row, "DELETE", COLOR_SEPARATOR, COLOR_TEXT_MUTED);
+    ui_apply_disabled(delete_btn);
+}
+
+const char* presets_get_name(int index) {
+    if (index < 0 || index >= PRESET_MAX_ROWS) return nullptr;
+    return preset_name_refs[index];
 }
 
 void presets_update_list(const char** presetNames, int count) {
@@ -220,6 +234,7 @@ void presets_update_list(const char** presetNames, int count) {
         preset_rows[i] = nullptr;
         preset_bars[i] = nullptr;
         preset_names[i] = nullptr;
+        preset_name_refs[i] = nullptr;
     }
     preset_row_count = 0;
     for (int i = 0; i < count; i++) {

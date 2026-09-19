@@ -16,15 +16,10 @@ static int32_t db_to_percent(float db) {
     return (int32_t)(normalized * 100.0f);
 }
 
-// Seleciona cor baseada no nível de dB
-static lv_color_t get_meter_color(float db) {
-    if (db >= -3.0f) {
-        return COLOR_ERROR;
-    } else if (db >= -12.0f) {
-        return COLOR_WARNING;
-    }
-    return COLOR_AUDIO;
-}
+// Clip threshold and hold. The bar itself stays turquoise; warning/clip is
+// shown by the dedicated marker instead of recolouring the whole bar.
+static constexpr float kClipThresholdDb = -1.0f;
+static constexpr uint32_t kClipHoldMs = 800;
 
 VuMeter_t* vu_meter_create(lv_obj_t* parent, int32_t x, int32_t y, 
                            int32_t height, const char* label_text) {
@@ -64,10 +59,20 @@ VuMeter_t* vu_meter_create(lv_obj_t* parent, int32_t x, int32_t y,
     lv_label_set_text(meter->db_label, "-60");
     lv_obj_set_style_text_font(meter->db_label, FONT_TINY, 0);
     lv_obj_set_style_text_color(meter->db_label, COLOR_TEXT_SECONDARY, 0);
+
+    // Small clip marker at the far right; off unless the signal clips.
+    meter->clip_led = lv_obj_create(meter->container);
+    lv_obj_set_size(meter->clip_led, 5, 5);
+    lv_obj_clear_flag(meter->clip_led, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_radius(meter->clip_led, LV_RADIUS_CIRCLE, 0);
+    lv_obj_set_style_border_width(meter->clip_led, 0, 0);
+    lv_obj_set_style_pad_all(meter->clip_led, 0, 0);
+    lv_obj_set_style_bg_color(meter->clip_led, COLOR_DISABLED, 0);
     
     meter->current_db = -60.0f;
     meter->peak_db = -60.0f;
     meter->peak_hold_time = 0;
+    meter->clip_hold_until = 0;
     
     (void)x; (void)y; (void)label_text;
     
@@ -90,12 +95,23 @@ void vu_meter_update(VuMeter_t* meter, float db) {
     int32_t percent = db_to_percent(db);
     lv_bar_set_value(meter->bar, percent, LV_ANIM_OFF);
     
-    lv_color_t color = get_meter_color(db);
-    lv_obj_set_style_bg_color(meter->bar, color, LV_PART_INDICATOR);
+    // Normal audio stays turquoise; the whole bar no longer turns red.
+    lv_obj_set_style_bg_color(meter->bar, COLOR_AUDIO, LV_PART_INDICATOR);
     
     char buf[8];
     snprintf(buf, sizeof(buf), "%d", (int)(db + (db > 0 ? 0.5f : -0.5f)));
     lv_label_set_text(meter->db_label, buf);
+
+    // Clip marker with a short hold so single-sample peaks stay visible.
+    const uint32_t now = lv_tick_get();
+    if (db >= kClipThresholdDb) {
+        meter->clip_hold_until = now + kClipHoldMs;
+    }
+    const bool clipping = (int32_t)(now - meter->clip_hold_until) < 0;
+    if (meter->clip_led) {
+        lv_obj_set_style_bg_color(meter->clip_led,
+            clipping ? COLOR_ERROR : COLOR_DISABLED, 0);
+    }
 }
 
 void vu_meter_reset_peak(VuMeter_t* meter) {

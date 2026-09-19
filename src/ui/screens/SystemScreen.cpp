@@ -44,6 +44,13 @@ static lv_obj_t* add_value_row(lv_obj_t* parent, const char* name) {
     return value;
 }
 
+// Values are neutral by default; colour appears only when there is a reason.
+static void set_value_alert(lv_obj_t* label, bool warning, bool error) {
+    if (!label) return;
+    lv_obj_set_style_text_color(label,
+        error ? COLOR_ERROR : (warning ? COLOR_WARNING : COLOR_TEXT_PRIMARY), 0);
+}
+
 void system_screen_init(lv_obj_t* parent) {
     lv_obj_t* container = lv_obj_create(parent);
     lv_obj_set_size(container, LV_PCT(100), LV_PCT(100));
@@ -134,26 +141,31 @@ void system_screen_update_info(const char* p4Firmware, const char* cydFirmware,
     if (cpu_load_label) {
         snprintf(buf, sizeof(buf), "%.0f %%", cpuLoad);
         lv_label_set_text(cpu_load_label, buf);
+        set_value_alert(cpu_load_label, cpuLoad > 85.0f, cpuLoad > 95.0f);
     }
     
     if (underruns_label) {
         snprintf(buf, sizeof(buf), "%d", underruns);
         lv_label_set_text(underruns_label, buf);
+        set_value_alert(underruns_label, underruns > 0, underruns >= 5);
     }
     
     if (uart_errors_label) {
         snprintf(buf, sizeof(buf), "%d", uartErrors);
         lv_label_set_text(uart_errors_label, buf);
+        set_value_alert(uart_errors_label, uartErrors > 0, false);
     }
     
     if (crc_errors_label) {
         snprintf(buf, sizeof(buf), "%d", crcErrors);
         lv_label_set_text(crc_errors_label, buf);
+        set_value_alert(crc_errors_label, crcErrors > 0, false);
     }
     
     if (reconnect_label) {
         snprintf(buf, sizeof(buf), "%d", reconnectCount);
         lv_label_set_text(reconnect_label, buf);
+        set_value_alert(reconnect_label, reconnectCount > 0, false);
     }
     
     if (heap_free_label) {
