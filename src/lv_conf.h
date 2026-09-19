@@ -55,7 +55,7 @@
 #define LV_USE_ANIMATION 1
 #define LV_USE_FS_STDIO 0
 #define LV_USE_GPU 0
-#define LV_USE_GRADIENT_SIMPLE 1
+#define LV_USE_GRADIENT_SIMPLE 0
 #define LV_USE_IMG_TRANSFORM 0
 #define LV_USE_SNAPSHOT 0
 #define LV_USE_MONKEY 0
@@ -69,12 +69,12 @@
 #define LV_USE_ANIMIMG 0
 #define LV_USE_BAR 1
 #define LV_USE_BTN 1
-#define LV_USE_BTNMATRIX 1
+#define LV_USE_BTNMATRIX 0
 #define LV_USE_CALENDAR 0
 #define LV_USE_CANVAS 0
 #define LV_USE_CHECKBOX 0
 #define LV_USE_DROPDOWN 0
-#define LV_USE_IMAGE 1
+#define LV_USE_IMAGE 0
 #define LV_USE_IMAGEBUTTON 0
 #define LV_USE_KEYBOARD 0
 #define LV_USE_LABEL 1
@@ -90,15 +90,17 @@
 
 // Others
 #define LV_USE_MSG 0
-#define LV_USE_LIST 1
-#define LV_USE_MENU 1
-#define LV_USE_TILEVIEW 1
-#define LV_USE_WIN 1
-#define LV_USE_SPAN 1
+// Unused higher-level containers/widgets disabled to reduce flash/RAM.
+#define LV_USE_LIST 0
+#define LV_USE_MENU 0
+#define LV_USE_TILEVIEW 0
+#define LV_USE_WIN 0
+#define LV_USE_SPAN 0
 #define LV_USE_SPINBOX 0
 #define LV_USE_SPINNER 0
 #define LV_USE_TABVIEW 0
 #define LV_USE_VIEWPORT 0
+#define LV_USE_MSGBOX 0
 
 // Themes
 #define LV_THEME_DEFAULT_GROW 0
@@ -106,6 +108,7 @@
 
 // Layouts
 #define LV_USE_FLEX 1
-#define LV_USE_GRID 1
+// Only flex layout is used; grid is unused.
+#define LV_USE_GRID 0
 
 #endif /* LV_CONF_H */
