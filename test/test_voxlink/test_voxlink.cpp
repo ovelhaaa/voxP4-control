@@ -3,6 +3,7 @@
 // reconnect and capability gating. No Arduino/LVGL.
 #include <unity.h>
 
+#include <cstdio>
 #include <cstring>
 #include <vector>
 
@@ -179,6 +180,71 @@ void complete_handshake(Harness &h) {
     h.state_end(7);
     h.drain_tx();
     h.drain_events();
+}
+
+// Full 49-parameter schema straight from the generated ABI constants.
+struct IdTag {
+    uint16_t id;
+    ValueTag tag;
+};
+const IdTag kFullSchema[] = {
+    {VOXP4_PARAM_HARMONY_ENABLE, ValueTag::Bool},
+    {VOXP4_PARAM_HARMONY_INTERVAL, ValueTag::Int32},
+    {VOXP4_PARAM_HARMONY_LEVEL, ValueTag::Float32},
+    {VOXP4_PARAM_HARMONY_MODE, ValueTag::Enum16},
+    {VOXP4_PARAM_HARMONY_KEY, ValueTag::Enum16},
+    {VOXP4_PARAM_HARMONY_SCALE, ValueTag::Enum16},
+    {VOXP4_PARAM_HARMONY_VOICE1_PAN, ValueTag::Float32},
+    {VOXP4_PARAM_HARMONY_VOICE1_DEGREE, ValueTag::Int32},
+    {VOXP4_PARAM_HARMONY_VOICE1_SMOOTHING_MS, ValueTag::Float32},
+    {VOXP4_PARAM_HARMONY_FORMANT_ENABLE, ValueTag::Bool},
+    {VOXP4_PARAM_HARMONY_FORMANT_AMOUNT, ValueTag::Float32},
+    {VOXP4_PARAM_HARMONY_ATTACK_MS, ValueTag::Float32},
+    {VOXP4_PARAM_HARMONY_RELEASE_MS, ValueTag::Float32},
+    {VOXP4_PARAM_HARMONY_LIMITER_ENABLE, ValueTag::Bool},
+    {VOXP4_PARAM_HARMONY_LIMITER_THRESHOLD_DB, ValueTag::Float32},
+    {VOXP4_PARAM_HARMONY_DRY_ALIGNMENT_ENABLE, ValueTag::Bool},
+    {VOXP4_PARAM_HARMONY_DRY_ALIGNMENT_MS, ValueTag::Float32},
+    {VOXP4_PARAM_HARMONY_VOICE1_NON_SCALE_POLICY, ValueTag::Enum16},
+    {VOXP4_PARAM_HARMONY_VOICE1_VOICE_LEADING, ValueTag::Bool},
+    {VOXP4_PARAM_HARMONY_VOICE1_MIN_MIDI, ValueTag::Float32},
+    {VOXP4_PARAM_HARMONY_VOICE1_MAX_MIDI, ValueTag::Float32},
+    {VOXP4_PARAM_COMPRESSOR_ENABLE, ValueTag::Bool},
+    {VOXP4_PARAM_COMPRESSOR_THRESHOLD_DB, ValueTag::Float32},
+    {VOXP4_PARAM_COMPRESSOR_RATIO, ValueTag::Float32},
+    {VOXP4_PARAM_COMPRESSOR_ATTACK_MS, ValueTag::Float32},
+    {VOXP4_PARAM_COMPRESSOR_RELEASE_MS, ValueTag::Float32},
+    {VOXP4_PARAM_COMPRESSOR_MAKEUP_DB, ValueTag::Float32},
+    {VOXP4_PARAM_COMPRESSOR_KNEE_DB, ValueTag::Float32},
+    {VOXP4_PARAM_GATE_ENABLE, ValueTag::Bool},
+    {VOXP4_PARAM_GATE_THRESHOLD_DB, ValueTag::Float32},
+    {VOXP4_PARAM_GATE_ATTACK_MS, ValueTag::Float32},
+    {VOXP4_PARAM_GATE_HOLD_MS, ValueTag::Float32},
+    {VOXP4_PARAM_GATE_RELEASE_MS, ValueTag::Float32},
+    {VOXP4_PARAM_GATE_RANGE_DB, ValueTag::Float32},
+    {VOXP4_PARAM_DELAY_ENABLE, ValueTag::Bool},
+    {VOXP4_PARAM_DELAY_LEFT_MS, ValueTag::Float32},
+    {VOXP4_PARAM_DELAY_RIGHT_MS, ValueTag::Float32},
+    {VOXP4_PARAM_DELAY_FEEDBACK, ValueTag::Float32},
+    {VOXP4_PARAM_DELAY_WET, ValueTag::Float32},
+    {VOXP4_PARAM_DELAY_DRY, ValueTag::Float32},
+    {VOXP4_PARAM_DELAY_FEEDBACK_LOWPASS_HZ, ValueTag::Float32},
+    {VOXP4_PARAM_REVERB_ENABLE, ValueTag::Bool},
+    {VOXP4_PARAM_REVERB_WET, ValueTag::Float32},
+    {VOXP4_PARAM_REVERB_DECAY_S, ValueTag::Float32},
+    {VOXP4_PARAM_REVERB_DAMPING, ValueTag::Float32},
+    {VOXP4_PARAM_LIMITER_CEILING, ValueTag::Float32},
+    {VOXP4_PARAM_OUTPUT_MUTE_DRY, ValueTag::Bool},
+    {VOXP4_PARAM_OUTPUT_SPATIAL_ROUTING, ValueTag::Enum16},
+    {VOXP4_PARAM_OUTPUT_SPATIAL_SOURCE, ValueTag::Enum16},
+};
+constexpr size_t kFullSchemaCount = sizeof(kFullSchema) / sizeof(kFullSchema[0]);
+
+void advertise_full(Harness &h, uint32_t caps) {
+    h.caps_begin(static_cast<uint16_t>(kFullSchemaCount), caps);
+    for (const auto &e : kFullSchema)
+        h.caps_param(e.id, e.tag, 0.0f, 1.0f, 0.0f, 0.01f);
+    h.caps_end(static_cast<uint16_t>(kFullSchemaCount));
 }
 
 const Frame *find(const std::vector<Frame> &v, MsgType t) {
@@ -437,6 +503,308 @@ void test_version_mismatch_rejected(void) {
     TEST_ASSERT_TRUE(h.client.counters().version_errors >= 1);
 }
 
+// --- M6.1 hardening --------------------------------------------------------
+void test_full_49_param_snapshot_no_drop(void) {
+    Harness h;
+    h.client.begin(0);
+    h.drain_tx();
+    h.hello_ack();
+    h.drain_tx();
+    uint32_t caps = kCapHarmony | kCapReverb | kCapDelay | kCapLimiter |
+                    kCapGate | kCapCompressor | kCapFormantPreservation;
+    advertise_full(h, caps);
+    h.drain_tx();
+
+    h.state_begin(7, (uint16_t)kFullSchemaCount);
+    for (const auto &e : kFullSchema)
+        h.state_param(e.id, e.tag, e.tag == ValueTag::Float32 ? 0.5f : 1.0f);
+    h.state_end(7);
+
+    auto events = h.drain_events();
+    int authoritative = 0, link = 0;
+    for (const auto &e : events) {
+        if (e.type == EventType::ParamAuthoritative) ++authoritative;
+        if (e.type == EventType::LinkActive) ++link;
+    }
+    TEST_ASSERT_EQUAL_INT((int)kFullSchemaCount, authoritative);
+    TEST_ASSERT_EQUAL_INT(1, link);
+    TEST_ASSERT_EQUAL_UINT32(0, h.client.counters().event_drops);
+    TEST_ASSERT_TRUE(h.client.active());
+    TEST_ASSERT_TRUE(!events.empty());
+    // LinkActive must be last so the UI sees a complete snapshot first.
+    TEST_ASSERT_EQUAL_INT((int)EventType::LinkActive, (int)events.back().type);
+}
+
+void test_set_ack_then_same_revision_param_changed(void) {
+    Harness h;
+    complete_handshake(h); // revision 7
+    h.client.set_parameter(VOXP4_PARAM_REVERB_WET, 0.18f, h.now);
+    h.now += 40;
+    h.client.tick(h.now);
+    auto tx = h.drain_tx();
+    const Frame *set = find(tx, MsgType::SetParam);
+    TEST_ASSERT_NOT_NULL(set);
+
+    h.ack_nack(MsgType::Ack, (uint8_t)MsgType::SetParam, set->seq, Code::Ok);
+    // ACK must NOT finalize a SET.
+    TEST_ASSERT_EQUAL_INT(1, (int)h.client.pending_count());
+
+    // Same revision, direct no-op confirmation must still be accepted.
+    h.param_changed(VOXP4_PARAM_REVERB_WET, 7, set->seq, ValueTag::Float32,
+                    0.18f);
+    TEST_ASSERT_EQUAL_INT(0, (int)h.client.pending_count());
+    auto events = h.drain_events();
+    bool auth = false;
+    for (const auto &e : events)
+        if (e.type == EventType::ParamAuthoritative &&
+            e.id == VOXP4_PARAM_REVERB_WET)
+            auth = true;
+    TEST_ASSERT_TRUE(auth);
+}
+
+void test_heartbeat_ack_seq_collision(void) {
+    Harness h;
+    complete_handshake(h);
+    // First client request uses seq 0.
+    h.client.set_parameter(VOXP4_PARAM_REVERB_WET, 0.3f, h.now);
+    h.now += 40;
+    h.client.tick(h.now);
+    auto tx = h.drain_tx();
+    const Frame *set = find(tx, MsgType::SetParam);
+    TEST_ASSERT_NOT_NULL(set);
+    TEST_ASSERT_EQUAL_UINT8(0, set->seq);
+
+    // A heartbeat ACK (ref_type Heartbeat, seq 0) must not touch the SET.
+    h.ack_nack(MsgType::Ack, (uint8_t)MsgType::Heartbeat, 0, Code::Ok);
+    TEST_ASSERT_EQUAL_INT(1, (int)h.client.pending_count());
+
+    // The matching PARAM_CHANGED still finalizes it.
+    h.param_changed(VOXP4_PARAM_REVERB_WET, 7, set->seq, ValueTag::Float32, 0.3f);
+    TEST_ASSERT_EQUAL_INT(0, (int)h.client.pending_count());
+}
+
+void test_bool_queue_full_retry_success(void) {
+    Harness h;
+    complete_handshake(h);
+    TEST_ASSERT_TRUE(
+        h.client.set_parameter(VOXP4_PARAM_REVERB_ENABLE, 0.0f, h.now));
+    auto tx = h.drain_tx();
+    const Frame *set = find(tx, MsgType::SetParam);
+    TEST_ASSERT_NOT_NULL(set);
+    h.ack_nack(MsgType::Nack, (uint8_t)MsgType::SetParam, set->seq,
+               Code::QueueFull);
+    TEST_ASSERT_EQUAL_UINT32(1, h.client.counters().queue_full);
+
+    h.now += 40;
+    h.client.tick(h.now);
+    auto tx2 = h.drain_tx();
+    const Frame *retry = find(tx2, MsgType::SetParam);
+    TEST_ASSERT_NOT_NULL(retry);
+    h.param_changed(VOXP4_PARAM_REVERB_ENABLE, 8, retry->seq, ValueTag::Bool,
+                    0.0f);
+    auto events = h.drain_events();
+    bool auth = false;
+    for (const auto &e : events)
+        if (e.type == EventType::ParamAuthoritative &&
+            e.id == VOXP4_PARAM_REVERB_ENABLE && e.value == 0.0f)
+            auth = true;
+    TEST_ASSERT_TRUE(auth);
+}
+
+void test_bool_queue_full_retry_exhaustion_rollback(void) {
+    Harness h;
+    complete_handshake(h);
+    h.client.set_parameter(VOXP4_PARAM_REVERB_ENABLE, 0.0f, h.now);
+    auto tx = h.drain_tx();
+    const Frame *set = find(tx, MsgType::SetParam);
+    TEST_ASSERT_NOT_NULL(set);
+    uint8_t seq = set->seq;
+    for (int i = 0; i < 4; ++i) {
+        h.ack_nack(MsgType::Nack, (uint8_t)MsgType::SetParam, seq, Code::QueueFull);
+        h.now += 40;
+        h.client.tick(h.now);
+        auto t = h.drain_tx();
+        const Frame *next = find(t, MsgType::SetParam);
+        if (next != nullptr) seq = next->seq;
+    }
+    auto events = h.drain_events();
+    bool revert = false;
+    for (const auto &e : events)
+        if (e.type == EventType::ParamRevert &&
+            e.id == VOXP4_PARAM_REVERB_ENABLE)
+            revert = true;
+    TEST_ASSERT_TRUE(revert);
+    TEST_ASSERT_TRUE(h.client.counters().queue_full_exhausted >= 1);
+}
+
+void test_enum_queue_full_latest_wins(void) {
+    Harness h;
+    complete_handshake(h);
+    h.client.set_parameter(VOXP4_PARAM_HARMONY_MODE, 1.0f, h.now);
+    auto tx = h.drain_tx();
+    const Frame *set = find(tx, MsgType::SetParam);
+    TEST_ASSERT_NOT_NULL(set);
+    h.ack_nack(MsgType::Nack, (uint8_t)MsgType::SetParam, set->seq,
+               Code::QueueFull);
+    // User changes again before the retry window.
+    h.client.set_parameter(VOXP4_PARAM_HARMONY_MODE, 2.0f, h.now);
+    h.now += 40;
+    h.client.tick(h.now);
+    auto tx2 = h.drain_tx();
+    const Frame *retry = find(tx2, MsgType::SetParam);
+    TEST_ASSERT_NOT_NULL(retry);
+    TEST_ASSERT_EQUAL_UINT16(2, get_u16(retry->payload + 3));
+}
+
+void test_pending_pool_saturation(void) {
+    Harness h;
+    complete_handshake(h);
+    const uint16_t ids[8] = {
+        VOXP4_PARAM_HARMONY_INTERVAL,
+        VOXP4_PARAM_HARMONY_VOICE1_DEGREE,
+        VOXP4_PARAM_HARMONY_KEY,
+        VOXP4_PARAM_HARMONY_SCALE,
+        VOXP4_PARAM_HARMONY_MODE,
+        VOXP4_PARAM_HARMONY_VOICE1_NON_SCALE_POLICY,
+        VOXP4_PARAM_HARMONY_VOICE1_VOICE_LEADING,
+        VOXP4_PARAM_HARMONY_FORMANT_ENABLE,
+    };
+    for (uint16_t id : ids)
+        TEST_ASSERT_TRUE(h.client.set_parameter(id, 1.0f, h.now));
+    TEST_ASSERT_EQUAL_INT((int)VoxLinkClient::kPendingCapacity,
+                          (int)h.client.pending_count());
+    const uint32_t before = h.client.counters().pending_full;
+    TEST_ASSERT_FALSE(
+        h.client.set_parameter(VOXP4_PARAM_HARMONY_LIMITER_ENABLE, 1.0f, h.now));
+    TEST_ASSERT_TRUE(h.client.counters().pending_full > before);
+    TEST_ASSERT_TRUE(h.client.pending_count() <=
+                     (int)VoxLinkClient::kPendingCapacity);
+
+    auto tx = h.drain_tx();
+    std::vector<uint8_t> seqs;
+    for (const auto &f : tx)
+        if (f.type == MsgType::SetParam) seqs.push_back(f.seq);
+    for (size_t i = 0; i < seqs.size(); ++i)
+        for (size_t j = i + 1; j < seqs.size(); ++j)
+            TEST_ASSERT_TRUE(seqs[i] != seqs[j]);
+}
+
+void test_tx_ring_saturation(void) {
+    Harness h;
+    complete_handshake(h);
+    h.drain_tx();
+    for (int i = 0; i < 300; ++i) {
+        h.feed_frame(MsgType::Heartbeat, 0, nullptr, 0); // keep link alive
+        h.now += 1000;
+        h.client.tick(h.now);
+    }
+    TEST_ASSERT_TRUE(h.client.counters().tx_drops > 0);
+    TEST_ASSERT_TRUE(h.client.tx_used() <= VoxLinkClient::kTxCapacity - 1);
+
+    uint8_t buf[VoxLinkClient::kTxCapacity];
+    const size_t n = h.client.take_tx(buf, sizeof(buf));
+    TEST_ASSERT_TRUE(n <= VoxLinkClient::kTxCapacity - 1);
+    size_t off = 0;
+    while (off < n) {
+        Frame f;
+        size_t consumed = 0;
+        if (decode_frame(buf + off, n - off, &f, &consumed) != DecodeStatus::Ok)
+            break;
+        off += consumed;
+    }
+    TEST_ASSERT_EQUAL_UINT((unsigned)off, (unsigned)n); // ring stayed intact
+    TEST_ASSERT_EQUAL_UINT(0, (unsigned)h.client.tx_used());
+}
+
+void test_garbage_does_not_keep_link_alive(void) {
+    Harness h;
+    complete_handshake(h);
+    h.drain_tx();
+    const uint8_t zeros[16] = {0};
+    bool down = false;
+    for (int i = 0; i < 40 && !down; ++i) {
+        h.now += 100;
+        h.feed_raw(zeros, sizeof(zeros));
+        h.feed_raw(voxlink_vectors::kHelloBadCrc,
+                   sizeof(voxlink_vectors::kHelloBadCrc));
+        h.client.tick(h.now);
+        for (const auto &e : h.drain_events())
+            if (e.type == EventType::LinkDown) down = true;
+    }
+    TEST_ASSERT_TRUE(down);
+    TEST_ASSERT_FALSE(h.client.active());
+}
+
+void test_stale_param_value_ignored(void) {
+    Harness h;
+    complete_handshake(h); // revision 7
+    h.param_changed(VOXP4_PARAM_REVERB_WET, 20, 0xFE, ValueTag::Float32, 0.50f);
+    h.drain_events();
+    TEST_ASSERT_EQUAL_UINT32(20, h.client.revision());
+
+    uint8_t p[11];
+    put_u16(p, VOXP4_PARAM_REVERB_WET);
+    put_u32(p + 2, 19);
+    p[6] = (uint8_t)ValueTag::Float32;
+    put_f32(p + 7, 0.20f);
+    h.feed_frame(MsgType::ParamValue, 0xFD, p, sizeof(p));
+    auto events = h.drain_events();
+    TEST_ASSERT_EQUAL_INT(0, (int)events.size());
+    TEST_ASSERT_EQUAL_UINT32(20, h.client.revision());
+}
+
+void test_reconnect_replaces_caps(void) {
+    Harness h;
+    complete_handshake(h); // advertises formant
+    TEST_ASSERT_TRUE(
+        h.client.parameter_supported(VOXP4_PARAM_HARMONY_FORMANT_AMOUNT));
+
+    h.now += 4000;
+    h.client.tick(h.now);
+    h.drain_events();
+    TEST_ASSERT_FALSE(h.client.active());
+
+    h.now += 300;
+    h.client.tick(h.now);
+    h.drain_tx();
+    h.hello_ack();
+    h.drain_tx();
+    advertise_common(h, /*include_formant=*/false);
+    h.drain_tx();
+    h.state_begin(12, 0);
+    h.state_end(12);
+
+    TEST_ASSERT_TRUE(h.client.active());
+    TEST_ASSERT_FALSE(
+        h.client.parameter_supported(VOXP4_PARAM_HARMONY_FORMANT_AMOUNT));
+}
+
+void test_caps_overflow_rejected(void) {
+    Harness h;
+    h.client.begin(0);
+    h.drain_tx();
+    h.hello_ack();
+    h.drain_tx();
+    h.caps_begin(65, kCapHarmony); // > kMaxCapsParams
+    TEST_ASSERT_FALSE(h.client.caps_valid());
+    TEST_ASSERT_TRUE(h.client.counters().caps_overflow >= 1);
+    auto tx = h.drain_tx();
+    TEST_ASSERT_NULL(find(tx, MsgType::GetState));
+}
+
+void test_snapshot_overflow_rejected(void) {
+    Harness h;
+    complete_handshake(h);
+    const uint32_t rev = h.client.revision();
+    h.state_begin(rev + 1, 65); // > kMaxSnapshotParams
+    h.state_param(VOXP4_PARAM_REVERB_WET, ValueTag::Float32, 0.9f);
+    h.state_end(rev + 1);
+    auto events = h.drain_events();
+    TEST_ASSERT_TRUE(h.client.counters().snapshot_overflow >= 1);
+    TEST_ASSERT_EQUAL_UINT32(rev, h.client.revision());
+    TEST_ASSERT_EQUAL_INT(0, (int)events.size());
+}
+
 int main(int, char **) {
     UNITY_BEGIN();
     RUN_TEST(test_crc_check_value);
@@ -450,5 +818,18 @@ int main(int, char **) {
     RUN_TEST(test_reconnect_p4_wins);
     RUN_TEST(test_caps_gating_and_unknown_param);
     RUN_TEST(test_version_mismatch_rejected);
+    RUN_TEST(test_full_49_param_snapshot_no_drop);
+    RUN_TEST(test_set_ack_then_same_revision_param_changed);
+    RUN_TEST(test_heartbeat_ack_seq_collision);
+    RUN_TEST(test_bool_queue_full_retry_success);
+    RUN_TEST(test_bool_queue_full_retry_exhaustion_rollback);
+    RUN_TEST(test_enum_queue_full_latest_wins);
+    RUN_TEST(test_pending_pool_saturation);
+    RUN_TEST(test_tx_ring_saturation);
+    RUN_TEST(test_garbage_does_not_keep_link_alive);
+    RUN_TEST(test_stale_param_value_ignored);
+    RUN_TEST(test_reconnect_replaces_caps);
+    RUN_TEST(test_caps_overflow_rejected);
+    RUN_TEST(test_snapshot_overflow_rejected);
     return UNITY_END();
 }
