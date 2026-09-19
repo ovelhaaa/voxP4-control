@@ -36,9 +36,11 @@ authority for values, and `ui_update_parameter()` is the single logical change.
 ## UiParamId
 
 Logical, controller-local IDs. They are deliberately **not** the backend's
-`VocalFxParameter` ordinals. Each descriptor also stores `voxlinkId`, the
-intended mapping to the ESP32-P4 VoxLink parameter ID, for the future transport
-layer. No voxP4 header is included by the controller.
+`VocalFxParameter` ordinals. Each descriptor stores `voxlinkId`, taken from the
+generated `VOXP4_PARAM_*` constants (synchronized from voxP4), for the future
+transport layer. No voxP4 source header is included by the controller; only the
+generated `src/voxlink/generated/VoxP4ParamIds.h` artifact is shared. See
+[`docs/m5_1_voxlink_contract.md`](m5_1_voxlink_contract.md).
 
 ```text
 Harmony:  HarmonyMode, HarmonyInterval, HarmonyDegree, HarmonyKey,
@@ -79,7 +81,7 @@ struct UiParamDescriptor {
     const char* section;       // section header grouping
     UiControlType type;        // Slider | Toggle | Segmented | Stepper
     UiValueFormat format;      // Percent | ... | EnumLabel
-    float minValue, maxValue, step, defaultValue;
+    float minValue, maxValue, uiStep, defaultValue;
     const char* const* options; // enum labels
     uint8_t optionCount;
     uint16_t voxlinkId;         // future mapping
@@ -95,7 +97,7 @@ changes never rebuild the screen.
 ## Controls
 
 * **Slider** — labelled row + formatted value + orange slider (int index mapped
-  from `(value-min)/step`).
+  from `(value-min)/uiStep`).
 * **Toggle** — ON/OFF button (used for Formant mode, Voice Leading).
 * **Segmented** — 2–3 options (MODE, NON-SCALE).
 * **Stepper** — `[-] value [+]` for large enums (KEY, SCALE, 12 values, wrap).
@@ -109,7 +111,7 @@ clamps and is the future mapping target. The spec's approximate harmony defaults
 that production `vocal_fx_init` overrides; the real boot values equal the
 registry defaults, which is what the controller uses.
 
-| Parameter | Range | Step | Default |
+| Parameter | Range | UI step | Default |
 |---|---|---|---|
 | HarmonyMode | 0..2 | 1 | 0 (FIXED) |
 | HarmonyInterval | -12..12 st | 1 | 0 |
