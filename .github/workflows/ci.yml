@@ -5,73 +5,112 @@ on:
     branches: [ "main", "develop" ]
   pull_request:
     branches: [ "main", "develop" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  native-tests:
+    name: Native parameter-model tests
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 20
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: ~/.platformio/.cache
+          key: ${{ runner.os }}-pio-${{ hashFiles('**/platformio.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-
+
       - name: Install PlatformIO Core
         run: |
           python -m pip install --upgrade pip
           pip install --upgrade platformio
-      
-      - name: Cache PlatformIO dependencies
+
+      - name: Run native tests
+        run: pio test -e native
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache PlatformIO
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.platformio
-            .pio
-          key: ${{ runner.os }}-platformio-${{ hashFiles('**/platformio.ini') }}
+          path: ~/.platformio/.cache
+          key: ${{ runner.os }}-pio-${{ hashFiles('**/platformio.ini') }}
           restore-keys: |
-            ${{ runner.os }}-platformio-
-      
-      - name: Install project dependencies
+            ${{ runner.os }}-pio-
+
+      - name: Install PlatformIO Core
         run: |
-          pio pkg install
-      
-      - name: Build project
-        run: |
-          pio run
-      
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        if: success()
-        with:
-          name: firmware-binaries
-          path: .pio/build/esp32-cyd/*.bin
-          retention-days: 7
-      
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Build release
+        run: pio run -e esp32-cyd-release
+
+      - name: Build debug
+        run: pio run -e esp32-cyd-debug
+
       - name: Check for compilation warnings
         run: |
-          pio run 2>&1 | tee build.log
+          pio run -e esp32-cyd-release 2>&1 | tee build.log
           if grep -q "warning:" build.log; then
             echo "::warning::Build completed with warnings"
             grep "warning:" build.log || true
           fi
 
+      - name: Upload release firmware
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: voxp4-control-esp32-cyd-release
+          path: |
+            .pio/build/esp32-cyd-release/firmware.bin
+            .pio/build/esp32-cyd-release/firmware.elf
+            .pio/build/esp32-cyd-release/firmware.map
+          if-no-files-found: error
+          retention-days: 14
+
   lint:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Run clang-format check
         uses: jidicula/clang-format-action@v4.11.0
         with:
           clang-format-version: '17'
           check-path: 'src'
         continue-on-error: true
-      
+
       - name: Check file structure
         run: |
           echo "Checking required source files..."
@@ -84,7 +123,7 @@ jobs:
             "src/ui/UiTheme.cpp"
             "src/ui/UiTheme.h"
           )
-          
+
           missing=0
           for file in "${required_files[@]}"; do
             if [ ! -f "$file" ]; then
@@ -92,7 +131,7 @@ jobs:
               missing=1
             fi
           done
-          
+
           if [ $missing -eq 1 ]; then
             exit 1
           fi
