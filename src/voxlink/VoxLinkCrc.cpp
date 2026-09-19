@@ -1,0 +1,16 @@
+#include "voxlink/VoxLinkCrc.h"
+
+namespace voxlink {
+uint16_t crc16_ccitt_false(const uint8_t *data, size_t len) {
+    uint16_t crc = 0xFFFF;
+    if (data == nullptr) return crc;
+    for (size_t i = 0; i < len; ++i) {
+        crc ^= static_cast<uint16_t>(data[i]) << 8;
+        for (int bit = 0; bit < 8; ++bit) {
+            crc = (crc & 0x8000u) ? static_cast<uint16_t>((crc << 1) ^ 0x1021u)
+                                  : static_cast<uint16_t>(crc << 1);
+        }
+    }
+    return crc;
+}
+} // namespace voxlink

@@ -17,6 +17,7 @@
 // the wire/ABI IDs for the future VoxLink transport (M6) and must never be used
 // as UiParamId ordinals. The build does not require a voxP4 checkout.
 
+#include "voxlink/generated/VoxP4ContractPin.h"
 #include "voxlink/generated/VoxP4ParamIds.h"
 
 #endif // VOXLINK_CONTRACT_H
