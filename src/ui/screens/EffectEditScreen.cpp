@@ -2,6 +2,7 @@
 #include "../UiApp.h"
 #include "../UiTheme.h"
 #include "ui/params/UiParamModel.h"
+#include "voxlink/VoxLinkUi.h"
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -401,6 +402,9 @@ static void rebuild_params(void) {
     for (size_t i = 0; i < count; i++) {
         const UiParamDescriptor& d = table[i];
         if (!ui_descriptor_applies(d, mode)) continue;
+        // Capability gating: skip parameters the connected P4 does not expose.
+        const uint16_t wire_id = ui_param_voxlink_id(d.id);
+        if (wire_id != 0 && !voxlink_param_supported(wire_id)) continue;
         if (d.section &&
             (last_section == nullptr || std::strcmp(d.section, last_section) != 0)) {
             create_section_header(params_area, d.section);

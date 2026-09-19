@@ -179,6 +179,29 @@ uint16_t ui_param_voxlink_id(UiParamId id) {
     return d ? d->voxlinkId : 0u;
 }
 
+bool ui_param_from_voxlink_id(uint16_t voxlinkId, UiParamId* out) {
+    if (voxlinkId == 0) return false;
+    for (size_t i = 0; i < kUiParamCount; ++i) {
+        const UiParamDescriptor* d = ui_param_descriptor(static_cast<UiParamId>(i));
+        if (d != nullptr && d->voxlinkId == voxlinkId) {
+            if (out != nullptr) *out = d->id;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ui_effect_from_enable_voxlink_id(uint16_t id, UiEffectId* out) {
+    for (size_t e = 0; e < kUiEffectCount; ++e) {
+        const UiEffectId effect = static_cast<UiEffectId>(e);
+        if (ui_effect_enable_voxlink_id(effect) == id) {
+            if (out != nullptr) *out = effect;
+            return true;
+        }
+    }
+    return false;
+}
+
 uint16_t ui_effect_enable_voxlink_id(UiEffectId effect) {
     switch (effect) {
         case UiEffectId::Harmony: return VOXP4_PARAM_HARMONY_ENABLE;

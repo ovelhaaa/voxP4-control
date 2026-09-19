@@ -14,6 +14,7 @@ static lv_obj_t* preset_rows[PRESET_MAX_ROWS] = {nullptr};
 static lv_obj_t* preset_bars[PRESET_MAX_ROWS] = {nullptr};
 static lv_obj_t* preset_names[PRESET_MAX_ROWS] = {nullptr};
 static const char* preset_name_refs[PRESET_MAX_ROWS] = {nullptr};
+static lv_obj_t* load_btn_ = nullptr;
 static int preset_row_count = 0;
 static int selected_index = -1;
 static int current_preset_id = 0;
@@ -205,9 +206,9 @@ void presets_screen_init(lv_obj_t* parent) {
     lv_obj_set_flex_align(action_row, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     // LOAD is the only preset action with local behaviour in this milestone.
-    lv_obj_t* load_btn = create_action_button(action_row, "LOAD", COLOR_ACCENT, COLOR_ACCENT_BRIGHT);
-    lv_obj_add_event_cb(load_btn, [](lv_event_t* e) {
-        UiAction action = { UiActionType::LoadPreset, (uint16_t)(selected_index + 1), 0 };
+    load_btn_ = create_action_button(action_row, "LOAD", COLOR_ACCENT, COLOR_ACCENT_BRIGHT);
+    lv_obj_add_event_cb(load_btn_, [](lv_event_t* e) {
+        UiAction action = { UiActionType::LoadPreset, (uint16_t)(selected_index + 1), 0.0f };
         ui_emit_action(action);
     }, LV_EVENT_CLICKED, NULL);
 
@@ -223,6 +224,20 @@ void presets_screen_init(lv_obj_t* parent) {
 const char* presets_get_name(int index) {
     if (index < 0 || index >= PRESET_MAX_ROWS) return nullptr;
     return preset_name_refs[index];
+}
+
+void presets_set_available(bool available) {
+    if (!load_btn_) return;
+    if (available) {
+        // Restore the primary LOAD treatment.
+        lv_obj_add_flag(load_btn_, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_set_style_opa(load_btn_, LV_OPA_COVER, 0);
+        lv_obj_set_style_border_color(load_btn_, COLOR_ACCENT, 0);
+        lv_obj_t* label = lv_obj_get_child(load_btn_, 0);
+        if (label) lv_obj_set_style_text_color(label, COLOR_ACCENT_BRIGHT, 0);
+    } else {
+        ui_apply_disabled(load_btn_);
+    }
 }
 
 void presets_update_list(const char** presetNames, int count) {

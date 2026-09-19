@@ -38,11 +38,12 @@ struct UiAction {
 // UI Intent emitter
 void ui_emit_action(const UiAction& action);
 
-// Where a parameter value came from. LocalDefault until the P4 provides an
-// authoritative GET_STATE/PARAM_CHANGED (M6).
+// Where a value came from. LocalDefault at boot, LocalPending after an
+// optimistic local edit, Authoritative once the P4 confirms/announces it.
 enum class UiValueAuthority : uint8_t {
     LocalDefault = 0,
-    Authoritative = 1
+    LocalPending = 1,
+    Authoritative = 2
 };
 
 // Application state
@@ -66,11 +67,14 @@ struct UiAppState {
     bool reverbEnabled;
     bool delayEnabled;
     bool limiterEnabled;
+    UiValueAuthority effectAuthority[4];
+    bool effectAuthoritative[4]; // last P4-confirmed enable (for rollback)
     
     // Parameter model (values indexed by UiParamId). Still a LOCAL simulation
     // until VoxLink provides P4-authoritative snapshots, but it is the single
     // authority the editor and both effect summaries read from.
     float parameterValues[kUiParamCount];
+    float parameterAuthoritativeValues[kUiParamCount]; // last P4 value
     bool parameterValid[kUiParamCount];
     UiValueAuthority parameterAuthority[kUiParamCount];
 
@@ -120,13 +124,29 @@ void ui_update_footswitch_state(int index, bool pressed);
 // Single source of truth for the abbreviated label used by all screens.
 const char* ui_footswitch_short_label(uint8_t action);
 
-// Parameter model access. ui_update_parameter is the single logical change and
-// fans out to the editor and the affected effect summaries. The future VoxLink
-// layer will call ui_update_parameter on PARAM_CHANGED without UI changes.
-void ui_update_parameter(UiParamId id, float value);
+// Parameter model access. Local edits are optimistic (LocalPending) and produce
+// a wire intent; authoritative values come only from the P4 and win conflicts.
+void ui_set_parameter_local(UiParamId id, float value);
+void ui_apply_parameter_authoritative(UiParamId id, float acceptedValue);
+void ui_revert_parameter(UiParamId id);
 float ui_get_parameter(UiParamId id);
+float ui_get_authoritative_parameter(UiParamId id);
 bool ui_parameter_is_valid(UiParamId id);
 UiValueAuthority ui_parameter_authority(UiParamId id);
+
+// Effect enable, same authority model.
+void ui_set_effect_enable_local(UiEffectId effect, bool enabled);
+void ui_apply_effect_enable_authoritative(UiEffectId effect, bool enabled);
+void ui_revert_effect_enable(UiEffectId effect);
+UiValueAuthority ui_effect_authority(UiEffectId effect);
+
+// The App registers one callback so the VoxLink glue can translate local intents
+// into wire SET_PARAM requests without the UI depending on the client.
+typedef void (*UiWireIntentFn)(uint16_t wireId, float value);
+void ui_set_wire_intent_callback(UiWireIntentFn fn);
+
+// Capability gating driven by the VoxLink client (CAPS / link state).
+void ui_set_link_capabilities(bool presetsAvailable, bool bypassAvailable);
 // Human-readable summary derived from the parameter state (no heap). Both
 // Performance and FX Chain consume this same function.
 void ui_format_effect_summary(int effectId, char* mainValue, size_t mainSize,

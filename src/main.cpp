@@ -20,6 +20,7 @@
 #include "ui/UiApp.h"
 #include "ui/UiTheme.h"
 #include "control/FootswitchManager.h"
+#include "voxlink/VoxLinkGlue.h"
 
 // Instância global do display
 LGFX_CYD lcd;
@@ -97,7 +98,11 @@ void setup() {
     // Inicializar UI (LVGL)
     Serial.println("[INIT] Initializing LVGL UI...");
     ui_app_init(lcd);
-    
+
+    // Start the VoxLink client (owns its own UART task; never touches LVGL).
+    Serial.println("[INIT] Initializing VoxLink client...");
+    voxlink_glue_init();
+
     Serial.println("[INIT] System ready!");
     
     // Print memory info
@@ -116,14 +121,14 @@ void setup() {
  * - Comunicação UART com VoxP4 (futuro)
  */
 void loop() {
+    // Apply VoxLink client events in the UI context (never from the UART task).
+    voxlink_glue_tick();
+
     // Processar eventos da UI (LVGL)
     ui_app_run();
     
     // Processar footswitches
     footswitch_poll();
-    
-    // Futuro: Processar comunicação UART
-    // voxlink_process();
     
     // Pequeno delay para evitar busy-wait excessivo
     // O timing é gerenciado principalmente pelo LVGL e footswitch polling

@@ -14,6 +14,11 @@ static lv_obj_t* reconnect_label = nullptr;
 static lv_obj_t* heap_free_label = nullptr;
 static lv_obj_t* uptime_label = nullptr;
 
+static lv_obj_t* link_label = nullptr;
+static lv_obj_t* baud_label = nullptr;
+static lv_obj_t* rx_label = nullptr;
+static lv_obj_t* tx_label = nullptr;
+
 static lv_obj_t* add_section(lv_obj_t* parent, const char* title, lv_color_t color) {
     lv_obj_t* label = lv_label_create(parent);
     lv_label_set_text(label, title);
@@ -89,6 +94,10 @@ void system_screen_init(lv_obj_t* parent) {
     lv_obj_set_scrollbar_mode(body, LV_SCROLLBAR_MODE_AUTO);
 
     add_section(body, "VOXLINK", COLOR_AUDIO);
+    link_label = add_value_row(body, "LINK");
+    baud_label = add_value_row(body, "BAUD");
+    rx_label = add_value_row(body, "RX");
+    tx_label = add_value_row(body, "TX");
     p4_fw_label = add_value_row(body, "P4 FW");
     cyd_fw_label = add_value_row(body, "CYD FW");
 
@@ -182,6 +191,58 @@ void system_screen_update_info(const char* p4Firmware, const char* cydFirmware,
                      (unsigned long)((uptimeSec % 3600) / 60),
                      (unsigned long)(uptimeSec % 60));
         }
+        lv_label_set_text(uptime_label, buf);
+    }
+}
+
+void system_screen_update_link(bool active, uint32_t baud, uint32_t rxFrames,
+                               uint32_t txFrames, uint32_t crcErrors,
+                               uint32_t parseErrors, uint32_t reconnects,
+                               uint32_t pending, uint32_t heapFree,
+                               uint32_t uptimeSec) {
+    char buf[32];
+    if (link_label) {
+        if (active)
+            lv_label_set_text(link_label, "ACTIVE");
+        else
+            lv_label_set_text(link_label, pending ? "..." : "OFF");
+        lv_obj_set_style_text_color(
+            link_label, active ? COLOR_AUDIO : COLOR_TEXT_MUTED, 0);
+    }
+    if (baud_label) {
+        snprintf(buf, sizeof(buf), "%u", (unsigned)baud);
+        lv_label_set_text(baud_label, buf);
+    }
+    if (rx_label) {
+        snprintf(buf, sizeof(buf), "%u", (unsigned)rxFrames);
+        lv_label_set_text(rx_label, buf);
+    }
+    if (tx_label) {
+        snprintf(buf, sizeof(buf), "%u", (unsigned)txFrames);
+        lv_label_set_text(tx_label, buf);
+    }
+    if (crc_errors_label) {
+        snprintf(buf, sizeof(buf), "%u", (unsigned)crcErrors);
+        lv_label_set_text(crc_errors_label, buf);
+        set_value_alert(crc_errors_label, crcErrors > 0, false);
+    }
+    if (uart_errors_label) {
+        snprintf(buf, sizeof(buf), "%u", (unsigned)parseErrors);
+        lv_label_set_text(uart_errors_label, buf);
+        set_value_alert(uart_errors_label, parseErrors > 0, false);
+    }
+    if (reconnect_label) {
+        snprintf(buf, sizeof(buf), "%u", (unsigned)reconnects);
+        lv_label_set_text(reconnect_label, buf);
+        set_value_alert(reconnect_label, reconnects > 0, false);
+    }
+    if (heap_free_label) {
+        snprintf(buf, sizeof(buf), "%lu KB", (unsigned long)(heapFree / 1024));
+        lv_label_set_text(heap_free_label, buf);
+    }
+    if (uptime_label) {
+        snprintf(buf, sizeof(buf), "%lu:%02lu", (unsigned long)(uptimeSec / 60),
+                 (unsigned long)(uptimeSec % 60));
         lv_label_set_text(uptime_label, buf);
     }
 }

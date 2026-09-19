@@ -21,6 +21,11 @@ using namespace VoxUiTheme;
 
 static UiAppState app_state = {};
 
+// VoxLink bridge state (see VoxLinkGlue.cpp).
+static UiWireIntentFn s_wire_intent = nullptr;
+static bool s_presets_available = true;
+static bool s_bypass_available = true;
+
 // Footswitch snapshot kept by the App layer so a physical event never needs to
 // consult a screen. Labels are derived once from the FootswitchManager config.
 static char fs_short_label[2][16] = {"--", "--"};
@@ -64,6 +69,7 @@ static void init_parameter_defaults() {
         const UiParamDescriptor* d =
             ui_param_descriptor(static_cast<UiParamId>(i));
         app_state.parameterValues[i] = d ? d->defaultValue : 0.0f;
+        app_state.parameterAuthoritativeValues[i] = app_state.parameterValues[i];
         app_state.parameterValid[i] = true;
         app_state.parameterAuthority[i] = UiValueAuthority::LocalDefault;
     }
@@ -86,7 +92,8 @@ void ui_emit_action(const UiAction& action) {
     switch (action.type) {
         case UiActionType::ToggleEffect:
             if (action.id >= 4) return;
-            ui_update_effect_state(action.id, !effect_enabled_from_state(action.id));
+            ui_set_effect_enable_local(static_cast<UiEffectId>(action.id),
+                                       !effect_enabled_from_state(action.id));
             break;
 
         case UiActionType::OpenEffect:
@@ -99,18 +106,17 @@ void ui_emit_action(const UiAction& action) {
             break;
 
         case UiActionType::AllEffectsOn:
-            // LOCAL TEMPORARY: no backend yet. This is an optimistic local
-            // change, fanned out through ui_update_effect_state so Performance,
-            // FX Chain and Effect Edit stay consistent.
+            // Four real enable parameters; optimistic locally, sent to the P4
+            // when the link is active.
             for (int i = 0; i < 4; i++) {
-                ui_update_effect_state(i, true);
+                ui_set_effect_enable_local(static_cast<UiEffectId>(i), true);
             }
             break;
 
         case UiActionType::GlobalBypass:
-            // LOCAL TEMPORARY: flips a dedicated flag only. Individual effect
-            // enabled states are intentionally untouched. A real global bypass
-            // must come from the backend (VoxLink).
+            // Global bypass has no VoxLink v1 backend. It stays a local-only
+            // flag and is unavailable while a real link is active.
+            if (!s_bypass_available) break;
             app_state.globalBypass = !app_state.globalBypass;
             fx_chain_set_bypass(app_state.globalBypass);
             break;
@@ -127,9 +133,8 @@ void ui_emit_action(const UiAction& action) {
             break;
 
         case UiActionType::SetParameter:
-            // Local optimistic edit. Becomes an intent to the P4 once VoxLink
-            // exists; the UI is not the permanent authority.
-            ui_update_parameter(static_cast<UiParamId>(action.id), action.value);
+            // Optimistic local edit; produces a VoxLink intent when connected.
+            ui_set_parameter_local(static_cast<UiParamId>(action.id), action.value);
             break;
 
         case UiActionType::SetFootswitchConfig:
@@ -406,6 +411,8 @@ void ui_app_init(LGFX_CYD& display) {
     app_state.delayEnabled = ui_effect_default_enabled(UiEffectId::Delay);
     app_state.limiterEnabled = ui_effect_default_enabled(UiEffectId::Limiter);
     for (int i = 0; i < 4; i++) {
+        app_state.effectAuthoritative[i] = effect_enabled_from_state(i);
+        app_state.effectAuthority[i] = UiValueAuthority::LocalDefault;
         ui_update_effect_state(i, effect_enabled_from_state(i));
     }
 
@@ -548,7 +555,12 @@ void ui_format_effect_summary(int effectId, char* mainValue, size_t mainSize,
                             metadata, metaSize);
 }
 
-void ui_update_parameter(UiParamId id, float value) {
+static void fan_out_parameter(UiParamId id, float value) {
+    update_effect_summary(static_cast<int>(ui_effect_of(id)));
+    effect_edit_notify(id, value);
+}
+
+void ui_set_parameter_local(UiParamId id, float value) {
     const size_t index = static_cast<size_t>(id);
     if (index >= kUiParamCount) return;
     const UiParamDescriptor* descriptor = ui_param_descriptor(id);
@@ -557,14 +569,34 @@ void ui_update_parameter(UiParamId id, float value) {
     const float clamped = ui_clamp_parameter(*descriptor, value);
     app_state.parameterValues[index] = clamped;
     app_state.parameterValid[index] = true;
-    // Optimistic local edit for now; M6 will set this to Authoritative when the
-    // value arrives from the P4 (GET_STATE / PARAM_CHANGED).
-    app_state.parameterAuthority[index] = UiValueAuthority::Authoritative;
+    // Optimistic: pending until the P4 confirms via PARAM_CHANGED.
+    app_state.parameterAuthority[index] = UiValueAuthority::LocalPending;
+    fan_out_parameter(id, clamped);
 
-    // Fan out only what is affected: the owning effect's summary and the open
-    // editor control. No screen rebuild for a value change.
-    update_effect_summary(static_cast<int>(ui_effect_of(id)));
-    effect_edit_notify(id, clamped);
+    const uint16_t wire_id = ui_param_voxlink_id(id);
+    if (s_wire_intent != nullptr && wire_id != 0) s_wire_intent(wire_id, clamped);
+}
+
+void ui_apply_parameter_authoritative(UiParamId id, float acceptedValue) {
+    const size_t index = static_cast<size_t>(id);
+    if (index >= kUiParamCount) return;
+    const UiParamDescriptor* descriptor = ui_param_descriptor(id);
+    if (descriptor == nullptr) return;
+
+    const float clamped = ui_clamp_parameter(*descriptor, acceptedValue);
+    app_state.parameterValues[index] = clamped;
+    app_state.parameterAuthoritativeValues[index] = clamped;
+    app_state.parameterValid[index] = true;
+    app_state.parameterAuthority[index] = UiValueAuthority::Authoritative;
+    fan_out_parameter(id, clamped);
+}
+
+void ui_revert_parameter(UiParamId id) {
+    const size_t index = static_cast<size_t>(id);
+    if (index >= kUiParamCount) return;
+    app_state.parameterValues[index] = app_state.parameterAuthoritativeValues[index];
+    app_state.parameterAuthority[index] = UiValueAuthority::Authoritative;
+    fan_out_parameter(id, app_state.parameterValues[index]);
 }
 
 void ui_update_effect_state(int effectId, bool enabled) {
@@ -580,6 +612,56 @@ void ui_update_effect_state(int effectId, bool enabled) {
     performance_update_effect(effectId, enabled);
     update_effect_summary(effectId);
     effect_edit_set_enabled(effectId, enabled);
+}
+
+float ui_get_authoritative_parameter(UiParamId id) {
+    const size_t index = static_cast<size_t>(id);
+    if (index >= kUiParamCount) return 0.0f;
+    return app_state.parameterAuthoritativeValues[index];
+}
+
+UiValueAuthority ui_effect_authority(UiEffectId effect) {
+    const int index = static_cast<int>(effect);
+    if (index < 0 || index >= 4) return UiValueAuthority::LocalDefault;
+    return app_state.effectAuthority[index];
+}
+
+void ui_set_effect_enable_local(UiEffectId effect, bool enabled) {
+    const int index = static_cast<int>(effect);
+    if (index < 0 || index >= 4) return;
+    ui_update_effect_state(index, enabled);
+    app_state.effectAuthority[index] = UiValueAuthority::LocalPending;
+    const uint16_t wire_id = ui_effect_enable_voxlink_id(effect);
+    if (s_wire_intent != nullptr && wire_id != 0)
+        s_wire_intent(wire_id, enabled ? 1.0f : 0.0f);
+}
+
+void ui_apply_effect_enable_authoritative(UiEffectId effect, bool enabled) {
+    const int index = static_cast<int>(effect);
+    if (index < 0 || index >= 4) return;
+    ui_update_effect_state(index, enabled);
+    app_state.effectAuthoritative[index] = enabled;
+    app_state.effectAuthority[index] = UiValueAuthority::Authoritative;
+}
+
+void ui_revert_effect_enable(UiEffectId effect) {
+    const int index = static_cast<int>(effect);
+    if (index < 0 || index >= 4) return;
+    ui_update_effect_state(index, app_state.effectAuthoritative[index]);
+    app_state.effectAuthority[index] = UiValueAuthority::Authoritative;
+}
+
+void ui_set_wire_intent_callback(UiWireIntentFn fn) { s_wire_intent = fn; }
+
+void ui_set_link_capabilities(bool presetsAvailable, bool bypassAvailable) {
+    s_presets_available = presetsAvailable;
+    s_bypass_available = bypassAvailable;
+    presets_set_available(presetsAvailable);
+    fx_chain_set_bypass_available(bypassAvailable);
+    if (!bypassAvailable) {
+        app_state.globalBypass = false;
+        fx_chain_set_bypass(false);
+    }
 }
 
 void ui_update_meters(float inputDb, float outputDb) {

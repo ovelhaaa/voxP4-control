@@ -22,13 +22,24 @@ typedef struct {
 static FxModule_t fx_modules[4] = {};
 static lv_obj_t* bypass_button = nullptr;
 
-// Global bypass is a local flag only in this milestone; this updates its visual
-// state without touching individual effect enabled states.
+// Global bypass is a local flag only; this updates its visual state without
+// touching individual effect enabled states.
 void fx_chain_set_bypass(bool active) {
     if (!bypass_button) return;
     lv_obj_set_style_bg_color(bypass_button, active ? COLOR_ACCENT_DARK : COLOR_SURFACE, 0);
     lv_obj_set_style_bg_opa(bypass_button, active ? LV_OPA_COVER : LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_color(bypass_button, COLOR_ACCENT, 0);
+}
+
+void fx_chain_set_bypass_available(bool available) {
+    if (!bypass_button) return;
+    if (available) {
+        lv_obj_add_flag(bypass_button, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_set_style_opa(bypass_button, LV_OPA_COVER, 0);
+        lv_obj_set_style_border_color(bypass_button, COLOR_ACCENT, 0);
+    } else {
+        ui_apply_disabled(bypass_button);
+    }
 }
 
 static void module_clicked(lv_event_t* e) {

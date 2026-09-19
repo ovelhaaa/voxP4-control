@@ -136,3 +136,33 @@ jobs:
             exit 1
           fi
           echo "All required files present"
+
+  voxlink-contract-sync:
+    name: VoxLink contract sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout controller
+        uses: actions/checkout@v4
+
+      - name: Read pinned VoxP4 SHA
+        id: pin
+        run: |
+          sha=$(grep -oE 'VOXP4_CONTRACT_SOURCE_SHA "[0-9a-f]+"' \
+            src/voxlink/generated/VoxP4ContractPin.h | grep -oE '[0-9a-f]{40}')
+          if [ -z "$sha" ]; then
+            echo "::error::No pinned VoxP4 SHA found in VoxP4ContractPin.h"
+            exit 1
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout voxP4 at pinned SHA
+        uses: actions/checkout@v4
+        with:
+          repository: ovelhaaa/voxP4
+          ref: ${{ steps.pin.outputs.sha }}
+          path: voxP4
+
+      - name: Verify artifacts are in sync
+        run: python3 scripts/sync_voxlink_schema.py --voxp4 voxP4 --check

@@ -141,6 +141,11 @@ UiEffectId ui_effect_of(UiParamId id);
 uint16_t ui_param_voxlink_id(UiParamId id);
 uint16_t ui_effect_enable_voxlink_id(UiEffectId effect);
 
+// Reverse lookup used by the VoxLink client glue to map authoritative wire IDs
+// back to UI parameters / effect enables.
+bool ui_param_from_voxlink_id(uint16_t voxlinkId, UiParamId* out);
+bool ui_effect_from_enable_voxlink_id(uint16_t id, UiEffectId* out);
+
 // Local enable defaults mirrored from the VoxLink registry (*.enable default).
 // Used only until M6 GET_STATE provides the authoritative snapshot.
 bool ui_effect_default_enabled(UiEffectId effect);

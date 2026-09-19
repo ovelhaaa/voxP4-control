@@ -12,5 +12,7 @@ void fx_chain_update_effect_state(int effectId, bool enabled,
 
 // Reflects the local global-bypass flag on the BYPASS action.
 void fx_chain_set_bypass(bool active);
+// Global bypass has no VoxLink v1 backend; disable the action while connected.
+void fx_chain_set_bypass_available(bool available);
 
 #endif  // FX_CHAIN_SCREEN_H
