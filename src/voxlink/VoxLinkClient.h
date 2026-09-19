@@ -85,6 +85,7 @@ struct Counters {
     uint32_t tx_drops = 0;
     uint32_t event_drops = 0;
     uint32_t pending_full = 0;
+    uint32_t coalesce_full = 0;
     uint32_t caps_overflow = 0;
     uint32_t snapshot_overflow = 0;
 };
@@ -131,6 +132,7 @@ public:
     const HelloInfo &hello() const { return hello_; }
     const Counters &counters() const { return counters_; }
     size_t pending_count() const;
+    size_t coalesce_used() const;
     size_t tx_used() const;
     size_t tx_free() const;
 
@@ -186,8 +188,11 @@ private:
     void flush_coalesced(uint32_t now_ms);
     void retry_tick(uint32_t now_ms);
     void expire_pending(uint32_t now_ms);
-    void coalesce_put(uint16_t id, float value);
+    bool coalesce_put(uint16_t id, float value);
     Coalesce *coalesce_find(uint16_t id);
+    // Frees a continuous slot once its value is authoritative, unless a newer
+    // value is still waiting to be sent.
+    void coalesce_reclaim(uint16_t id);
     Retry *retry_find(uint16_t id);
     Retry *retry_put(uint16_t id, ValueTag tag, float value, uint32_t now_ms);
     Pending *pending_find(MsgType type, uint8_t seq);

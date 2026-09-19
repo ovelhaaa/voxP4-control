@@ -120,8 +120,8 @@ Counters: `frames_rx/tx`, `bytes_rx/tx`, `crc_errors`, `length_errors`,
 `version_errors`, `unknown_messages`, `unknown_params`, `parse_errors`,
 `timeouts`, `nacks`, `queue_full`, `queue_full_retries`,
 `queue_full_exhausted`, `reconnects`, `tx_drops`, `event_drops`,
-`pending_full`, `caps_overflow`, `snapshot_overflow` (plus `ui_queue_drops` in
-the glue). The System screen
+`pending_full`, `coalesce_full`, `caps_overflow`, `snapshot_overflow` (plus
+`ui_queue_drops` in the glue). The System screen
 shows link state, baud, RX/TX and error counters, refreshed at 2 Hz.
 `DEBUG_BUILD` may log handshake milestones; release logs nothing per frame.
 
@@ -152,8 +152,15 @@ Correctness fixes made before the first physical bring-up:
   also used seq 0.
 * **No-op write.** A direct `PARAM_CHANGED` with the same revision and matching
   pending seq is accepted (`direct`), so an idempotent SET still confirms.
-  Asynchronous `PARAM_CHANGED`/`PARAM_VALUE` obey revision ordering and stale
-  (older) values are ignored.
+  Asynchronous `PARAM_CHANGED`/`PARAM_VALUE` obey revision ordering; an older
+  revision is ignored **even when direct** (a delayed confirmation cannot
+  regress a newer authoritative value).
+* **Coalescing slot reclaim (M6.1.1).** A continuous slot is freed once its
+  value is confirmed (`PARAM_CHANGED`/`PARAM_VALUE`) and no newer value is
+  dirty; if a newer value is still waiting, the slot is kept and `retries`
+  reset. `start_handshake()` clears all coalescing slots. `coalesce_put()`
+  reports whether a slot was reserved (`coalesce_full` otherwise), so
+  `set_parameter()` never returns success without a slot.
 * **QUEUE_FULL retry.** Continuous floats keep the latest value and retry on the
   next coalescing window, bounded by `kMaxQueueFullRetries` (3). Discrete values
   (bools/enums/ints, including effect enables) use a small retry table, latest
@@ -166,8 +173,10 @@ Correctness fixes made before the first physical bring-up:
   releases the pending immediately (no ghost request waiting for timeout).
 * **CAPS validity.** `HELLO_ACK` only fills `HelloInfo`; `caps().valid` becomes
   true strictly after a valid `CAPS_END`. `start_handshake()` clears the
-  previous inventory so a reconnect never uses stale capabilities. Oversized
-  `CAPS_BEGIN`/`STATE_BEGIN` (`count > 64`) are rejected with
+  previous inventory so a reconnect never uses stale capabilities. `CAPS_END`
+  is transactional: its count must match both the `CAPS_BEGIN` count and the
+  number of `CAPS_PARAM` received, otherwise the inventory is rejected.
+  Oversized `CAPS_BEGIN`/`STATE_BEGIN` (`count > 64`) are rejected with
   `caps_overflow`/`snapshot_overflow` instead of being truncated.
 * **Liveness.** `last_rx_ms` is refreshed only by a valid parsed frame, never by
   raw bytes or bad-CRC frames, so continuous garbage cannot keep the link alive.

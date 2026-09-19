@@ -59,10 +59,7 @@ void VoxLinkClient::start_handshake(uint32_t now_ms) {
     caps_received_ = false;
     caps_received_count_ = 0;
     for (auto &p : pending_) p = Pending{};
-    for (auto &c : coalesce_) {
-        c.dirty = false;
-        c.retries = 0;
-    }
+    for (auto &c : coalesce_) c = Coalesce{};
     for (auto &r : retries_) r = Retry{};
 
     uint8_t payload[3] = {kVersion, kClientTypeCyd, 0};
@@ -202,6 +199,13 @@ size_t VoxLinkClient::pending_count() const {
     return n;
 }
 
+size_t VoxLinkClient::coalesce_used() const {
+    size_t n = 0;
+    for (const auto &c : coalesce_)
+        if (c.used) ++n;
+    return n;
+}
+
 VoxLinkClient::Pending *VoxLinkClient::allocate_pending(MsgType type, uint16_t id,
                                                         ValueTag tag, float value,
                                                         uint8_t retries,
@@ -254,12 +258,12 @@ VoxLinkClient::Coalesce *VoxLinkClient::coalesce_find(uint16_t id) {
     return nullptr;
 }
 
-void VoxLinkClient::coalesce_put(uint16_t id, float value) {
+bool VoxLinkClient::coalesce_put(uint16_t id, float value) {
     for (auto &c : coalesce_) {
         if (c.used && c.id == id) {
             c.value = value;
             c.dirty = true;
-            return;
+            return true;
         }
     }
     for (auto &c : coalesce_) {
@@ -269,9 +273,20 @@ void VoxLinkClient::coalesce_put(uint16_t id, float value) {
             c.value = value;
             c.dirty = true;
             c.retries = 0;
-            return;
+            return true;
         }
     }
+    return false; // no slot reserved
+}
+
+void VoxLinkClient::coalesce_reclaim(uint16_t id) {
+    Coalesce *c = coalesce_find(id);
+    if (c == nullptr) return;
+    if (c->dirty) {
+        c->retries = 0; // newer value still pending; keep the slot
+        return;
+    }
+    *c = Coalesce{}; // confirmed and idle -> free the slot
 }
 
 VoxLinkClient::Retry *VoxLinkClient::retry_find(uint16_t id) {
@@ -411,7 +426,10 @@ bool VoxLinkClient::set_parameter(uint16_t id, float value, uint32_t now_ms) {
         return true;
     }
     if (cp->tag == ValueTag::Float32) {
-        coalesce_put(id, value);
+        if (!coalesce_put(id, value)) {
+            ++counters_.coalesce_full;
+            return false; // no slot reserved -> no silent success
+        }
         return true;
     }
     return send_set_now(id, cp->tag, value, 0, now_ms);
@@ -589,7 +607,9 @@ void VoxLinkClient::handle_caps_end(const Frame &frame, uint32_t now_ms) {
         return;
     }
     const uint16_t count = get_u16(frame.payload);
-    if (count != caps_received_count_) {
+    // Transactional count check: the end count must match both the count
+    // announced by CAPS_BEGIN and the number of CAPS_PARAM actually received.
+    if (count != caps_received_count_ || count != caps_.param_count) {
         ++counters_.parse_errors;
         return;
     }
@@ -701,12 +721,13 @@ void VoxLinkClient::handle_param_changed(const Frame &frame) {
         revision_ = rev;
         have_revision_ = true;
         push_event(EventType::ParamAuthoritative, id, value);
-    } else if (direct) {
-        // Direct response to our SET: accept even at the same (no-op) revision.
+    } else if (direct && rev == revision_) {
+        // Direct no-op response to our SET: accept at the same revision.
         push_event(EventType::ParamAuthoritative, id, value);
     }
-    // else: stale asynchronous notification -> ignore value.
+    // else: older than the current revision -> ignore, even if direct.
     if (p != nullptr && p->id == id) pending_remove(p);
+    coalesce_reclaim(id);
 }
 
 void VoxLinkClient::handle_param_value(const Frame &frame) {
@@ -737,6 +758,7 @@ void VoxLinkClient::handle_param_value(const Frame &frame) {
     }
     // Stale (older) value: do not regress state.
     if (p != nullptr && p->id == id) pending_remove(p);
+    coalesce_reclaim(id);
 }
 
 void VoxLinkClient::handle_ack_nack(const Frame &frame, bool nack,

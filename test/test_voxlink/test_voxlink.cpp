@@ -805,6 +805,101 @@ void test_snapshot_overflow_rejected(void) {
     TEST_ASSERT_EQUAL_INT(0, (int)events.size());
 }
 
+// --- M6.1.1 ----------------------------------------------------------------
+void test_coalesce_slots_are_reclaimed_after_success(void) {
+    Harness h;
+    complete_handshake(h);
+    TEST_ASSERT_TRUE(
+        h.client.set_parameter(VOXP4_PARAM_REVERB_WET, 0.2f, h.now));
+    TEST_ASSERT_EQUAL_INT(1, (int)h.client.coalesce_used());
+    h.now += 40;
+    h.client.tick(h.now);
+    auto tx = h.drain_tx();
+    const Frame *set = find(tx, MsgType::SetParam);
+    TEST_ASSERT_NOT_NULL(set);
+    h.param_changed(VOXP4_PARAM_REVERB_WET, 8, set->seq, ValueTag::Float32, 0.2f);
+    h.drain_events();
+    // Confirmed and idle -> the coalescing slot must be freed.
+    TEST_ASSERT_EQUAL_INT(0, (int)h.client.coalesce_used());
+}
+
+void test_more_than_8_distinct_float_params_work(void) {
+    Harness h;
+    complete_handshake(h);
+    const uint16_t ids[10] = {
+        VOXP4_PARAM_HARMONY_LEVEL,
+        VOXP4_PARAM_HARMONY_VOICE1_PAN,
+        VOXP4_PARAM_HARMONY_VOICE1_SMOOTHING_MS,
+        VOXP4_PARAM_HARMONY_ATTACK_MS,
+        VOXP4_PARAM_HARMONY_RELEASE_MS,
+        VOXP4_PARAM_HARMONY_FORMANT_AMOUNT,
+        VOXP4_PARAM_REVERB_WET,
+        VOXP4_PARAM_REVERB_DECAY_S,
+        VOXP4_PARAM_REVERB_DAMPING,
+        VOXP4_PARAM_DELAY_LEFT_MS,
+    };
+    for (size_t i = 0; i < 10; ++i) {
+        const float value = 0.1f + 0.05f * (float)i;
+        TEST_ASSERT_TRUE(h.client.set_parameter(ids[i], value, h.now));
+        h.now += 40;
+        h.client.tick(h.now);
+        auto tx = h.drain_tx();
+        const Frame *set = find(tx, MsgType::SetParam);
+        TEST_ASSERT_NOT_NULL(set);
+        TEST_ASSERT_EQUAL_HEX16(ids[i], get_u16(set->payload));
+        h.param_changed(ids[i], 10 + (uint32_t)i, set->seq, ValueTag::Float32,
+                        value);
+        h.drain_events();
+    }
+    TEST_ASSERT_EQUAL_INT(0, (int)h.client.coalesce_used());
+    TEST_ASSERT_EQUAL_UINT32(0, h.client.counters().coalesce_full);
+}
+
+void test_older_direct_param_changed_is_ignored(void) {
+    Harness h;
+    complete_handshake(h); // revision 7
+    TEST_ASSERT_TRUE(
+        h.client.set_parameter(VOXP4_PARAM_REVERB_WET, 0.4f, h.now));
+    h.now += 40;
+    h.client.tick(h.now);
+    auto tx = h.drain_tx();
+    const Frame *set = find(tx, MsgType::SetParam);
+    TEST_ASSERT_NOT_NULL(set);
+    const uint8_t set_seq = set->seq;
+
+    // A newer asynchronous change lands first.
+    h.param_changed(VOXP4_PARAM_REVERB_WET, 20, 0xEE, ValueTag::Float32, 0.5f);
+    h.drain_events();
+    TEST_ASSERT_EQUAL_UINT32(20, h.client.revision());
+
+    // The delayed direct confirmation for the earlier SET (revision 15) must
+    // not regress state even though it matches the pending request.
+    h.param_changed(VOXP4_PARAM_REVERB_WET, 15, set_seq, ValueTag::Float32, 0.4f);
+    auto events = h.drain_events();
+    TEST_ASSERT_EQUAL_INT(0, (int)events.size());
+    TEST_ASSERT_EQUAL_UINT32(20, h.client.revision());
+    TEST_ASSERT_EQUAL_INT(0, (int)h.client.pending_count());
+}
+
+void test_caps_begin_end_count_mismatch_is_rejected(void) {
+    Harness h;
+    h.client.begin(0);
+    h.drain_tx();
+    h.hello_ack();
+    h.drain_tx();
+    uint32_t caps = kCapHarmony | kCapReverb | kCapDelay | kCapLimiter |
+                    kCapGate | kCapCompressor | kCapFormantPreservation;
+    h.caps_begin(49, caps);
+    for (size_t i = 0; i < 48; ++i)
+        h.caps_param(kFullSchema[i].id, kFullSchema[i].tag, 0.0f, 1.0f, 0.0f,
+                     0.01f);
+    h.caps_end(48); // mismatch: begin announced 49
+    TEST_ASSERT_FALSE(h.client.caps_valid());
+    TEST_ASSERT_TRUE(h.client.counters().parse_errors >= 1);
+    auto tx = h.drain_tx();
+    TEST_ASSERT_NULL(find(tx, MsgType::GetState));
+}
+
 int main(int, char **) {
     UNITY_BEGIN();
     RUN_TEST(test_crc_check_value);
@@ -831,5 +926,9 @@ int main(int, char **) {
     RUN_TEST(test_reconnect_replaces_caps);
     RUN_TEST(test_caps_overflow_rejected);
     RUN_TEST(test_snapshot_overflow_rejected);
+    RUN_TEST(test_coalesce_slots_are_reclaimed_after_success);
+    RUN_TEST(test_more_than_8_distinct_float_params_work);
+    RUN_TEST(test_older_direct_param_changed_is_ignored);
+    RUN_TEST(test_caps_begin_end_count_mismatch_is_rejected);
     return UNITY_END();
 }
