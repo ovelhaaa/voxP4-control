@@ -34,25 +34,38 @@ static void ui_log_heap(const char* stage) {
 }
 #endif
 
-// Canonical effect display metadata. Keep this list in sync with the effect
-// index order used everywhere: 0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER.
-static const char* kEffectNames[4]     = {"HARMONY", "REVERB", "DELAY", "LIMITER"};
-static const char* kEffectMainValues[4] = {"+3rd", "18%", "--", "-3 dB"};
-static const char* kEffectMetadata[4]   = {"KEY AUTO", "PLATE", "1/4", "THRESHOLD"};
+// Canonical effect display names. Index order is fixed:
+// 0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER.
+static const char* kEffectNames[4] = {"HARMONY", "REVERB", "DELAY", "LIMITER"};
+
+static bool effect_enabled_from_state(int effectId);
 
 const char* ui_effect_name(int effectId) {
     if (effectId < 0 || effectId >= 4) return "--";
     return kEffectNames[effectId];
 }
 
-const char* ui_effect_main_value(int effectId) {
-    if (effectId < 0 || effectId >= 4) return "--";
-    return kEffectMainValues[effectId];
+// Recompute and fan out the summary for a single effect. Only the affected
+// effect's Performance card and FX Chain module are touched.
+static void update_effect_summary(int effectId) {
+    if (effectId < 0 || effectId >= 4) return;
+    char main_value[24];
+    char metadata[24];
+    ui_build_effect_summary(static_cast<UiEffectId>(effectId),
+                            app_state.parameterValues, main_value,
+                            sizeof(main_value), metadata, sizeof(metadata));
+    performance_update_effect_value(effectId, main_value);
+    fx_chain_update_effect_state(effectId, effect_enabled_from_state(effectId),
+                                 main_value, metadata);
 }
 
-const char* ui_effect_metadata(int effectId) {
-    if (effectId < 0 || effectId >= 4) return "";
-    return kEffectMetadata[effectId];
+static void init_parameter_defaults() {
+    for (size_t i = 0; i < kUiParamCount; ++i) {
+        const UiParamDescriptor* d =
+            ui_param_descriptor(static_cast<UiParamId>(i));
+        app_state.parameterValues[i] = d ? d->defaultValue : 0.0f;
+        app_state.parameterValid[i] = true;
+    }
 }
 
 static bool effect_enabled_from_state(int effectId) {
@@ -110,6 +123,12 @@ void ui_emit_action(const UiAction& action) {
         case UiActionType::SavePreset:
             // No persistence backend yet. Control is disabled in the UI; this
             // guard exists only so a stray event can never fake a save.
+            break;
+
+        case UiActionType::SetParameter:
+            // Local optimistic edit. Becomes an intent to the P4 once VoxLink
+            // exists; the UI is not the permanent authority.
+            ui_update_parameter(static_cast<UiParamId>(action.id), action.value);
             break;
 
         case UiActionType::SetFootswitchConfig:
@@ -374,7 +393,10 @@ void ui_app_init(LGFX_CYD& display) {
     app_state.selectedPresetId = 0;
     app_state.presetName[0] = '\0';
 
-    // Hydrate UI with current state
+    // Hydrate UI with current state. Parameter defaults come from the
+    // descriptors; these are a LOCAL simulation that mirrors the ESP32-P4
+    // VoxLink registry defaults until the transport provides a real snapshot.
+    init_parameter_defaults();
     performance_update_link(app_state.linkUp);
     for (int i = 0; i < 4; i++) {
         ui_update_effect_state(i, effect_enabled_from_state(i));
@@ -399,6 +421,8 @@ void ui_app_init(LGFX_CYD& display) {
 }
 
 void ui_app_run(void) {
+    // Deferred editor rebuilds (mode changes) run outside LVGL event dispatch.
+    effect_edit_tick();
     lv_timer_handler();
     delay(VoxCydConfig::LvglTickMs);
 }
@@ -488,6 +512,45 @@ void ui_update_footswitch_state(int index, bool pressed) {
     footswitch_update_state(index, pressed);
 }
 
+// ---------------------------------------------------------------------------
+// Parameter model
+// ---------------------------------------------------------------------------
+float ui_get_parameter(UiParamId id) {
+    const size_t index = static_cast<size_t>(id);
+    if (index >= kUiParamCount) return 0.0f;
+    return app_state.parameterValues[index];
+}
+
+bool ui_parameter_is_valid(UiParamId id) {
+    const size_t index = static_cast<size_t>(id);
+    if (index >= kUiParamCount) return false;
+    return app_state.parameterValid[index];
+}
+
+void ui_format_effect_summary(int effectId, char* mainValue, size_t mainSize,
+                              char* metadata, size_t metaSize) {
+    if (effectId < 0 || effectId >= static_cast<int>(kUiEffectCount)) return;
+    ui_build_effect_summary(static_cast<UiEffectId>(effectId),
+                            app_state.parameterValues, mainValue, mainSize,
+                            metadata, metaSize);
+}
+
+void ui_update_parameter(UiParamId id, float value) {
+    const size_t index = static_cast<size_t>(id);
+    if (index >= kUiParamCount) return;
+    const UiParamDescriptor* descriptor = ui_param_descriptor(id);
+    if (descriptor == nullptr) return;
+
+    const float clamped = ui_clamp_parameter(*descriptor, value);
+    app_state.parameterValues[index] = clamped;
+    app_state.parameterValid[index] = true;
+
+    // Fan out only what is affected: the owning effect's summary and the open
+    // editor control. No screen rebuild for a value change.
+    update_effect_summary(static_cast<int>(ui_effect_of(id)));
+    effect_edit_notify(id, clamped);
+}
+
 void ui_update_effect_state(int effectId, bool enabled) {
     switch (effectId) {
         case 0: app_state.harmonyEnabled = enabled; break;
@@ -499,9 +562,7 @@ void ui_update_effect_state(int effectId, bool enabled) {
     // Fan out one logical state change to every representation so the UI can
     // never show conflicting effect states across screens.
     performance_update_effect(effectId, enabled);
-    fx_chain_update_effect_state(effectId, enabled,
-                                 ui_effect_main_value(effectId),
-                                 ui_effect_metadata(effectId));
+    update_effect_summary(effectId);
     effect_edit_set_enabled(effectId, enabled);
 }
 

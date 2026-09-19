@@ -129,7 +129,8 @@ void performance_screen_init(lv_obj_t* parent) {
         effect_cards[i] = effect_card_create(effects_container, 0, 0, (EffectType_t)i);
         if (!effect_cards[i]) continue;
 
-        effect_card_set_param(effect_cards[i], ui_effect_main_value(i));
+        // Value is filled by the App from the parameter model on init.
+        effect_card_set_param(effect_cards[i], "--");
         effect_card_set_enabled(effect_cards[i], false);
 
         lv_obj_add_flag(effect_cards[i]->card, LV_OBJ_FLAG_CLICKABLE);
@@ -204,6 +205,13 @@ void performance_update_effect(int effectIndex, bool enabled) {
     if (effectIndex < 0 || effectIndex >= 4) return;
     if (effect_cards[effectIndex]) {
         effect_card_set_enabled(effect_cards[effectIndex], enabled);
+    }
+}
+
+void performance_update_effect_value(int effectIndex, const char* mainValue) {
+    if (effectIndex < 0 || effectIndex >= 4) return;
+    if (effect_cards[effectIndex] && mainValue) {
+        effect_card_set_param(effect_cards[effectIndex], mainValue);
     }
 }
 

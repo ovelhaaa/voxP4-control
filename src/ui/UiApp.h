@@ -2,7 +2,9 @@
 #define UI_APP_H
 
 #include <lvgl.h>
+#include <cstddef>
 #include "board/CYD_Config.h"
+#include "ui/params/UiParamModel.h"
 
 // Screen IDs - main navigation tabs (0-3 for nav bar, 4+ for subscreens)
 enum class UiScreenId {
@@ -23,13 +25,14 @@ enum class UiActionType {
     SavePreset,
     SetFootswitchConfig,
     GlobalBypass,
-    AllEffectsOn
+    AllEffectsOn,
+    SetParameter
 };
 
 struct UiAction {
     UiActionType type;
     uint16_t id;
-    int32_t value;
+    float value;
 };
 
 // UI Intent emitter
@@ -57,6 +60,12 @@ struct UiAppState {
     bool delayEnabled;
     bool limiterEnabled;
     
+    // Parameter model (values indexed by UiParamId). Still a LOCAL simulation
+    // until VoxLink provides P4-authoritative snapshots, but it is the single
+    // authority the editor and both effect summaries read from.
+    float parameterValues[kUiParamCount];
+    bool parameterValid[kUiParamCount];
+
     // Meters
     float inputPeakDb;
     float outputPeakDb;
@@ -103,10 +112,19 @@ void ui_update_footswitch_state(int index, bool pressed);
 // Single source of truth for the abbreviated label used by all screens.
 const char* ui_footswitch_short_label(uint8_t action);
 
-// Canonical effect display metadata (single source of truth for all screens).
-// Index order is fixed: 0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER.
+// Parameter model access. ui_update_parameter is the single logical change and
+// fans out to the editor and the affected effect summaries. The future VoxLink
+// layer will call ui_update_parameter on PARAM_CHANGED without UI changes.
+void ui_update_parameter(UiParamId id, float value);
+float ui_get_parameter(UiParamId id);
+bool ui_parameter_is_valid(UiParamId id);
+// Human-readable summary derived from the parameter state (no heap). Both
+// Performance and FX Chain consume this same function.
+void ui_format_effect_summary(int effectId, char* mainValue, size_t mainSize,
+                              char* metadata, size_t metaSize);
+
+// Canonical effect display name. Index order is fixed:
+// 0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER.
 const char* ui_effect_name(int effectId);
-const char* ui_effect_main_value(int effectId);
-const char* ui_effect_metadata(int effectId);
 
 #endif  // UI_APP_H
