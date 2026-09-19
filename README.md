@@ -4,6 +4,22 @@ Interface física de controle para o **VoxP4**, baseada em um **ESP32 Cheap Yell
 
 O objetivo é transformar o CYD em uma control surface dedicada para o VoxP4, deixando o **ESP32-P4 inteiramente responsável pelo processamento de áudio**.
 
+## VoxLink client (M6)
+
+O cliente VoxLink v1 está **implementado** no CYD: HELLO/CAPS/GET_STATE, snapshot
+transacional, SET_PARAM com coalescing, PARAM_CHANGED autoritativo, rollback em
+NACK, heartbeat/reconnect e capability gating. O parser/CRC/codec/cliente são
+C++ puro e cobertos por `pio test -e native`.
+
+```text
+VoxLink client:            IMPLEMENTED
+Hardware UART link:        AWAITING VERIFIED P4 GPIO ASSIGNMENT
+```
+
+O link físico CYD <-> P4 ainda **não** foi validado: os GPIOs UART do P4 estão
+`-1` em `voxP4` até verificação do schematic. Ver
+[`docs/m6_voxlink_client.md`](docs/m6_voxlink_client.md).
+
 ```text
 ┌─────────────────────────────┐
 │       VoxP4-control         │
