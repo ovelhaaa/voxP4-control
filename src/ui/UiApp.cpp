@@ -65,6 +65,7 @@ static void init_parameter_defaults() {
             ui_param_descriptor(static_cast<UiParamId>(i));
         app_state.parameterValues[i] = d ? d->defaultValue : 0.0f;
         app_state.parameterValid[i] = true;
+        app_state.parameterAuthority[i] = UiValueAuthority::LocalDefault;
     }
 }
 
@@ -398,6 +399,12 @@ void ui_app_init(LGFX_CYD& display) {
     // VoxLink registry defaults until the transport provides a real snapshot.
     init_parameter_defaults();
     performance_update_link(app_state.linkUp);
+    // Enable defaults mirror the VoxLink registry (*.enable default values);
+    // never rely on zero initialization.
+    app_state.harmonyEnabled = ui_effect_default_enabled(UiEffectId::Harmony);
+    app_state.reverbEnabled = ui_effect_default_enabled(UiEffectId::Reverb);
+    app_state.delayEnabled = ui_effect_default_enabled(UiEffectId::Delay);
+    app_state.limiterEnabled = ui_effect_default_enabled(UiEffectId::Limiter);
     for (int i = 0; i < 4; i++) {
         ui_update_effect_state(i, effect_enabled_from_state(i));
     }
@@ -527,6 +534,12 @@ bool ui_parameter_is_valid(UiParamId id) {
     return app_state.parameterValid[index];
 }
 
+UiValueAuthority ui_parameter_authority(UiParamId id) {
+    const size_t index = static_cast<size_t>(id);
+    if (index >= kUiParamCount) return UiValueAuthority::LocalDefault;
+    return app_state.parameterAuthority[index];
+}
+
 void ui_format_effect_summary(int effectId, char* mainValue, size_t mainSize,
                               char* metadata, size_t metaSize) {
     if (effectId < 0 || effectId >= static_cast<int>(kUiEffectCount)) return;
@@ -544,6 +557,9 @@ void ui_update_parameter(UiParamId id, float value) {
     const float clamped = ui_clamp_parameter(*descriptor, value);
     app_state.parameterValues[index] = clamped;
     app_state.parameterValid[index] = true;
+    // Optimistic local edit for now; M6 will set this to Authoritative when the
+    // value arrives from the P4 (GET_STATE / PARAM_CHANGED).
+    app_state.parameterAuthority[index] = UiValueAuthority::Authoritative;
 
     // Fan out only what is affected: the owning effect's summary and the open
     // editor control. No screen rebuild for a value change.

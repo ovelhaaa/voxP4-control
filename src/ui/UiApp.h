@@ -38,6 +38,13 @@ struct UiAction {
 // UI Intent emitter
 void ui_emit_action(const UiAction& action);
 
+// Where a parameter value came from. LocalDefault until the P4 provides an
+// authoritative GET_STATE/PARAM_CHANGED (M6).
+enum class UiValueAuthority : uint8_t {
+    LocalDefault = 0,
+    Authoritative = 1
+};
+
 // Application state
 struct UiAppState {
     UiScreenId currentScreen;
@@ -65,6 +72,7 @@ struct UiAppState {
     // authority the editor and both effect summaries read from.
     float parameterValues[kUiParamCount];
     bool parameterValid[kUiParamCount];
+    UiValueAuthority parameterAuthority[kUiParamCount];
 
     // Meters
     float inputPeakDb;
@@ -118,6 +126,7 @@ const char* ui_footswitch_short_label(uint8_t action);
 void ui_update_parameter(UiParamId id, float value);
 float ui_get_parameter(UiParamId id);
 bool ui_parameter_is_valid(UiParamId id);
+UiValueAuthority ui_parameter_authority(UiParamId id);
 // Human-readable summary derived from the parameter state (no heap). Both
 // Performance and FX Chain consume this same function.
 void ui_format_effect_summary(int effectId, char* mainValue, size_t mainSize,

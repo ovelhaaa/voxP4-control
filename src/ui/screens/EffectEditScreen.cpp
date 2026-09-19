@@ -57,12 +57,12 @@ static void format_label(const UiParamDescriptor& d, float value,
 }
 
 static int slider_count(const UiParamDescriptor& d) {
-    int count = (int)std::lround((d.maxValue - d.minValue) / d.step);
+    int count = (int)std::lround((d.maxValue - d.minValue) / d.uiStep);
     return count < 1 ? 1 : count;
 }
 
 static int slider_index(const UiParamDescriptor& d, float value) {
-    int index = (int)std::lround((value - d.minValue) / d.step);
+    int index = (int)std::lround((value - d.minValue) / d.uiStep);
     int count = slider_count(d);
     if (index < 0) index = 0;
     if (index > count) index = count;
@@ -74,6 +74,39 @@ static int stepper_count(const UiParamDescriptor& d) {
     return slider_count(d) + 1;
 }
 
+// --- Shared visual helpers -------------------------------------------------
+// Used by creation, local events and remote (authoritative) updates, so that a
+// P4 PARAM_CHANGED produces exactly the same visuals as a local tap.
+
+static void set_toggle_visual(lv_obj_t* btn, lv_obj_t* label, bool on) {
+    if (btn) {
+        lv_obj_set_style_bg_color(btn, on ? COLOR_ACCENT_DARK : COLOR_SURFACE, 0);
+        lv_obj_set_style_border_width(btn, on ? 0 : 1, 0);
+        lv_obj_set_style_border_color(btn, COLOR_SEPARATOR, 0);
+    }
+    if (label) {
+        lv_label_set_text(label, on ? "ON" : "OFF");
+        lv_obj_set_style_text_color(label,
+                                    on ? COLOR_TEXT_PRIMARY : COLOR_TEXT_MUTED, 0);
+    }
+}
+
+static void set_segmented_visual(lv_obj_t* seg, int index) {
+    if (!seg) return;
+    const uint32_t count = lv_obj_get_child_cnt(seg);
+    for (uint32_t i = 0; i < count; i++) {
+        lv_obj_t* opt = lv_obj_get_child(seg, i);
+        const bool active = ((int)i == index);
+        lv_obj_set_style_bg_color(opt, active ? COLOR_SURFACE_ELEV : COLOR_PANEL, 0);
+        lv_obj_set_style_border_color(opt, active ? COLOR_ACCENT : COLOR_SEPARATOR, 0);
+        lv_obj_t* label = lv_obj_get_child(opt, 0);
+        if (label) {
+            lv_obj_set_style_text_color(
+                label, active ? COLOR_ACCENT_BRIGHT : COLOR_TEXT_SECONDARY, 0);
+        }
+    }
+}
+
 // --- Event callbacks -------------------------------------------------------
 
 static void slider_event(lv_event_t* e) {
@@ -81,7 +114,7 @@ static void slider_event(lv_event_t* e) {
     const UiParamDescriptor* d =
         static_cast<const UiParamDescriptor*>(lv_obj_get_user_data(slider));
     if (!d) return;
-    const float value = d->minValue + lv_slider_get_value(slider) * d->step;
+    const float value = d->minValue + lv_slider_get_value(slider) * d->uiStep;
     for (int i = 0; i < s_row_count; i++) {
         if (s_rows[i].id == d->id) {
             format_label(*d, value, s_rows[i].value_label);
@@ -97,14 +130,7 @@ static void toggle_event(lv_event_t* e) {
         static_cast<const UiParamDescriptor*>(lv_obj_get_user_data(btn));
     if (!d) return;
     const bool on = ui_get_parameter(d->id) < 0.5f;
-    lv_obj_set_style_bg_color(btn, on ? COLOR_ACCENT_DARK : COLOR_SURFACE, 0);
-    lv_obj_set_style_border_width(btn, on ? 0 : 1, 0);
-    lv_obj_t* label = lv_obj_get_child(btn, 0);
-    if (label) {
-        lv_label_set_text(label, on ? "ON" : "OFF");
-        lv_obj_set_style_text_color(label,
-                                    on ? COLOR_TEXT_PRIMARY : COLOR_TEXT_MUTED, 0);
-    }
+    set_toggle_visual(btn, lv_obj_get_child(btn, 0), on);
     emit_set(*d, on ? 1.0f : 0.0f);
 }
 
@@ -115,18 +141,7 @@ static void seg_event(lv_event_t* e) {
     const UiParamDescriptor* d =
         static_cast<const UiParamDescriptor*>(lv_obj_get_user_data(seg));
     if (!d) return;
-    uint32_t count = lv_obj_get_child_cnt(seg);
-    for (uint32_t i = 0; i < count; i++) {
-        lv_obj_t* opt = lv_obj_get_child(seg, i);
-        const bool active = ((int)i == index);
-        lv_obj_set_style_bg_color(opt, active ? COLOR_SURFACE_ELEV : COLOR_PANEL, 0);
-        lv_obj_set_style_border_color(opt, active ? COLOR_ACCENT : COLOR_SEPARATOR, 0);
-        lv_obj_t* label = lv_obj_get_child(opt, 0);
-        if (label) {
-            lv_obj_set_style_text_color(
-                label, active ? COLOR_ACCENT_BRIGHT : COLOR_TEXT_SECONDARY, 0);
-        }
-    }
+    set_segmented_visual(seg, index);
     emit_set(*d, (float)index);
 }
 
@@ -139,9 +154,9 @@ static void stepper_event(lv_event_t* e) {
     if (!d) return;
     const int count = stepper_count(*d);
     const int index =
-        (int)std::lround((ui_get_parameter(d->id) - d->minValue) / d->step);
+        (int)std::lround((ui_get_parameter(d->id) - d->minValue) / d->uiStep);
     const int next = ui_step_index(index, delta, count, d->wraparound);
-    const float value = d->minValue + next * d->step;
+    const float value = d->minValue + next * d->uiStep;
     format_label(*d, value, lv_obj_get_child(stepper, 1));
     emit_set(*d, value);
 }
@@ -252,16 +267,12 @@ static void create_toggle_row(const UiParamDescriptor& d) {
     lv_obj_set_ext_click_area(btn, 6);
     lv_obj_set_style_radius(btn, RADIUS_S, 0);
     lv_obj_set_style_shadow_width(btn, 0, 0);
-    lv_obj_set_style_bg_color(btn, on ? COLOR_ACCENT_DARK : COLOR_SURFACE, 0);
-    lv_obj_set_style_border_width(btn, on ? 0 : 1, 0);
-    lv_obj_set_style_border_color(btn, COLOR_SEPARATOR, 0);
     ui_apply_pressed(btn, COLOR_SURFACE_ELEV, COLOR_BORDER);
 
     lv_obj_t* bl = lv_label_create(btn);
-    lv_label_set_text(bl, on ? "ON" : "OFF");
     lv_obj_center(bl);
     lv_obj_set_style_text_font(bl, FONT_TINY, 0);
-    lv_obj_set_style_text_color(bl, on ? COLOR_TEXT_PRIMARY : COLOR_TEXT_MUTED, 0);
+    set_toggle_visual(btn, bl, on);
 
     lv_obj_set_user_data(btn, (void*)&d);
     lv_obj_add_event_cb(btn, toggle_event, LV_EVENT_CLICKED, NULL);
@@ -288,28 +299,25 @@ static void create_segmented_row(const UiParamDescriptor& d) {
 
     const int selected = (int)std::lround(ui_get_parameter(d.id));
     for (int i = 0; i < d.optionCount; i++) {
-        const bool active = (i == selected);
         lv_obj_t* btn = lv_btn_create(seg);
         lv_obj_set_height(btn, 24);
         lv_obj_set_flex_grow(btn, 1);
         lv_obj_set_style_radius(btn, RADIUS_S, 0);
         lv_obj_set_style_shadow_width(btn, 0, 0);
         lv_obj_set_style_border_width(btn, 1, 0);
-        lv_obj_set_style_bg_color(btn, active ? COLOR_SURFACE_ELEV : COLOR_PANEL, 0);
-        lv_obj_set_style_border_color(btn, active ? COLOR_ACCENT : COLOR_SEPARATOR, 0);
-        ui_apply_pressed(btn, COLOR_SURFACE_ELEV,
-                         active ? COLOR_ACCENT : COLOR_BORDER);
+        lv_obj_set_style_bg_color(btn, COLOR_PANEL, 0);
+        lv_obj_set_style_border_color(btn, COLOR_SEPARATOR, 0);
+        ui_apply_pressed(btn, COLOR_SURFACE_ELEV, COLOR_BORDER);
 
         lv_obj_t* opt = lv_label_create(btn);
         lv_label_set_text(opt, d.options[i]);
         lv_obj_center(opt);
         lv_obj_set_style_text_font(opt, FONT_SMALL, 0);
-        lv_obj_set_style_text_color(
-            opt, active ? COLOR_ACCENT_BRIGHT : COLOR_TEXT_SECONDARY, 0);
 
         lv_obj_set_user_data(btn, (void*)(intptr_t)i);
         lv_obj_add_event_cb(btn, seg_event, LV_EVENT_CLICKED, NULL);
     }
+    set_segmented_visual(seg, selected);
     lv_obj_set_user_data(seg, (void*)&d);
     bind_row(d.id, UiControlType::Segmented, seg, value_label);
 }
@@ -520,10 +528,14 @@ void effect_edit_notify(UiParamId id, float value) {
     const UiParamDescriptor* d = ui_param_descriptor(id);
     if (!d) return;
 
-    // Segmented controls can change the layout (MODE) or the option highlight;
-    // defer a body rebuild to the next tick to avoid deleting the widget that is
-    // currently dispatching the event.
-    if (d->type == UiControlType::Segmented) {
+    // Only the currently open effect should react to a value change.
+    if (ui_effect_of(id) != static_cast<UiEffectId>(current_edit_id)) return;
+
+    // Only Harmony MODE changes the structure of the page. Defer that rebuild to
+    // the next tick so the widget dispatching the event is not deleted mid-event.
+    // Other Segmented controls (e.g. NON-SCALE) update in place and must NOT
+    // rebuild or reset the scroll position.
+    if (id == UiParamId::HarmonyMode) {
         pending_rebuild = true;
         return;
     }
@@ -538,22 +550,18 @@ void effect_edit_notify(UiParamId id, float value) {
                 }
                 format_label(*d, value, s_rows[i].value_label);
                 break;
-            case UiControlType::Toggle: {
-                const bool on = value >= 0.5f;
-                if (s_rows[i].control) {
-                    lv_obj_set_style_bg_color(
-                        s_rows[i].control, on ? COLOR_ACCENT_DARK : COLOR_SURFACE, 0);
-                    lv_obj_set_style_border_width(s_rows[i].control, on ? 0 : 1, 0);
-                }
-                if (s_rows[i].value_label) {
-                    lv_label_set_text(s_rows[i].value_label, on ? "ON" : "OFF");
-                }
+            case UiControlType::Toggle:
+                set_toggle_visual(s_rows[i].control, s_rows[i].value_label,
+                                  value >= 0.5f);
                 break;
-            }
             case UiControlType::Stepper:
                 format_label(*d, value, s_rows[i].value_label);
                 break;
             case UiControlType::Segmented:
+                // s_rows[i].control is the segmented container.
+                set_segmented_visual(s_rows[i].control,
+                                     (int)std::lround(value));
+                format_label(*d, value, s_rows[i].value_label);
                 break;
         }
         return;

@@ -36,44 +36,44 @@ constexpr uint8_t kModeAll = kModeFixed | kModeDiatonic | kModeMidi;
 // ---------------------------------------------------------------------------
 extern const UiParamDescriptor kUiHarmonyDescriptors[] = {
     {UiParamId::HarmonyMode, "MODE", "TARGET", UiControlType::Segmented,
-     UiValueFormat::EnumLabel, 0, 2, 1, 0, kUiHarmonyModeLabels, 3, 0x0103,
+     UiValueFormat::EnumLabel, 0, 2, 1, 0, kUiHarmonyModeLabels, 3, VOXP4_PARAM_HARMONY_MODE,
      kModeAll, false},
     {UiParamId::HarmonyInterval, "INTERVAL", "TARGET", UiControlType::Slider,
-     UiValueFormat::Semitones, -12, 12, 1, 0, nullptr, 0, 0x0101, kModeFixed,
+     UiValueFormat::Semitones, -12, 12, 1, 0, nullptr, 0, VOXP4_PARAM_HARMONY_INTERVAL, kModeFixed,
      false},
     {UiParamId::HarmonyDegree, "DEGREE", "TARGET", UiControlType::Slider,
-     UiValueFormat::Degrees, -7, 7, 1, 0, nullptr, 0, 0x0108, kModeDiatonic,
+     UiValueFormat::Degrees, -7, 7, 1, 0, nullptr, 0, VOXP4_PARAM_HARMONY_VOICE1_DEGREE, kModeDiatonic,
      false},
     {UiParamId::HarmonyKey, "KEY", "TARGET", UiControlType::Stepper,
-     UiValueFormat::EnumLabel, 0, 11, 1, 0, kUiHarmonyKeyLabels, 12, 0x0104,
+     UiValueFormat::EnumLabel, 0, 11, 1, 0, kUiHarmonyKeyLabels, 12, VOXP4_PARAM_HARMONY_KEY,
      kModeDiatonic, true},
     {UiParamId::HarmonyScale, "SCALE", "TARGET", UiControlType::Stepper,
-     UiValueFormat::EnumLabel, 0, 11, 1, 0, kUiHarmonyScaleLabels, 12, 0x0105,
+     UiValueFormat::EnumLabel, 0, 11, 1, 0, kUiHarmonyScaleLabels, 12, VOXP4_PARAM_HARMONY_SCALE,
      kModeDiatonic, true},
     {UiParamId::HarmonyNonScalePolicy, "NON-SCALE", "TARGET",
      UiControlType::Segmented, UiValueFormat::EnumLabel, 0, 2, 1, 0,
-     kUiNonScalePolicyLabels, 3, 0x0112, kModeDiatonic, false},
+     kUiNonScalePolicyLabels, 3, VOXP4_PARAM_HARMONY_VOICE1_NON_SCALE_POLICY, kModeDiatonic, false},
     {UiParamId::HarmonyVoiceLeading, "VOICE LEAD", "TARGET",
      UiControlType::Toggle, UiValueFormat::EnumLabel, 0, 1, 1, 0, nullptr, 0,
-     0x0113, kModeDiatonic, false},
+     VOXP4_PARAM_HARMONY_VOICE1_VOICE_LEADING, kModeDiatonic, false},
     {UiParamId::HarmonyLevel, "LEVEL", "VOICE", UiControlType::Slider,
-     UiValueFormat::Percent, 0, 1, 0.01f, 1.0f, nullptr, 0, 0x0102, kModeAll,
+     UiValueFormat::Percent, 0, 1, 0.01f, 1.0f, nullptr, 0, VOXP4_PARAM_HARMONY_LEVEL, kModeAll,
      false},
     {UiParamId::HarmonyPan, "PAN", "VOICE", UiControlType::Slider,
-     UiValueFormat::Pan, -1, 1, 0.01f, 0, nullptr, 0, 0x0107, kModeAll, false},
+     UiValueFormat::Pan, -1, 1, 0.01f, 0, nullptr, 0, VOXP4_PARAM_HARMONY_VOICE1_PAN, kModeAll, false},
     {UiParamId::HarmonySmoothingMs, "SMOOTHING", "VOICE",
      UiControlType::Slider, UiValueFormat::Milliseconds, 1, 500, 1, 30,
-     nullptr, 0, 0x0109, kModeAll, false},
+     nullptr, 0, VOXP4_PARAM_HARMONY_VOICE1_SMOOTHING_MS, kModeAll, false},
     {UiParamId::FormantEnabled, "MODE", "FORMANT", UiControlType::Toggle,
-     UiValueFormat::EnumLabel, 0, 1, 1, 0, nullptr, 0, 0x010A, kModeAll, false},
+     UiValueFormat::EnumLabel, 0, 1, 1, 0, nullptr, 0, VOXP4_PARAM_HARMONY_FORMANT_ENABLE, kModeAll, false},
     {UiParamId::FormantAmount, "AMOUNT", "FORMANT", UiControlType::Slider,
-     UiValueFormat::Percent, 0, 1, 0.01f, 1.0f, nullptr, 0, 0x010B, kModeAll,
+     UiValueFormat::Percent, 0, 1, 0.01f, 1.0f, nullptr, 0, VOXP4_PARAM_HARMONY_FORMANT_AMOUNT, kModeAll,
      false},
     {UiParamId::HarmonyAttackMs, "ATTACK", "DYNAMICS", UiControlType::Slider,
-     UiValueFormat::Milliseconds, 0.1f, 100, 0.1f, 4, nullptr, 0, 0x010C,
+     UiValueFormat::Milliseconds, 0.1f, 100, 0.1f, 4, nullptr, 0, VOXP4_PARAM_HARMONY_ATTACK_MS,
      kModeAll, false},
     {UiParamId::HarmonyReleaseMs, "RELEASE", "DYNAMICS", UiControlType::Slider,
-     UiValueFormat::Milliseconds, 1, 500, 1, 20, nullptr, 0, 0x010D, kModeAll,
+     UiValueFormat::Milliseconds, 1, 500, 1, 20, nullptr, 0, VOXP4_PARAM_HARMONY_RELEASE_MS, kModeAll,
      false},
 };
 extern const size_t kUiHarmonyDescriptorCount =
@@ -81,33 +81,33 @@ extern const size_t kUiHarmonyDescriptorCount =
 
 extern const UiParamDescriptor kUiReverbDescriptors[] = {
     {UiParamId::ReverbWet, "MIX", "REVERB", UiControlType::Slider,
-     UiValueFormat::Percent, 0, 1, 0.01f, 0.18f, nullptr, 0, 0x0401, 0, false},
+     UiValueFormat::Percent, 0, 1, 0.01f, 0.18f, nullptr, 0, VOXP4_PARAM_REVERB_WET, 0, false},
     {UiParamId::ReverbDecaySeconds, "DECAY", "REVERB", UiControlType::Slider,
-     UiValueFormat::Seconds, 0.15f, 20, 0.05f, 2.0f, nullptr, 0, 0x0402, 0,
+     UiValueFormat::Seconds, 0.15f, 20, 0.05f, 2.0f, nullptr, 0, VOXP4_PARAM_REVERB_DECAY_S, 0,
      false},
     {UiParamId::ReverbDamping, "DAMPING", "REVERB", UiControlType::Slider,
-     UiValueFormat::Percent, 0, 1, 0.01f, 0.45f, nullptr, 0, 0x0403, 0, false},
+     UiValueFormat::Percent, 0, 1, 0.01f, 0.45f, nullptr, 0, VOXP4_PARAM_REVERB_DAMPING, 0, false},
 };
 extern const size_t kUiReverbDescriptorCount =
     sizeof(kUiReverbDescriptors) / sizeof(kUiReverbDescriptors[0]);
 
 extern const UiParamDescriptor kUiDelayDescriptors[] = {
     {UiParamId::DelayLeftMs, "LEFT", "TIME", UiControlType::Slider,
-     UiValueFormat::Milliseconds, 1, 2000, 1, 250, nullptr, 0, 0x0301, 0,
+     UiValueFormat::Milliseconds, 1, 2000, 1, 250, nullptr, 0, VOXP4_PARAM_DELAY_LEFT_MS, 0,
      false},
     {UiParamId::DelayRightMs, "RIGHT", "TIME", UiControlType::Slider,
-     UiValueFormat::Milliseconds, 1, 2000, 1, 375, nullptr, 0, 0x0302, 0,
+     UiValueFormat::Milliseconds, 1, 2000, 1, 375, nullptr, 0, VOXP4_PARAM_DELAY_RIGHT_MS, 0,
      false},
     {UiParamId::DelayFeedback, "FEEDBACK", "FEEDBACK", UiControlType::Slider,
      UiValueFormat::PercentSigned, -0.95f, 0.95f, 0.01f, 0.25f, nullptr, 0,
-     0x0303, 0, false},
+     VOXP4_PARAM_DELAY_FEEDBACK, 0, false},
     {UiParamId::DelayFeedbackLowpassHz, "FILTER", "FEEDBACK",
      UiControlType::Slider, UiValueFormat::Hertz, 200, 20000, 10, 6000, nullptr,
-     0, 0x0306, 0, false},
+     0, VOXP4_PARAM_DELAY_FEEDBACK_LOWPASS_HZ, 0, false},
     {UiParamId::DelayWet, "WET", "MIX", UiControlType::Slider,
-     UiValueFormat::Percent, 0, 1, 0.01f, 0.20f, nullptr, 0, 0x0304, 0, false},
+     UiValueFormat::Percent, 0, 1, 0.01f, 0.20f, nullptr, 0, VOXP4_PARAM_DELAY_WET, 0, false},
     {UiParamId::DelayDry, "DRY", "MIX", UiControlType::Slider,
-     UiValueFormat::Percent, 0, 1, 0.01f, 1.0f, nullptr, 0, 0x0305, 0, false},
+     UiValueFormat::Percent, 0, 1, 0.01f, 1.0f, nullptr, 0, VOXP4_PARAM_DELAY_DRY, 0, false},
 };
 extern const size_t kUiDelayDescriptorCount =
     sizeof(kUiDelayDescriptors) / sizeof(kUiDelayDescriptors[0]);
@@ -115,7 +115,7 @@ extern const size_t kUiDelayDescriptorCount =
 extern const UiParamDescriptor kUiLimiterDescriptors[] = {
     {UiParamId::LimiterThresholdDb, "THRESHOLD", "HARMONY BUS",
      UiControlType::Slider, UiValueFormat::Decibels, -24, 0, 0.5f, -3.0f,
-     nullptr, 0, 0x010F, 0, false},
+     nullptr, 0, VOXP4_PARAM_HARMONY_LIMITER_THRESHOLD_DB, 0, false},
 };
 extern const size_t kUiLimiterDescriptorCount =
     sizeof(kUiLimiterDescriptors) / sizeof(kUiLimiterDescriptors[0]);
@@ -174,15 +174,43 @@ UiEffectId ui_effect_of(UiParamId id) {
     return UiEffectId::Count;
 }
 
+uint16_t ui_param_voxlink_id(UiParamId id) {
+    const UiParamDescriptor* d = ui_param_descriptor(id);
+    return d ? d->voxlinkId : 0u;
+}
+
+uint16_t ui_effect_enable_voxlink_id(UiEffectId effect) {
+    switch (effect) {
+        case UiEffectId::Harmony: return VOXP4_PARAM_HARMONY_ENABLE;
+        case UiEffectId::Reverb: return VOXP4_PARAM_REVERB_ENABLE;
+        case UiEffectId::Delay: return VOXP4_PARAM_DELAY_ENABLE;
+        // LIMITER is the harmony bus limiter, never the master ceiling.
+        case UiEffectId::Limiter: return VOXP4_PARAM_HARMONY_LIMITER_ENABLE;
+        default: return 0u;
+    }
+}
+
+bool ui_effect_default_enabled(UiEffectId effect) {
+    // Mirrors the VoxLink registry *.enable defaults. These are a LOCAL
+    // simulation until M6 GET_STATE hydrates authoritative state.
+    switch (effect) {
+        case UiEffectId::Harmony: return false; // harmony.enable default 0
+        case UiEffectId::Reverb: return true;   // reverb.enable default 1
+        case UiEffectId::Delay: return true;    // delay.enable default 1
+        case UiEffectId::Limiter: return true;  // harmony.limiter.enable default 1
+        default: return false;
+    }
+}
+
 float ui_clamp_parameter(const UiParamDescriptor& descriptor, float value) {
     if (!std::isfinite(value)) return descriptor.defaultValue;
     float v = value;
     if (v < descriptor.minValue) v = descriptor.minValue;
     if (v > descriptor.maxValue) v = descriptor.maxValue;
-    if (descriptor.step > 0.0f) {
+    if (descriptor.uiStep > 0.0f) {
         v = descriptor.minValue +
-            std::round((v - descriptor.minValue) / descriptor.step) *
-                descriptor.step;
+            std::round((v - descriptor.minValue) / descriptor.uiStep) *
+                descriptor.uiStep;
     }
     if (v < descriptor.minValue) v = descriptor.minValue;
     if (v > descriptor.maxValue) v = descriptor.maxValue;

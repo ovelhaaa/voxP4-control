@@ -15,6 +15,10 @@
 #include <cstddef>
 #include <cstdint>
 
+// Versioned VoxLink ABI constants (parameter IDs, count, golden vectors).
+// Synchronized from the ESP32-P4 firmware; see src/voxlink/VoxLinkContract.h.
+#include "voxlink/VoxLinkContract.h"
+
 enum class UiEffectId : uint8_t {
     Harmony = 0,
     Reverb = 1,
@@ -87,9 +91,13 @@ struct UiParamDescriptor {
     const char* section;
     UiControlType type;
     UiValueFormat format;
+    // uiStep is the UI/touch ergonomics resolution, NOT the wire step. The
+    // VoxLink schema (integration/voxlink_params.json) owns the authoritative
+    // wire step/range; the UI step may be coarser and stays within the wire
+    // range. See docs/m5_1_voxlink_contract.md.
     float minValue;
     float maxValue;
-    float step;
+    float uiStep;
     float defaultValue;
     const char* const* options; // enum labels for Segmented/Stepper/EnumLabel
     uint8_t optionCount;
@@ -126,6 +134,16 @@ const UiParamDescriptor* ui_param_descriptor(UiParamId id);
 
 // Owning effect of a parameter (UiEffectId::Count when unknown).
 UiEffectId ui_effect_of(UiParamId id);
+
+// Wire ABI mapping. ui_param_voxlink_id returns 0 when a parameter is not bound
+// to the VoxLink schema. ui_effect_enable_voxlink_id maps the four visual module
+// enables to their backend parameter (LIMITER == harmony bus limiter).
+uint16_t ui_param_voxlink_id(UiParamId id);
+uint16_t ui_effect_enable_voxlink_id(UiEffectId effect);
+
+// Local enable defaults mirrored from the VoxLink registry (*.enable default).
+// Used only until M6 GET_STATE provides the authoritative snapshot.
+bool ui_effect_default_enabled(UiEffectId effect);
 
 // Clamp + quantize to the descriptor range/step.
 float ui_clamp_parameter(const UiParamDescriptor& descriptor, float value);
