@@ -22,4 +22,8 @@ void effect_edit_notify(UiParamId id, float value);
 // Performs a pending rebuild outside LVGL event dispatch. Called from ui_app_run.
 void effect_edit_tick(void);
 
+// Requests a rebuild of the open editor body (e.g. after a CAPS snapshot
+// changes capability gating). Safe to call outside LVGL event dispatch.
+void effect_edit_refresh(void);
+
 #endif // EFFECT_EDIT_SCREEN_H

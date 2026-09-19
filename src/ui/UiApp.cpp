@@ -653,6 +653,10 @@ void ui_revert_effect_enable(UiEffectId effect) {
 
 void ui_set_wire_intent_callback(UiWireIntentFn fn) { s_wire_intent = fn; }
 
+void ui_refresh_capability_gated_controls() {
+    if (current_screen == UiScreenId::EFFECT_EDIT) effect_edit_refresh();
+}
+
 void ui_set_link_capabilities(bool presetsAvailable, bool bypassAvailable) {
     s_presets_available = presetsAvailable;
     s_bypass_available = bypassAvailable;

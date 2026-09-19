@@ -21,7 +21,9 @@
 namespace {
 voxlink::VoxLinkClient g_client;
 constexpr size_t kIntentQueueDepth = 16;
-constexpr size_t kEventQueueDepth = 32;
+// Must hold a full 49-parameter snapshot plus LinkActive with margin. The
+// FreeRTOS queue is also a head/tail ring with usable depth = depth-1.
+constexpr size_t kEventQueueDepth = 80;
 
 struct Intent {
     uint16_t id;
@@ -30,6 +32,7 @@ struct Intent {
 
 QueueHandle_t g_intent_queue = nullptr;
 QueueHandle_t g_event_queue = nullptr;
+uint32_t g_ui_queue_drops = 0; // events the FreeRTOS bridge could not enqueue
 
 // Published capability snapshot for UI-thread queries (guarded by a spinlock).
 portMUX_TYPE g_caps_mux = portMUX_INITIALIZER_UNLOCKED;
@@ -47,6 +50,8 @@ struct PublishedCaps {
     uint32_t parse = 0;
     uint32_t reconnects = 0;
     uint32_t pending = 0;
+    uint32_t event_drops = 0;
+    uint32_t ui_queue_drops = 0;
 };
 PublishedCaps g_published;
 
@@ -72,6 +77,8 @@ void publish_caps(bool active) {
                  counters.version_errors;
     next.reconnects = counters.reconnects;
     next.pending = static_cast<uint32_t>(g_client.pending_count());
+    next.event_drops = counters.event_drops;
+    next.ui_queue_drops = g_ui_queue_drops;
     portENTER_CRITICAL(&g_caps_mux);
     g_published = next;
     portEXIT_CRITICAL(&g_caps_mux);
@@ -104,10 +111,31 @@ void task_entry(void *) {
 
         voxlink::Event ev;
         while (g_client.take_event(&ev)) {
-            xQueueSend(g_event_queue, &ev, 0);
+            if (xQueueSend(g_event_queue, &ev, 0) != pdTRUE) ++g_ui_queue_drops;
         }
 
         publish_caps(g_client.active());
+
+#if defined(DEBUG_BUILD)
+        // Log only abnormal saturation events, never normal traffic.
+        static voxlink::Counters prev;
+        const voxlink::Counters &c = g_client.counters();
+        if (c.event_drops != prev.event_drops)
+            Serial.printf("[VL] event queue full (drops=%u)\n", (unsigned)c.event_drops);
+        if (c.pending_full != prev.pending_full)
+            Serial.printf("[VL] pending pool full (drops=%u)\n", (unsigned)c.pending_full);
+        if (c.tx_drops != prev.tx_drops)
+            Serial.printf("[VL] tx ring full (drops=%u)\n", (unsigned)c.tx_drops);
+        if (c.caps_overflow != prev.caps_overflow)
+            Serial.printf("[VL] caps overflow\n");
+        if (c.snapshot_overflow != prev.snapshot_overflow)
+            Serial.printf("[VL] snapshot overflow\n");
+        if (c.queue_full_exhausted != prev.queue_full_exhausted)
+            Serial.printf("[VL] retries exhausted (count=%u)\n",
+                          (unsigned)c.queue_full_exhausted);
+        prev = c;
+#endif
+
         vTaskDelay(pdMS_TO_TICKS(2));
     }
 }
@@ -120,6 +148,9 @@ void voxlink_glue_init() {
 
     Serial2.begin(VoxCydConfig::VoxUartBaud, SERIAL_8N1, VoxCydConfig::VoxUartRx,
                   VoxCydConfig::VoxUartTx);
+    // Bound any blocking read to 2 ms even if fewer bytes than requested arrive;
+    // the task loop runs every ~2 ms and must not stall heartbeat/coalescing.
+    Serial2.setTimeout(2);
 
     // UI intents -> client task.
     ui_set_wire_intent_callback([](uint16_t wire_id, float value) {
@@ -148,6 +179,8 @@ void voxlink_glue_tick() {
                 portEXIT_CRITICAL(&g_caps_mux);
                 ui_set_link_capabilities(presets, bypass);
                 ui_update_link_state(true);
+                // The editor may have been built before CAPS arrived.
+                ui_refresh_capability_gated_controls();
                 break;
             }
             case voxlink::EventType::LinkDown:

@@ -147,6 +147,9 @@ void ui_set_wire_intent_callback(UiWireIntentFn fn);
 
 // Capability gating driven by the VoxLink client (CAPS / link state).
 void ui_set_link_capabilities(bool presetsAvailable, bool bypassAvailable);
+// Rebuilds capability-gated controls (currently the Effect Editor body) after a
+// CAPS snapshot arrives. No-op when the editor is not open.
+void ui_refresh_capability_gated_controls();
 // Human-readable summary derived from the parameter state (no heap). Both
 // Performance and FX Chain consume this same function.
 void ui_format_effect_summary(int effectId, char* mainValue, size_t mainSize,

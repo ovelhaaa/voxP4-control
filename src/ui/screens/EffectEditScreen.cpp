@@ -575,3 +575,7 @@ void effect_edit_notify(UiParamId id, float value) {
 void effect_edit_tick(void) {
     if (pending_rebuild) rebuild_params();
 }
+
+void effect_edit_refresh(void) {
+    if (current_edit_id >= 0) pending_rebuild = true;
+}
