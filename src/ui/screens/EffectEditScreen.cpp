@@ -230,3 +230,8 @@ void effect_edit_load_effect(int effectId) {
         }
     }
 }
+
+void effect_edit_set_enabled(int effectId, bool enabled) {
+    if (effectId != current_edit_id) return;
+    set_enable_visual(enabled);
+}

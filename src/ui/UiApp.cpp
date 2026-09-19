@@ -16,25 +16,51 @@ using namespace VoxUiTheme;
 
 static UiAppState app_state = {};
 
+// Canonical effect display metadata. Keep this list in sync with the effect
+// index order used everywhere: 0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER.
+static const char* kEffectNames[4]     = {"HARMONY", "REVERB", "DELAY", "LIMITER"};
+static const char* kEffectMainValues[4] = {"+3rd", "18%", "--", "-3 dB"};
+static const char* kEffectMetadata[4]   = {"KEY AUTO", "PLATE", "1/4", "THRESHOLD"};
+
+const char* ui_effect_name(int effectId) {
+    if (effectId < 0 || effectId >= 4) return "--";
+    return kEffectNames[effectId];
+}
+
+const char* ui_effect_main_value(int effectId) {
+    if (effectId < 0 || effectId >= 4) return "--";
+    return kEffectMainValues[effectId];
+}
+
+const char* ui_effect_metadata(int effectId) {
+    if (effectId < 0 || effectId >= 4) return "";
+    return kEffectMetadata[effectId];
+}
+
+static bool effect_enabled_from_state(int effectId) {
+    switch (effectId) {
+        case 0: return app_state.harmonyEnabled;
+        case 1: return app_state.reverbEnabled;
+        case 2: return app_state.delayEnabled;
+        case 3: return app_state.limiterEnabled;
+        default: return false;
+    }
+}
+
 // Placeholder for action handling. In the future this will dispatch to VoxLink.
 void ui_emit_action(const UiAction& action) {
-    // For now, we print to Serial and let the UI react optimistically or wait for state sync
-    // This provides a clear boundary between view intent and state authority
-
-    // As a placeholder for optimistic UI updates:
+    // This provides a clear boundary between view intent and state authority.
+    // Until VoxLink is wired, actions update the local optimistic state, which
+    // is then fanned out to every screen that represents an effect.
     if (action.type == UiActionType::ToggleEffect) {
-        bool enabled;
-        switch (action.id) {
-            case 0: enabled = app_state.harmonyEnabled; break;
-            case 1: enabled = app_state.reverbEnabled; break;
-            case 2: enabled = app_state.limiterEnabled; break;
-            case 3: enabled = app_state.delayEnabled; break;
-            default: return;
-        }
-        ui_update_effect_state(action.id, !enabled);
+        if (action.id >= 4) return;
+        ui_update_effect_state(action.id, !effect_enabled_from_state(action.id));
     } else if (action.type == UiActionType::OpenEffect) {
-        // This is a local navigation action, not sent to P4
+        // Local navigation action, not sent to P4.
         effect_edit_load_effect(action.id);
+        if (action.id < 4) {
+            effect_edit_set_enabled(action.id, effect_enabled_from_state(action.id));
+        }
         ui_navigate_to(UiScreenId::EFFECT_EDIT);
     }
 }
@@ -260,10 +286,9 @@ void ui_app_init(LGFX_CYD& display) {
     // Hydrate UI with current state
     performance_update_preset(app_state.presetName);
     performance_update_link(app_state.linkUp);
-    performance_update_effect(0, app_state.harmonyEnabled);
-    performance_update_effect(1, app_state.reverbEnabled);
-    performance_update_effect(2, app_state.limiterEnabled);
-    performance_update_effect(3, app_state.delayEnabled);
+    for (int i = 0; i < 4; i++) {
+        ui_update_effect_state(i, effect_enabled_from_state(i));
+    }
     performance_update_meters(app_state.inputPeakDb, app_state.outputPeakDb);
     const char* noteName = note_name_from_midi(app_state.detectedNote);
     performance_update_pitch(app_state.pitchFreqHz, noteName, app_state.voiced);
@@ -309,10 +334,17 @@ void ui_update_effect_state(int effectId, bool enabled) {
     switch (effectId) {
         case 0: app_state.harmonyEnabled = enabled; break;
         case 1: app_state.reverbEnabled = enabled; break;
-        case 2: app_state.limiterEnabled = enabled; break;
-        case 3: app_state.delayEnabled = enabled; break;
+        case 2: app_state.delayEnabled = enabled; break;
+        case 3: app_state.limiterEnabled = enabled; break;
+        default: return;
     }
+    // Fan out one logical state change to every representation so the UI can
+    // never show conflicting effect states across screens.
     performance_update_effect(effectId, enabled);
+    fx_chain_update_effect_state(effectId, enabled,
+                                 ui_effect_main_value(effectId),
+                                 ui_effect_metadata(effectId));
+    effect_edit_set_enabled(effectId, enabled);
 }
 
 void ui_update_meters(float inputDb, float outputDb) {

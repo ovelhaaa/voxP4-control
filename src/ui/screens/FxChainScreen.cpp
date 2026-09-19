@@ -2,19 +2,152 @@
 #include "../UiApp.h"
 #include "../UiTheme.h"
 
-static lv_obj_t* fx_rows[4] = {nullptr};
-static lv_obj_t* fx_leds[4] = {nullptr};
-static lv_obj_t* fx_name_labels[4] = {nullptr};
-static lv_obj_t* fx_param_labels[4] = {nullptr};
-static lv_obj_t* fx_state_labels[4] = {nullptr};
+// Module card geometry, tuned directly for the 320x204 content area.
+#define FX_CARD_W 74
+#define FX_CARD_H 84
+#define FX_ACTION_H 48
 
-static const char* effect_names[] = {"HARMONY", "REVERB", "DELAY", "LIMITER"};
+// Each effect is presented as a hardware-like processing module, not a settings
+// row. The card is a single large touch target that opens the effect editor.
+typedef struct {
+    lv_obj_t* card;
+    lv_obj_t* led;
+    lv_obj_t* name;
+    lv_obj_t* value;
+    lv_obj_t* meta;
+} FxModule_t;
 
-static void fx_row_clicked(lv_event_t* e) {
-    lv_obj_t* row = lv_event_get_target(e);
-    int effect_id = (int)(intptr_t)lv_obj_get_user_data(row);
+static FxModule_t fx_modules[4] = {};
+
+static void module_clicked(lv_event_t* e) {
+    lv_obj_t* card = lv_event_get_target(e);
+    int effect_id = (int)(intptr_t)lv_obj_get_user_data(card);
     UiAction action = { UiActionType::OpenEffect, (uint16_t)effect_id, 0 };
     ui_emit_action(action);
+}
+
+static lv_obj_t* make_line(lv_obj_t* parent) {
+    lv_obj_t* line = lv_obj_create(parent);
+    lv_obj_set_size(line, LV_PCT(100), 1);
+    lv_obj_clear_flag(line, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(line, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(line, COLOR_SEPARATOR, 0);
+    lv_obj_set_style_border_width(line, 0, 0);
+    lv_obj_set_style_radius(line, 0, 0);
+    lv_obj_set_style_pad_all(line, 0, 0);
+    return line;
+}
+
+static void create_module(lv_obj_t* parent, int index, const char* name) {
+    lv_obj_t* card = lv_obj_create(parent);
+    lv_obj_set_size(card, FX_CARD_W, FX_CARD_H);
+    lv_obj_clear_flag(card, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(card, COLOR_SURFACE, 0);
+    lv_obj_set_style_border_width(card, 1, 0);
+    lv_obj_set_style_border_color(card, COLOR_SEPARATOR, 0);
+    lv_obj_set_style_radius(card, RADIUS_M, 0);
+    lv_obj_set_style_pad_all(card, 5, 0);
+    lv_obj_set_style_pad_row(card, 4, 0);
+    lv_obj_set_flex_flow(card, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(card, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_add_flag(card, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_user_data(card, (void*)(intptr_t)index);
+    lv_obj_add_event_cb(card, module_clicked, LV_EVENT_CLICKED, NULL);
+
+    // Top row: status LED + effect name
+    lv_obj_t* top = lv_obj_create(card);
+    lv_obj_set_size(top, LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_clear_flag(top, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(top, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(top, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(top, 0, 0);
+    lv_obj_set_style_pad_all(top, 0, 0);
+    lv_obj_set_style_pad_column(top, SPACING_XS, 0);
+    lv_obj_set_flex_flow(top, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(top, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+    lv_obj_t* led = lv_obj_create(top);
+    lv_obj_set_size(led, 8, 8);
+    lv_obj_clear_flag(led, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(led, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(led, COLOR_DISABLED, 0);
+    lv_obj_set_style_radius(led, LV_RADIUS_CIRCLE, 0);
+    lv_obj_set_style_border_width(led, 0, 0);
+    lv_obj_set_style_pad_all(led, 0, 0);
+
+    lv_obj_t* name_label = lv_label_create(top);
+    lv_label_set_text(name_label, name);
+    lv_obj_set_style_text_font(name_label, FONT_TINY, 0);
+    lv_obj_set_style_text_color(name_label, COLOR_TEXT_SECONDARY, 0);
+
+    make_line(card);
+
+    // Dominant readout, vertically centered in the available space
+    lv_obj_t* value_box = lv_obj_create(card);
+    lv_obj_set_width(value_box, LV_PCT(100));
+    lv_obj_set_flex_grow(value_box, 1);
+    lv_obj_clear_flag(value_box, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(value_box, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(value_box, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(value_box, 0, 0);
+    lv_obj_set_style_pad_all(value_box, 0, 0);
+    lv_obj_set_flex_flow(value_box, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(value_box, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+    lv_obj_t* value_label = lv_label_create(value_box);
+    lv_label_set_text(value_label, "--");
+    lv_obj_set_style_text_font(value_label, FONT_EMPHASIS, 0);
+    lv_obj_set_style_text_color(value_label, COLOR_TEXT_MUTED, 0);
+
+    make_line(card);
+
+    lv_obj_t* meta_label = lv_label_create(card);
+    lv_label_set_text(meta_label, "--");
+    lv_obj_set_style_text_font(meta_label, FONT_TINY, 0);
+    lv_obj_set_style_text_color(meta_label, COLOR_TEXT_FAINT, 0);
+
+    fx_modules[index].card = card;
+    fx_modules[index].led = led;
+    fx_modules[index].name = name_label;
+    fx_modules[index].value = value_label;
+    fx_modules[index].meta = meta_label;
+}
+
+// Global action: title + optional subtitle, cheap outline/fill treatment.
+static lv_obj_t* create_global_action(lv_obj_t* parent, const char* title, const char* subtitle,
+                                      lv_color_t border, lv_color_t title_color, bool filled) {
+    lv_obj_t* btn = lv_btn_create(parent);
+    lv_obj_set_size(btn, 150, FX_ACTION_H);
+    lv_obj_set_style_radius(btn, RADIUS_S, 0);
+    lv_obj_set_style_shadow_width(btn, 0, 0);
+    lv_obj_set_style_border_width(btn, 1, 0);
+    lv_obj_set_style_border_color(btn, border, 0);
+    lv_obj_set_style_bg_color(btn, COLOR_SURFACE, 0);
+    lv_obj_set_style_bg_opa(btn, filled ? LV_OPA_COVER : LV_OPA_TRANSP, 0);
+
+    lv_obj_t* col = lv_obj_create(btn);
+    lv_obj_set_size(col, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_clear_flag(col, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(col, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(col, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(col, 0, 0);
+    lv_obj_set_style_pad_all(col, 0, 0);
+    lv_obj_set_style_pad_row(col, 1, 0);
+    lv_obj_set_flex_flow(col, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(col, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_center(col);
+
+    lv_obj_t* title_label = lv_label_create(col);
+    lv_label_set_text(title_label, title);
+    lv_obj_set_style_text_font(title_label, FONT_BODY, 0);
+    lv_obj_set_style_text_color(title_label, title_color, 0);
+
+    lv_obj_t* subtitle_label = lv_label_create(col);
+    lv_label_set_text(subtitle_label, subtitle);
+    lv_obj_set_style_text_font(subtitle_label, FONT_TINY, 0);
+    lv_obj_set_style_text_color(subtitle_label, COLOR_TEXT_MUTED, 0);
+
+    return btn;
 }
 
 void fx_chain_screen_init(lv_obj_t* parent) {
@@ -22,7 +155,7 @@ void fx_chain_screen_init(lv_obj_t* parent) {
     lv_obj_set_size(fx_container, LV_PCT(100), LV_PCT(100));
     lv_obj_set_style_bg_color(fx_container, COLOR_BG, 0);
     lv_obj_set_style_pad_all(fx_container, SPACING_XS, 0);
-    lv_obj_set_style_pad_row(fx_container, SPACING_XS, 0);
+    lv_obj_set_style_pad_row(fx_container, SPACING_S, 0);
     lv_obj_set_style_border_width(fx_container, 0, 0);
     lv_obj_set_flex_flow(fx_container, LV_FLEX_FLOW_COLUMN);
 
@@ -46,118 +179,59 @@ void fx_chain_screen_init(lv_obj_t* parent) {
     lv_obj_t* rack = lv_obj_create(fx_container);
     lv_obj_set_size(rack, LV_PCT(100), LV_PCT(100));
     lv_obj_set_flex_grow(rack, 1);
+    lv_obj_clear_flag(rack, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(rack, COLOR_BG, 0);
     lv_obj_set_style_border_width(rack, 0, 0);
     lv_obj_set_style_pad_all(rack, 0, 0);
-    lv_obj_set_style_pad_row(rack, 3, 0);
-    lv_obj_set_flex_flow(rack, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_column(rack, 5, 0);
+    lv_obj_set_flex_flow(rack, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(rack, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     for (int i = 0; i < 4; i++) {
-        lv_obj_t* row = lv_obj_create(rack);
-        lv_obj_set_size(row, LV_PCT(100), 28);
-        lv_obj_set_style_bg_color(row, COLOR_SURFACE, 0);
-        lv_obj_set_style_radius(row, RADIUS_S, 0);
-        lv_obj_set_style_border_width(row, 1, 0);
-        lv_obj_set_style_border_color(row, COLOR_SEPARATOR, 0);
-        lv_obj_set_style_pad_hor(row, SPACING_M, 0);
-        lv_obj_set_style_pad_ver(row, 0, 0);
-        lv_obj_set_style_pad_column(row, SPACING_S, 0);
-        lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
-        lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-        lv_obj_add_flag(row, LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_set_user_data(row, (void*)(intptr_t)i);
-        lv_obj_add_event_cb(row, fx_row_clicked, LV_EVENT_CLICKED, NULL);
-
-        lv_obj_t* led = lv_obj_create(row);
-        lv_obj_set_size(led, 7, 7);
-        lv_obj_set_style_bg_color(led, COLOR_DISABLED, 0);
-        lv_obj_set_style_radius(led, LV_RADIUS_CIRCLE, 0);
-        lv_obj_set_style_border_width(led, 0, 0);
-        lv_obj_set_style_pad_all(led, 0, 0);
-
-        lv_obj_t* name_label = lv_label_create(row);
-        lv_label_set_text(name_label, effect_names[i]);
-        lv_obj_set_style_text_color(name_label, COLOR_TEXT_SECONDARY, 0);
-        lv_obj_set_style_text_font(name_label, FONT_SMALL, 0);
-        lv_obj_set_width(name_label, 78);
-
-        lv_obj_t* param_label = lv_label_create(row);
-        lv_label_set_text(param_label, "--");
-        lv_obj_set_style_text_color(param_label, COLOR_TEXT_MUTED, 0);
-        lv_obj_set_style_text_font(param_label, FONT_SMALL, 0);
-        lv_obj_set_flex_grow(param_label, 1);
-
-        lv_obj_t* state_label = lv_label_create(row);
-        lv_label_set_text(state_label, "OFF");
-        lv_obj_set_style_text_color(state_label, COLOR_TEXT_MUTED, 0);
-        lv_obj_set_style_text_font(state_label, FONT_TINY, 0);
-
-        fx_rows[i] = row;
-        fx_leds[i] = led;
-        fx_name_labels[i] = name_label;
-        fx_param_labels[i] = param_label;
-        fx_state_labels[i] = state_label;
+        create_module(rack, i, ui_effect_name(i));
     }
 
     // === GLOBAL ACTIONS ===
+    make_line(fx_container);
+
     lv_obj_t* actions_row = lv_obj_create(fx_container);
-    lv_obj_set_size(actions_row, LV_PCT(100), 32);
+    lv_obj_set_size(actions_row, LV_PCT(100), FX_ACTION_H);
+    lv_obj_clear_flag(actions_row, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(actions_row, COLOR_BG, 0);
     lv_obj_set_style_border_width(actions_row, 0, 0);
     lv_obj_set_style_pad_all(actions_row, 0, 0);
-    lv_obj_set_style_pad_column(actions_row, SPACING_S, 0);
+    lv_obj_set_style_pad_column(actions_row, SPACING_M, 0);
     lv_obj_set_flex_flow(actions_row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(actions_row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    lv_obj_t* all_on_btn = lv_btn_create(actions_row);
-    lv_obj_set_size(all_on_btn, 130, 32);
-    lv_obj_set_style_bg_opa(all_on_btn, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(all_on_btn, 1, 0);
-    lv_obj_set_style_border_color(all_on_btn, COLOR_AUDIO_DARK, 0);
-    lv_obj_set_style_radius(all_on_btn, RADIUS_S, 0);
-    lv_obj_set_style_shadow_width(all_on_btn, 0, 0);
-    lv_obj_t* all_on_label = lv_label_create(all_on_btn);
-    lv_label_set_text(all_on_label, "ALL ON");
-    lv_obj_center(all_on_label);
-    lv_obj_set_style_text_color(all_on_label, COLOR_AUDIO, 0);
-    lv_obj_set_style_text_font(all_on_label, FONT_SMALL, 0);
+    lv_obj_t* all_on_btn = create_global_action(actions_row, "ALL ON", "ENABLE ALL EFFECTS",
+                                                COLOR_AUDIO_DARK, COLOR_AUDIO, false);
     lv_obj_add_event_cb(all_on_btn, [](lv_event_t* e) {
         UiAction action = { UiActionType::AllEffectsOn, 0, 0 };
         ui_emit_action(action);
     }, LV_EVENT_CLICKED, NULL);
 
-    lv_obj_t* bypass_btn = lv_btn_create(actions_row);
-    lv_obj_set_size(bypass_btn, 130, 32);
-    lv_obj_set_style_bg_color(bypass_btn, COLOR_ACCENT_DARK, 0);
-    lv_obj_set_style_border_width(bypass_btn, 0, 0);
-    lv_obj_set_style_radius(bypass_btn, RADIUS_S, 0);
-    lv_obj_set_style_shadow_width(bypass_btn, 0, 0);
-    lv_obj_t* bypass_label = lv_label_create(bypass_btn);
-    lv_label_set_text(bypass_label, "BYPASS");
-    lv_obj_center(bypass_label);
-    lv_obj_set_style_text_color(bypass_label, COLOR_TEXT_PRIMARY, 0);
-    lv_obj_set_style_text_font(bypass_label, FONT_SMALL, 0);
+    lv_obj_t* bypass_btn = create_global_action(actions_row, "BYPASS", "DISABLE ALL EFFECTS",
+                                                COLOR_ACCENT, COLOR_TEXT_PRIMARY, true);
     lv_obj_add_event_cb(bypass_btn, [](lv_event_t* e) {
         UiAction action = { UiActionType::GlobalBypass, 0, 0 };
         ui_emit_action(action);
     }, LV_EVENT_CLICKED, NULL);
 }
 
-void fx_chain_update_effect_state(int effectId, bool enabled, const char* paramName, const char* paramValue) {
-    if (effectId < 0 || effectId >= 4 || !fx_rows[effectId]) return;
+void fx_chain_update_effect_state(int effectId, bool enabled,
+                                  const char* mainValue, const char* metadata) {
+    if (effectId < 0 || effectId >= 4 || !fx_modules[effectId].card) return;
 
-    lv_obj_set_style_border_color(fx_rows[effectId], enabled ? COLOR_ACCENT : COLOR_SEPARATOR, 0);
-    lv_obj_set_style_bg_color(fx_leds[effectId], enabled ? COLOR_ACCENT : COLOR_DISABLED, 0);
-    lv_obj_set_style_text_color(fx_name_labels[effectId],
-        enabled ? COLOR_TEXT_PRIMARY : COLOR_TEXT_SECONDARY, 0);
-    lv_obj_set_style_text_color(fx_state_labels[effectId],
-        enabled ? COLOR_ACCENT_BRIGHT : COLOR_TEXT_MUTED, 0);
-    lv_label_set_text(fx_state_labels[effectId], enabled ? "ON" : "OFF");
+    FxModule_t& m = fx_modules[effectId];
 
-    (void)paramName;
-    if (paramValue) {
-        lv_label_set_text(fx_param_labels[effectId], paramValue);
-        lv_obj_set_style_text_color(fx_param_labels[effectId],
-            enabled ? COLOR_TEXT_PRIMARY : COLOR_TEXT_MUTED, 0);
-    }
+    // ON: small orange cue. OFF: dimmed hierarchy. Never a filled card.
+    lv_obj_set_style_border_color(m.card, enabled ? COLOR_ACCENT_DARK : COLOR_SEPARATOR, 0);
+    lv_obj_set_style_bg_color(m.led, enabled ? COLOR_ACCENT : COLOR_DISABLED, 0);
+    lv_obj_set_style_text_color(m.name, enabled ? COLOR_TEXT_PRIMARY : COLOR_TEXT_SECONDARY, 0);
+    lv_obj_set_style_text_color(m.value, enabled ? COLOR_TEXT_PRIMARY : COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_color(m.meta, enabled ? COLOR_TEXT_SECONDARY : COLOR_TEXT_FAINT, 0);
+
+    if (mainValue) lv_label_set_text(m.value, mainValue);
+    if (metadata) lv_label_set_text(m.meta, metadata);
 }

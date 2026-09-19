@@ -17,8 +17,6 @@ static EffectCard_t* effect_cards[4] = {nullptr};
 static lv_obj_t* fs_containers[2] = {nullptr};
 static lv_obj_t* fs_labels[2] = {nullptr};
 
-static const char* effect_default_params[] = {"+3rd", "18%", "--", "-3dB"};
-
 void performance_screen_init(lv_obj_t* parent) {
     performance_container = lv_obj_create(parent);
     lv_obj_set_size(performance_container, LV_PCT(100), LV_PCT(100));
@@ -131,7 +129,7 @@ void performance_screen_init(lv_obj_t* parent) {
         effect_cards[i] = effect_card_create(effects_container, 0, 0, (EffectType_t)i);
         if (!effect_cards[i]) continue;
 
-        effect_card_set_param(effect_cards[i], effect_default_params[i]);
+        effect_card_set_param(effect_cards[i], ui_effect_main_value(i));
         effect_card_set_enabled(effect_cards[i], false);
 
         lv_obj_add_flag(effect_cards[i]->card, LV_OBJ_FLAG_CLICKABLE);

@@ -59,7 +59,7 @@
   <rect x="232" y="114" width="72" height="46" rx="5" class="surface" stroke="#F45126" stroke-width="1"/>
   <text x="239" y="127" class="t1" font-size="8" font-weight="bold">LIMITER</text>
   <circle cx="296" cy="124" r="3.5" class="acc"/>
-  <text x="239" y="152" class="t1" font-size="11">-3dB</text>
+  <text x="239" y="152" class="t1" font-size="11">-3 dB</text>
 
   <!-- FOOTSWITCH SUMMARY -->
   <rect x="4" y="164" width="152" height="32" rx="3" class="surface" stroke="#292A30" stroke-width="1"/>

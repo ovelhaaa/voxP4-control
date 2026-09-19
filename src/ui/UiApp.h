@@ -42,11 +42,11 @@ struct UiAppState {
     uint16_t presetId;
     char presetName[32];
     
-    // Effect states
+    // Effect states (index order: 0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER)
     bool harmonyEnabled;
     bool reverbEnabled;
-    bool limiterEnabled;
     bool delayEnabled;
+    bool limiterEnabled;
     
     // Meters
     float inputPeakDb;
@@ -75,5 +75,11 @@ void ui_update_preset(uint16_t id, const char* name);
 void ui_update_effect_state(int effectId, bool enabled);
 void ui_update_meters(float inputDb, float outputDb);
 void ui_update_pitch(float freqHz, int note, bool voiced);
+
+// Canonical effect display metadata (single source of truth for all screens).
+// Index order is fixed: 0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER.
+const char* ui_effect_name(int effectId);
+const char* ui_effect_main_value(int effectId);
+const char* ui_effect_metadata(int effectId);
 
 #endif  // UI_APP_H
