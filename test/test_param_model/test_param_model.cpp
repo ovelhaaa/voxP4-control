@@ -92,6 +92,16 @@ void test_hertz_format(void) {
     TEST_ASSERT_EQUAL_STRING("200 Hz", buf);
 }
 
+void test_cents_format(void) {
+    char buf[24];
+    format_into(UiParamId::MicroshiftLeftCents, -7.0f, buf, sizeof(buf));
+    TEST_ASSERT_EQUAL_STRING("-7 c", buf);
+    format_into(UiParamId::MicroshiftRightCents, 9.0f, buf, sizeof(buf));
+    TEST_ASSERT_EQUAL_STRING("+9 c", buf);
+    format_into(UiParamId::MicroshiftRightCents, 0.0f, buf, sizeof(buf));
+    TEST_ASSERT_EQUAL_STRING("0 c", buf);
+}
+
 // --- Stepper wrap ----------------------------------------------------------
 void test_enum_wrap(void) {
     TEST_ASSERT_EQUAL_INT(0, ui_step_index(11, 1, 12, true));
@@ -150,6 +160,10 @@ void test_effect_lookup(void) {
                           (int)ui_effect_of(UiParamId::DelayWet));
     TEST_ASSERT_EQUAL_INT((int)UiEffectId::Limiter,
                           (int)ui_effect_of(UiParamId::LimiterThresholdDb));
+    TEST_ASSERT_EQUAL_INT((int)UiEffectId::Modulation,
+                          (int)ui_effect_of(UiParamId::ModulationMix));
+    TEST_ASSERT_EQUAL_INT((int)UiEffectId::Modulation,
+                          (int)ui_effect_of(UiParamId::MicroshiftLeftCents));
 }
 
 // --- VoxLink ABI mapping (generated contract constants) --------------------
@@ -166,6 +180,16 @@ void test_voxlink_id_mapping(void) {
                             ui_param_voxlink_id(UiParamId::DelayFeedback));
     TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_HARMONY_LIMITER_THRESHOLD_DB,
                             ui_param_voxlink_id(UiParamId::LimiterThresholdDb));
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_CHORUS_MODE,
+                            ui_param_voxlink_id(UiParamId::ModulationMode));
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_CHORUS_MIX,
+                            ui_param_voxlink_id(UiParamId::ModulationMix));
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_CHORUS_MICROSHIFT_LEFT_CENTS,
+                            ui_param_voxlink_id(UiParamId::MicroshiftLeftCents));
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_CHORUS_MICROSHIFT_RIGHT_CENTS,
+                            ui_param_voxlink_id(UiParamId::MicroshiftRightCents));
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_CHORUS_MICROSHIFT_WINDOW_MS,
+                            ui_param_voxlink_id(UiParamId::MicroshiftWindowMs));
     // Every declared UiParamId must be bound to a non-zero wire id.
     for (size_t i = 0; i < kUiParamCount; i++) {
         TEST_ASSERT_NOT_EQUAL(0u,
@@ -185,10 +209,12 @@ void test_effect_enable_mapping(void) {
                             ui_effect_enable_voxlink_id(UiEffectId::Limiter));
     TEST_ASSERT_NOT_EQUAL(VOXP4_PARAM_LIMITER_CEILING,
                           ui_effect_enable_voxlink_id(UiEffectId::Limiter));
+    TEST_ASSERT_EQUAL_HEX16(VOXP4_PARAM_CHORUS_ENABLE,
+                            ui_effect_enable_voxlink_id(UiEffectId::Modulation));
 }
 
 void test_generated_constants(void) {
-    TEST_ASSERT_EQUAL_INT(49, (int)VOXP4_PARAM_COUNT);
+    TEST_ASSERT_EQUAL_INT(71, (int)VOXP4_PARAM_COUNT);
     TEST_ASSERT_TRUE(kUiParamCount > 0);
     TEST_ASSERT_TRUE(kUiParamCount <= VOXP4_PARAM_COUNT);
     TEST_ASSERT_EQUAL_HEX16(0x10u, VOXP4_VOXLINK_VERSION);
@@ -215,6 +241,69 @@ void test_delay_feedback_range(void) {
     TEST_ASSERT_EQUAL_FLOAT(0.95f, ui_clamp_parameter(d, 1.5f));
 }
 
+void test_microshift_clamping(void) {
+    const UiParamDescriptor& left = desc(UiParamId::MicroshiftLeftCents);
+    const UiParamDescriptor& right = desc(UiParamId::MicroshiftRightCents);
+    const UiParamDescriptor& window = desc(UiParamId::MicroshiftWindowMs);
+
+    TEST_ASSERT_EQUAL_FLOAT(-50.0f, ui_clamp_parameter(left, -99.0f));
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, ui_clamp_parameter(left, 10.0f));
+    TEST_ASSERT_EQUAL_FLOAT(-7.0f, ui_clamp_parameter(left, -7.0f));
+
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, ui_clamp_parameter(right, -10.0f));
+    TEST_ASSERT_EQUAL_FLOAT(50.0f, ui_clamp_parameter(right, 100.0f));
+    TEST_ASSERT_EQUAL_FLOAT(9.0f, ui_clamp_parameter(right, 9.0f));
+
+    TEST_ASSERT_EQUAL_FLOAT(5.0f, ui_clamp_parameter(window, 1.0f));
+    TEST_ASSERT_EQUAL_FLOAT(50.0f, ui_clamp_parameter(window, 100.0f));
+    TEST_ASSERT_EQUAL_FLOAT(25.0f, ui_clamp_parameter(window, 25.0f));
+}
+
+void test_modulation_mode_gating(void) {
+    const UiParamDescriptor& mode = desc(UiParamId::ModulationMode);
+    const UiParamDescriptor& mix = desc(UiParamId::ModulationMix);
+    const UiParamDescriptor& rate = desc(UiParamId::ModulationRateHz);
+    const UiParamDescriptor& depth = desc(UiParamId::ModulationDepthMs);
+    const UiParamDescriptor& width = desc(UiParamId::ModulationWidth);
+    const UiParamDescriptor& left = desc(UiParamId::MicroshiftLeftCents);
+    const UiParamDescriptor& right = desc(UiParamId::MicroshiftRightCents);
+    const UiParamDescriptor& window = desc(UiParamId::MicroshiftWindowMs);
+
+    // CHORUS = 0
+    TEST_ASSERT_TRUE(ui_descriptor_applies(mode, 0));
+    TEST_ASSERT_TRUE(ui_descriptor_applies(mix, 0));
+    TEST_ASSERT_TRUE(ui_descriptor_applies(rate, 0));
+    TEST_ASSERT_TRUE(ui_descriptor_applies(depth, 0));
+    TEST_ASSERT_TRUE(ui_descriptor_applies(width, 0));
+    TEST_ASSERT_FALSE(ui_descriptor_applies(left, 0));
+    TEST_ASSERT_FALSE(ui_descriptor_applies(right, 0));
+    TEST_ASSERT_FALSE(ui_descriptor_applies(window, 0));
+
+    // ENSEMBLE = 1
+    TEST_ASSERT_TRUE(ui_descriptor_applies(mix, 1));
+    TEST_ASSERT_FALSE(ui_descriptor_applies(rate, 1));
+    TEST_ASSERT_FALSE(ui_descriptor_applies(depth, 1));
+    TEST_ASSERT_TRUE(ui_descriptor_applies(width, 1));
+    TEST_ASSERT_FALSE(ui_descriptor_applies(left, 1));
+
+    // DIMENSION = 2
+    TEST_ASSERT_TRUE(ui_descriptor_applies(mix, 2));
+    TEST_ASSERT_FALSE(ui_descriptor_applies(rate, 2));
+    TEST_ASSERT_FALSE(ui_descriptor_applies(depth, 2));
+    TEST_ASSERT_TRUE(ui_descriptor_applies(width, 2));
+    TEST_ASSERT_FALSE(ui_descriptor_applies(left, 2));
+
+    // MICROSHIFT = 3
+    TEST_ASSERT_TRUE(ui_descriptor_applies(mode, 3));
+    TEST_ASSERT_TRUE(ui_descriptor_applies(mix, 3));
+    TEST_ASSERT_FALSE(ui_descriptor_applies(rate, 3));
+    TEST_ASSERT_FALSE(ui_descriptor_applies(depth, 3));
+    TEST_ASSERT_TRUE(ui_descriptor_applies(width, 3));
+    TEST_ASSERT_TRUE(ui_descriptor_applies(left, 3));
+    TEST_ASSERT_TRUE(ui_descriptor_applies(right, 3));
+    TEST_ASSERT_TRUE(ui_descriptor_applies(window, 3));
+}
+
 void test_uistep_quantization(void) {
     // UI step is coarser than the wire step; it must still stay in range.
     const UiParamDescriptor& level = desc(UiParamId::HarmonyLevel);
@@ -229,6 +318,7 @@ void test_effect_default_enabled(void) {
     TEST_ASSERT_TRUE(ui_effect_default_enabled(UiEffectId::Reverb));
     TEST_ASSERT_TRUE(ui_effect_default_enabled(UiEffectId::Delay));
     TEST_ASSERT_TRUE(ui_effect_default_enabled(UiEffectId::Limiter));
+    TEST_ASSERT_FALSE(ui_effect_default_enabled(UiEffectId::Modulation));
 }
 
 // --- Effect summaries ------------------------------------------------------
@@ -292,6 +382,28 @@ void test_summary_limiter(void) {
     TEST_ASSERT_EQUAL_STRING("HARM BUS", meta);
 }
 
+void test_summary_modulation_chorus(void) {
+    set(UiParamId::ModulationMode, 0.0f); // CHORUS
+    set(UiParamId::ModulationMix, 0.35f);
+    char main[24];
+    char meta[24];
+    summary(UiEffectId::Modulation, main, sizeof(main), meta, sizeof(meta));
+    TEST_ASSERT_EQUAL_STRING("35%", main);
+    TEST_ASSERT_EQUAL_STRING("CHORUS", meta);
+}
+
+void test_summary_modulation_microshift(void) {
+    set(UiParamId::ModulationMode, 3.0f); // MICROSHIFT
+    set(UiParamId::ModulationMix, 0.35f);
+    set(UiParamId::MicroshiftLeftCents, -7.0f);
+    set(UiParamId::MicroshiftRightCents, 9.0f);
+    char main[24];
+    char meta[24];
+    summary(UiEffectId::Modulation, main, sizeof(main), meta, sizeof(meta));
+    TEST_ASSERT_EQUAL_STRING("35%", main);
+    TEST_ASSERT_EQUAL_STRING("-7/+9 c", meta);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_percent_format);
@@ -300,6 +412,7 @@ int main(int, char**) {
     RUN_TEST(test_semitone_format);
     RUN_TEST(test_seconds_format);
     RUN_TEST(test_hertz_format);
+    RUN_TEST(test_cents_format);
     RUN_TEST(test_enum_wrap);
     RUN_TEST(test_clamp);
     RUN_TEST(test_mode_descriptor_selection);
@@ -310,6 +423,8 @@ int main(int, char**) {
     RUN_TEST(test_generated_constants);
     RUN_TEST(test_non_scale_enum);
     RUN_TEST(test_delay_feedback_range);
+    RUN_TEST(test_microshift_clamping);
+    RUN_TEST(test_modulation_mode_gating);
     RUN_TEST(test_uistep_quantization);
     RUN_TEST(test_effect_default_enabled);
     RUN_TEST(test_summary_reverb);
@@ -318,5 +433,7 @@ int main(int, char**) {
     RUN_TEST(test_summary_harmony_diatonic);
     RUN_TEST(test_summary_harmony_midi);
     RUN_TEST(test_summary_limiter);
+    RUN_TEST(test_summary_modulation_chorus);
+    RUN_TEST(test_summary_modulation_microshift);
     return UNITY_END();
 }

@@ -2,8 +2,8 @@
 #include "../UiApp.h"
 #include "../UiTheme.h"
 
-// Module card geometry, tuned directly for the 320x204 content area.
-#define FX_CARD_W 74
+// Module card geometry, tuned directly for the 320x204 content area (5 cards).
+#define FX_CARD_W 58
 #define FX_CARD_H 84
 #define FX_ACTION_H 48
 
@@ -19,7 +19,7 @@ typedef struct {
     lv_obj_t* meta;
 } FxModule_t;
 
-static FxModule_t fx_modules[4] = {};
+static FxModule_t fx_modules[kUiEffectCount] = {};
 static lv_obj_t* bypass_button = nullptr;
 
 // Global bypass is a local flag only; this updates its visual state without
@@ -235,7 +235,7 @@ void fx_chain_screen_init(lv_obj_t* parent) {
     lv_obj_set_flex_flow(rack, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(rack, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < static_cast<int>(kUiEffectCount); i++) {
         create_module(rack, i, ui_effect_name(i));
     }
 
@@ -269,7 +269,7 @@ void fx_chain_screen_init(lv_obj_t* parent) {
 
 void fx_chain_update_effect_state(int effectId, bool enabled,
                                   const char* mainValue, const char* metadata) {
-    if (effectId < 0 || effectId >= 4 || !fx_modules[effectId].card) return;
+    if (effectId < 0 || effectId >= static_cast<int>(kUiEffectCount) || !fx_modules[effectId].card) return;
 
     FxModule_t& m = fx_modules[effectId];
 

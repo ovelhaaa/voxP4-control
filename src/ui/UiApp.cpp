@@ -40,20 +40,21 @@ static void ui_log_heap(const char* stage) {
 #endif
 
 // Canonical effect display names. Index order is fixed:
-// 0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER.
-static const char* kEffectNames[4] = {"HARMONY", "REVERB", "DELAY", "LIMITER"};
+// 0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER, 4 MODULATION.
+static const char* kEffectNames[kUiEffectCount] = {
+    "HARMONY", "REVERB", "DELAY", "LIMITER", "MODULATION"};
 
 static bool effect_enabled_from_state(int effectId);
 
 const char* ui_effect_name(int effectId) {
-    if (effectId < 0 || effectId >= 4) return "--";
+    if (effectId < 0 || effectId >= static_cast<int>(kUiEffectCount)) return "--";
     return kEffectNames[effectId];
 }
 
 // Recompute and fan out the summary for a single effect. Only the affected
 // effect's Performance card and FX Chain module are touched.
 static void update_effect_summary(int effectId) {
-    if (effectId < 0 || effectId >= 4) return;
+    if (effectId < 0 || effectId >= static_cast<int>(kUiEffectCount)) return;
     char main_value[24];
     char metadata[24];
     ui_build_effect_summary(static_cast<UiEffectId>(effectId),
@@ -81,6 +82,7 @@ static bool effect_enabled_from_state(int effectId) {
         case 1: return app_state.reverbEnabled;
         case 2: return app_state.delayEnabled;
         case 3: return app_state.limiterEnabled;
+        case 4: return app_state.modulationEnabled;
         default: return false;
     }
 }
@@ -91,7 +93,7 @@ static bool effect_enabled_from_state(int effectId) {
 void ui_emit_action(const UiAction& action) {
     switch (action.type) {
         case UiActionType::ToggleEffect:
-            if (action.id >= 4) return;
+            if (action.id >= kUiEffectCount) return;
             ui_set_effect_enable_local(static_cast<UiEffectId>(action.id),
                                        !effect_enabled_from_state(action.id));
             break;
@@ -99,16 +101,16 @@ void ui_emit_action(const UiAction& action) {
         case UiActionType::OpenEffect:
             // Local navigation action, not sent to P4.
             effect_edit_load_effect(action.id);
-            if (action.id < 4) {
+            if (action.id < kUiEffectCount) {
                 effect_edit_set_enabled(action.id, effect_enabled_from_state(action.id));
             }
             ui_navigate_to(UiScreenId::EFFECT_EDIT);
             break;
 
         case UiActionType::AllEffectsOn:
-            // Four real enable parameters; optimistic locally, sent to the P4
+            // Five real enable parameters; optimistic locally, sent to the P4
             // when the link is active.
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < static_cast<int>(kUiEffectCount); i++) {
                 ui_set_effect_enable_local(static_cast<UiEffectId>(i), true);
             }
             break;
@@ -410,7 +412,8 @@ void ui_app_init(LGFX_CYD& display) {
     app_state.reverbEnabled = ui_effect_default_enabled(UiEffectId::Reverb);
     app_state.delayEnabled = ui_effect_default_enabled(UiEffectId::Delay);
     app_state.limiterEnabled = ui_effect_default_enabled(UiEffectId::Limiter);
-    for (int i = 0; i < 4; i++) {
+    app_state.modulationEnabled = ui_effect_default_enabled(UiEffectId::Modulation);
+    for (int i = 0; i < static_cast<int>(kUiEffectCount); i++) {
         app_state.effectAuthoritative[i] = effect_enabled_from_state(i);
         app_state.effectAuthority[i] = UiValueAuthority::LocalDefault;
         ui_update_effect_state(i, effect_enabled_from_state(i));
@@ -502,6 +505,7 @@ const char* ui_footswitch_short_label(uint8_t action) {
     if (strstr(full, "HARMONY")) return "HARMONY";
     if (strstr(full, "REVERB")) return "REVERB";
     if (strstr(full, "DELAY")) return "DELAY";
+    if (strstr(full, "MODULATION")) return "MOD";
     if (strstr(full, "TAP TEMPO")) return "TAP";
     if (strstr(full, "PRESET NEXT")) return "NEXT";
     if (strstr(full, "PRESET PREV")) return "PREV";
@@ -605,6 +609,7 @@ void ui_update_effect_state(int effectId, bool enabled) {
         case 1: app_state.reverbEnabled = enabled; break;
         case 2: app_state.delayEnabled = enabled; break;
         case 3: app_state.limiterEnabled = enabled; break;
+        case 4: app_state.modulationEnabled = enabled; break;
         default: return;
     }
     // Fan out one logical state change to every representation so the UI can
@@ -622,13 +627,14 @@ float ui_get_authoritative_parameter(UiParamId id) {
 
 UiValueAuthority ui_effect_authority(UiEffectId effect) {
     const int index = static_cast<int>(effect);
-    if (index < 0 || index >= 4) return UiValueAuthority::LocalDefault;
+    if (index < 0 || index >= static_cast<int>(kUiEffectCount))
+        return UiValueAuthority::LocalDefault;
     return app_state.effectAuthority[index];
 }
 
 void ui_set_effect_enable_local(UiEffectId effect, bool enabled) {
     const int index = static_cast<int>(effect);
-    if (index < 0 || index >= 4) return;
+    if (index < 0 || index >= static_cast<int>(kUiEffectCount)) return;
     ui_update_effect_state(index, enabled);
     app_state.effectAuthority[index] = UiValueAuthority::LocalPending;
     const uint16_t wire_id = ui_effect_enable_voxlink_id(effect);
@@ -638,7 +644,7 @@ void ui_set_effect_enable_local(UiEffectId effect, bool enabled) {
 
 void ui_apply_effect_enable_authoritative(UiEffectId effect, bool enabled) {
     const int index = static_cast<int>(effect);
-    if (index < 0 || index >= 4) return;
+    if (index < 0 || index >= static_cast<int>(kUiEffectCount)) return;
     ui_update_effect_state(index, enabled);
     app_state.effectAuthoritative[index] = enabled;
     app_state.effectAuthority[index] = UiValueAuthority::Authoritative;
@@ -646,7 +652,7 @@ void ui_apply_effect_enable_authoritative(UiEffectId effect, bool enabled) {
 
 void ui_revert_effect_enable(UiEffectId effect) {
     const int index = static_cast<int>(effect);
-    if (index < 0 || index >= 4) return;
+    if (index < 0 || index >= static_cast<int>(kUiEffectCount)) return;
     ui_update_effect_state(index, app_state.effectAuthoritative[index]);
     app_state.effectAuthority[index] = UiValueAuthority::Authoritative;
 }

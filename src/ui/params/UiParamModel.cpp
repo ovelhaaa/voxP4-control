@@ -19,6 +19,8 @@ extern const char* const kUiHarmonyScaleShortLabels[12] = {
     "LYDIAN",  "MIXOLYD",  "LOCRIAN",  "MAJ PENT", "MIN PENT", "BLUES MIN"};
 extern const char* const kUiNonScalePolicyLabels[3] = {"NEAREST", "CHROMATIC",
                                                        "BYPASS"};
+extern const char* const kUiModulationModeLabels[4] = {"CHORUS", "ENSEMBLE",
+                                                       "DIMENSION", "MICROSHIFT"};
 
 namespace {
 
@@ -27,6 +29,14 @@ constexpr uint8_t kModeFixed = 1u << 0;
 constexpr uint8_t kModeDiatonic = 1u << 1;
 constexpr uint8_t kModeMidi = 1u << 2;
 constexpr uint8_t kModeAll = kModeFixed | kModeDiatonic | kModeMidi;
+
+// Modulation mode mask bits.
+constexpr uint8_t kModChorus = 1u << 0;
+constexpr uint8_t kModEnsemble = 1u << 1;
+constexpr uint8_t kModDimension = 1u << 2;
+constexpr uint8_t kModMicroshift = 1u << 3;
+constexpr uint8_t kModAll =
+    kModChorus | kModEnsemble | kModDimension | kModMicroshift;
 
 } // namespace
 
@@ -120,6 +130,35 @@ extern const UiParamDescriptor kUiLimiterDescriptors[] = {
 extern const size_t kUiLimiterDescriptorCount =
     sizeof(kUiLimiterDescriptors) / sizeof(kUiLimiterDescriptors[0]);
 
+extern const UiParamDescriptor kUiModulationDescriptors[] = {
+    {UiParamId::ModulationMode, "MODE", "MODE", UiControlType::Segmented,
+     UiValueFormat::EnumLabel, 0, 3, 1, 0, kUiModulationModeLabels, 4,
+     VOXP4_PARAM_CHORUS_MODE, kModAll, false},
+    {UiParamId::ModulationMix, "MIX", "MODULATION", UiControlType::Slider,
+     UiValueFormat::Percent, 0, 1, 0.01f, 0.35f, nullptr, 0,
+     VOXP4_PARAM_CHORUS_MIX, kModAll, false},
+    {UiParamId::ModulationRateHz, "RATE", "LFO", UiControlType::Slider,
+     UiValueFormat::Hertz, 0.05f, 10.0f, 0.05f, 1.2f, nullptr, 0,
+     VOXP4_PARAM_CHORUS_RATE_HZ, kModChorus, false},
+    {UiParamId::ModulationDepthMs, "DEPTH", "LFO", UiControlType::Slider,
+     UiValueFormat::Milliseconds, 0.1f, 15.0f, 0.1f, 1.6f, nullptr, 0,
+     VOXP4_PARAM_CHORUS_DEPTH_MS, kModChorus, false},
+    {UiParamId::ModulationWidth, "WIDTH", "STEREO", UiControlType::Slider,
+     UiValueFormat::Percent, 0, 1, 0.01f, 1.0f, nullptr, 0,
+     VOXP4_PARAM_CHORUS_WIDTH, kModAll, false},
+    {UiParamId::MicroshiftLeftCents, "LEFT DETUNE", "DETUNE", UiControlType::Slider,
+     UiValueFormat::Cents, -50, 0, 1, -7, nullptr, 0,
+     VOXP4_PARAM_CHORUS_MICROSHIFT_LEFT_CENTS, kModMicroshift, false},
+    {UiParamId::MicroshiftRightCents, "RIGHT DETUNE", "DETUNE", UiControlType::Slider,
+     UiValueFormat::Cents, 0, 50, 1, 9, nullptr, 0,
+     VOXP4_PARAM_CHORUS_MICROSHIFT_RIGHT_CENTS, kModMicroshift, false},
+    {UiParamId::MicroshiftWindowMs, "WINDOW", "ADVANCED", UiControlType::Slider,
+     UiValueFormat::Milliseconds, 5, 50, 1, 25, nullptr, 0,
+     VOXP4_PARAM_CHORUS_MICROSHIFT_WINDOW_MS, kModMicroshift, false},
+};
+extern const size_t kUiModulationDescriptorCount =
+    sizeof(kUiModulationDescriptors) / sizeof(kUiModulationDescriptors[0]);
+
 // ---------------------------------------------------------------------------
 // Lookup / gating
 // ---------------------------------------------------------------------------
@@ -137,6 +176,9 @@ const UiParamDescriptor* ui_effect_descriptors(UiEffectId effect, size_t* count)
         case UiEffectId::Limiter:
             if (count) *count = kUiLimiterDescriptorCount;
             return kUiLimiterDescriptors;
+        case UiEffectId::Modulation:
+            if (count) *count = kUiModulationDescriptorCount;
+            return kUiModulationDescriptors;
         default:
             if (count) *count = 0;
             return nullptr;
@@ -144,10 +186,10 @@ const UiParamDescriptor* ui_effect_descriptors(UiEffectId effect, size_t* count)
 }
 
 bool ui_descriptor_applies(const UiParamDescriptor& descriptor,
-                           uint8_t harmonyMode) {
+                           uint8_t mode) {
     if (descriptor.harmonyModeMask == 0) return true;
-    if (harmonyMode > 2) harmonyMode = 0;
-    return (descriptor.harmonyModeMask & (1u << harmonyMode)) != 0;
+    if (mode >= 8) return false;
+    return (descriptor.harmonyModeMask & (1u << mode)) != 0;
 }
 
 const UiParamDescriptor* ui_param_descriptor(UiParamId id) {
@@ -209,6 +251,7 @@ uint16_t ui_effect_enable_voxlink_id(UiEffectId effect) {
         case UiEffectId::Delay: return VOXP4_PARAM_DELAY_ENABLE;
         // LIMITER is the harmony bus limiter, never the master ceiling.
         case UiEffectId::Limiter: return VOXP4_PARAM_HARMONY_LIMITER_ENABLE;
+        case UiEffectId::Modulation: return VOXP4_PARAM_CHORUS_ENABLE;
         default: return 0u;
     }
 }
@@ -221,6 +264,7 @@ bool ui_effect_default_enabled(UiEffectId effect) {
         case UiEffectId::Reverb: return true;   // reverb.enable default 1
         case UiEffectId::Delay: return true;    // delay.enable default 1
         case UiEffectId::Limiter: return true;  // harmony.limiter.enable default 1
+        case UiEffectId::Modulation: return false; // chorus.enable default 0
         default: return false;
     }
 }
@@ -337,6 +381,14 @@ void format_value(UiValueFormat format, float value,
                 std::snprintf(out, size, "--");
             break;
         }
+        case UiValueFormat::Cents: {
+            int c = (int)std::lround(value);
+            if (c > 0)
+                std::snprintf(out, size, "+%d c", c);
+            else
+                std::snprintf(out, size, "%d c", c);
+            break;
+        }
     }
 }
 
@@ -409,6 +461,33 @@ void ui_build_effect_summary(UiEffectId effect, const float* values,
                          0, mainValue, mainSize);
             std::snprintf(metadata, metaSize, "HARM BUS");
             break;
+        case UiEffectId::Modulation: {
+            format_value(UiValueFormat::Percent,
+                         value_of(values, UiParamId::ModulationMix), nullptr, 0,
+                         mainValue, mainSize);
+            const int mode =
+                (int)std::lround(value_of(values, UiParamId::ModulationMode));
+            switch (mode) {
+                case 1:
+                    std::snprintf(metadata, metaSize, "ENSEMBLE");
+                    break;
+                case 2:
+                    std::snprintf(metadata, metaSize, "DIMENSION");
+                    break;
+                case 3: {
+                    const int left = (int)std::lround(
+                        value_of(values, UiParamId::MicroshiftLeftCents));
+                    const int right = (int)std::lround(
+                        value_of(values, UiParamId::MicroshiftRightCents));
+                    std::snprintf(metadata, metaSize, "%d/+%d c", left, right);
+                    break;
+                }
+                default:
+                    std::snprintf(metadata, metaSize, "CHORUS");
+                    break;
+            }
+            break;
+        }
         default:
             std::snprintf(mainValue, mainSize, "--");
             break;

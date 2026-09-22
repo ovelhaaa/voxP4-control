@@ -24,6 +24,7 @@ enum class UiEffectId : uint8_t {
     Reverb = 1,
     Delay = 2,
     Limiter = 3,
+    Modulation = 4,
     Count
 };
 
@@ -60,6 +61,15 @@ enum class UiParamId : uint16_t {
 
     LimiterThresholdDb,
 
+    ModulationMode,
+    ModulationMix,
+    ModulationRateHz,
+    ModulationDepthMs,
+    ModulationWidth,
+    MicroshiftLeftCents,
+    MicroshiftRightCents,
+    MicroshiftWindowMs,
+
     Count
 };
 
@@ -82,7 +92,8 @@ enum class UiValueFormat : uint8_t {
     Degrees,        // "+2 deg"
     Pan,            // "L 25" / "C" / "R 25"
     Hertz,          // "6.0 kHz"
-    EnumLabel       // options[(int)value]
+    EnumLabel,      // options[(int)value]
+    Cents           // "-7 c" / "+9 c"
 };
 
 struct UiParamDescriptor {
@@ -102,7 +113,7 @@ struct UiParamDescriptor {
     const char* const* options; // enum labels for Segmented/Stepper/EnumLabel
     uint8_t optionCount;
     uint16_t voxlinkId;        // future ESP32-P4 VoxLink parameter ID (0 = none)
-    uint8_t harmonyModeMask;   // bit(mode) for harmony params; 0 = effect-agnostic
+    uint8_t harmonyModeMask;   // bit(mode) for mode-gated params; 0 = effect-agnostic
     bool wraparound;           // stepper wrap (KEY / SCALE)
 };
 
@@ -112,6 +123,7 @@ extern const char* const kUiHarmonyKeyLabels[12];
 extern const char* const kUiHarmonyScaleLabels[12];
 extern const char* const kUiHarmonyScaleShortLabels[12];
 extern const char* const kUiNonScalePolicyLabels[3];
+extern const char* const kUiModulationModeLabels[4];
 
 // Descriptor tables (static const, no heap).
 extern const UiParamDescriptor kUiHarmonyDescriptors[];
@@ -122,6 +134,8 @@ extern const UiParamDescriptor kUiDelayDescriptors[];
 extern const size_t kUiDelayDescriptorCount;
 extern const UiParamDescriptor kUiLimiterDescriptors[];
 extern const size_t kUiLimiterDescriptorCount;
+extern const UiParamDescriptor kUiModulationDescriptors[];
+extern const size_t kUiModulationDescriptorCount;
 
 // Descriptor array for an effect.
 const UiParamDescriptor* ui_effect_descriptors(UiEffectId effect, size_t* count);

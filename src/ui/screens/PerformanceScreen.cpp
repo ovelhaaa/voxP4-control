@@ -13,7 +13,7 @@ static VuMeter_t* output_meter = nullptr;
 static lv_obj_t* pitch_note_label = nullptr;
 static lv_obj_t* pitch_freq_label = nullptr;
 static lv_obj_t* voiced_label = nullptr;
-static EffectCard_t* effect_cards[4] = {nullptr};
+static EffectCard_t* effect_cards[kUiEffectCount] = {nullptr};
 static lv_obj_t* fs_containers[2] = {nullptr};
 static lv_obj_t* fs_labels[2] = {nullptr};
 
@@ -125,7 +125,7 @@ void performance_screen_init(lv_obj_t* parent) {
     lv_obj_set_flex_flow(effects_container, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(effects_container, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < static_cast<int>(kUiEffectCount); i++) {
         effect_cards[i] = effect_card_create(effects_container, 0, 0, (EffectType_t)i);
         if (!effect_cards[i]) continue;
 
@@ -202,14 +202,14 @@ void performance_update_pitch(float freqHz, const char* noteName, bool voiced) {
 }
 
 void performance_update_effect(int effectIndex, bool enabled) {
-    if (effectIndex < 0 || effectIndex >= 4) return;
+    if (effectIndex < 0 || effectIndex >= static_cast<int>(kUiEffectCount)) return;
     if (effect_cards[effectIndex]) {
         effect_card_set_enabled(effect_cards[effectIndex], enabled);
     }
 }
 
 void performance_update_effect_value(int effectIndex, const char* mainValue) {
-    if (effectIndex < 0 || effectIndex >= 4) return;
+    if (effectIndex < 0 || effectIndex >= static_cast<int>(kUiEffectCount)) return;
     if (effect_cards[effectIndex] && mainValue) {
         effect_card_set_param(effect_cards[effectIndex], mainValue);
     }

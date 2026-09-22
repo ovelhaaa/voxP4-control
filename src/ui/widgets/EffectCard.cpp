@@ -9,7 +9,8 @@ static const char* effect_names[] = {
     "HARMONY",
     "REVERB",
     "DELAY",
-    "LIMITER"
+    "LIMITER",
+    "MOD"
 };
 
 EffectCard_t* effect_card_create(lv_obj_t* parent, int32_t x, int32_t y, 
@@ -21,7 +22,7 @@ EffectCard_t* effect_card_create(lv_obj_t* parent, int32_t x, int32_t y,
     card->is_enabled = false;
     
     card->card = lv_obj_create(parent);
-    lv_obj_set_size(card->card, 72, 46);
+    lv_obj_set_size(card->card, 58, 46);
     lv_obj_set_pos(card->card, x, y);
     lv_obj_set_style_bg_color(card->card, COLOR_SURFACE, 0);
     lv_obj_set_style_border_color(card->card, COLOR_SEPARATOR, 0);

@@ -16,7 +16,8 @@ typedef enum {
     EFFECT_HARMONY,
     EFFECT_REVERB,
     EFFECT_DELAY,
-    EFFECT_LIMITER
+    EFFECT_LIMITER,
+    EFFECT_MODULATION
 } EffectType_t;
 
 typedef struct {

@@ -21,7 +21,8 @@ typedef enum {
     FS_ACTION_TAP_TEMPO,
     FS_ACTION_PRESET_NEXT,
     FS_ACTION_PRESET_PREV,
-    FS_ACTION_GLOBAL_BYPASS
+    FS_ACTION_GLOBAL_BYPASS,
+    FS_ACTION_MODULATION_TOGGLE
 } FootswitchAction;
 
 // Footswitch configuration

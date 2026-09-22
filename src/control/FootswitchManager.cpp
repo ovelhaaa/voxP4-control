@@ -36,7 +36,8 @@ static const char* actionNames[] = {
     "TAP TEMPO",
     "PRESET NEXT",
     "PRESET PREV",
-    "GLOBAL BYPASS"
+    "GLOBAL BYPASS",
+    "MODULATION TOGGLE"
 };
 
 void footswitch_manager_init(void) {

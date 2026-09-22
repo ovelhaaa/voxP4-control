@@ -18,7 +18,8 @@ static lv_obj_t* params_area = nullptr;
 static int current_edit_id = -1;
 static bool pending_rebuild = false;
 
-static const char* effect_names[] = {"HARMONY", "REVERB", "DELAY", "LIMITER"};
+static const char* effect_names[] = {"HARMONY", "REVERB", "DELAY", "LIMITER",
+                                     "MODULATION"};
 
 struct RowBinding {
     UiParamId id;
@@ -393,7 +394,9 @@ static void rebuild_params(void) {
 
     const UiEffectId effect = static_cast<UiEffectId>(current_edit_id);
     const uint8_t mode =
-        (uint8_t)std::lround(ui_get_parameter(UiParamId::HarmonyMode));
+        (effect == UiEffectId::Modulation)
+            ? (uint8_t)std::lround(ui_get_parameter(UiParamId::ModulationMode))
+            : (uint8_t)std::lround(ui_get_parameter(UiParamId::HarmonyMode));
     size_t count = 0;
     const UiParamDescriptor* table = ui_effect_descriptors(effect, &count);
     if (!table) return;
@@ -535,11 +538,11 @@ void effect_edit_notify(UiParamId id, float value) {
     // Only the currently open effect should react to a value change.
     if (ui_effect_of(id) != static_cast<UiEffectId>(current_edit_id)) return;
 
-    // Only Harmony MODE changes the structure of the page. Defer that rebuild to
-    // the next tick so the widget dispatching the event is not deleted mid-event.
-    // Other Segmented controls (e.g. NON-SCALE) update in place and must NOT
-    // rebuild or reset the scroll position.
-    if (id == UiParamId::HarmonyMode) {
+    // Harmony MODE and Modulation MODE change the structure of the page. Defer
+    // that rebuild to the next tick so the widget dispatching the event is not
+    // deleted mid-event. Other Segmented controls (e.g. NON-SCALE) update in
+    // place and must NOT rebuild or reset the scroll position.
+    if (id == UiParamId::HarmonyMode || id == UiParamId::ModulationMode) {
         pending_rebuild = true;
         return;
     }

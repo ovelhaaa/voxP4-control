@@ -62,13 +62,14 @@ struct UiAppState {
     // enabled state; it is a separate flag pending a real backend (VoxLink).
     bool globalBypass;
 
-    // Effect states (index order: 0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER)
+    // Effect states (index order: 0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER, 4 MODULATION)
     bool harmonyEnabled;
     bool reverbEnabled;
     bool delayEnabled;
     bool limiterEnabled;
-    UiValueAuthority effectAuthority[4];
-    bool effectAuthoritative[4]; // last P4-confirmed enable (for rollback)
+    bool modulationEnabled;
+    UiValueAuthority effectAuthority[kUiEffectCount];
+    bool effectAuthoritative[kUiEffectCount]; // last P4-confirmed enable (for rollback)
     
     // Parameter model (values indexed by UiParamId). Still a LOCAL simulation
     // until VoxLink provides P4-authoritative snapshots, but it is the single
