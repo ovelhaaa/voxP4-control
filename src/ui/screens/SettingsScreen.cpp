@@ -75,5 +75,6 @@ void settings_screen_init(lv_obj_t* parent) {
     lv_obj_set_style_text_font(title, FONT_BODY, 0);
 
     create_menu_entry(container, "FOOTSWITCHES", "assign actions and behavior", UiScreenId::FOOTSWITCH);
+    create_menu_entry(container, "MASTER / ROUTING", "tempo, limiter and output routing", UiScreenId::MASTER);
     create_menu_entry(container, "SYSTEM", "link, audio and diagnostics", UiScreenId::SYSTEM);
 }

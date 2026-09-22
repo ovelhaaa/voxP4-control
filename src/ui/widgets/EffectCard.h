@@ -13,11 +13,13 @@ extern "C" {
 #endif
 
 typedef enum {
+    EFFECT_GATE,
+    EFFECT_COMPRESSOR,
     EFFECT_HARMONY,
-    EFFECT_REVERB,
+    EFFECT_DRIVE,
+    EFFECT_MODULATION,
     EFFECT_DELAY,
-    EFFECT_LIMITER,
-    EFFECT_MODULATION
+    EFFECT_REVERB
 } EffectType_t;
 
 typedef struct {

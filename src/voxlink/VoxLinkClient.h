@@ -94,7 +94,7 @@ class VoxLinkClient {
 public:
     static constexpr size_t kTxCapacity = 1024;
     // A head==tail ring holds kEventCapacity-1 elements. 80 slots > 79 usable,
-    // enough for a 49-parameter snapshot plus LinkActive with margin.
+    // enough for a 71-parameter snapshot plus LinkActive with margin.
     static constexpr size_t kEventCapacity = 80;
     static constexpr size_t kPendingCapacity = 8;
     static constexpr size_t kCoalesceCapacity = 8;

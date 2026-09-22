@@ -1,5 +1,11 @@
 # M5.1 — VoxLink contract cleanup, parameter ABI hardening and CI
 
+> **Historical snapshot.** The contract has since grown to **71** parameters
+> (gate/compressor/drive, tempo and master/routing), and the controller UI now
+> exposes all of them. See [`docs/m7_param_ui_coverage.md`](m7_param_ui_coverage.md).
+> Statements in this file about "49 parameters" and about parameters that are
+> "NOT exposed in the current Effect Editor" describe the M5.1 milestone only.
+
 Milestone goal: eliminate divergences between the ESP32-P4 VoxLink registry,
 the exported artifacts, the documentation and the controller parameter model,
 and add CI that makes schema drift a build failure. No UART/VoxLink transport is

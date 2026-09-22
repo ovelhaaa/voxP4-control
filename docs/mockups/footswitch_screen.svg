@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="320" height="240">
   <style>
-    .bg{fill:#090A0E}.surface{fill:#14151B}.header{fill:#101116}.nav{fill:#101116}
+    .bg{fill:#090A0E}.surface{fill:#14151B}.header{fill:#101116}.nav{fill:#101116}.panel{fill:#202128}
     .t1{fill:#F0EDE5}.t2{fill:#B1ACA3}.tm{fill:#716E69}.tf{fill:#4A4947}
-    .acc{fill:#F45126}.dis{fill:#414147}
+    .acc{fill:#F45126}.accb{fill:#FF6030}.accd{fill:#B83A1C}
+    .dis{fill:#414147}
     text{font-family:Arial,Helvetica,sans-serif}
   </style>
 
@@ -13,27 +14,43 @@
   <rect x="4" y="4" width="312" height="24" rx="3" class="header"/>
   <text x="12" y="20.5" class="t1" font-size="13" font-weight="bold">FOOTSWITCH</text>
 
-  <!-- FS1 -->
-  <rect x="4" y="32" width="312" height="80" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
-  <circle cx="14" cy="62" r="4" class="dis"/>
-  <text x="28" y="68" class="t1" font-size="16" font-weight="bold">FS1</text>
-  <text x="12" y="86" class="tm" font-size="9">RELEASED</text>
-  <text x="150" y="67" class="tf" font-size="9">MODE</text>
-  <text x="150" y="84" class="t2" font-size="11">MOMENTARY</text>
-  <text x="240" y="67" class="tf" font-size="9">ACTION</text>
-  <text x="240" y="84" class="t1" font-size="11">HARMONY</text>
+  <!-- FS1 (EDIT selected -> panel below) -->
+  <rect x="4" y="32" width="312" height="56" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <circle cx="14" cy="48" r="4" class="dis"/>
+  <text x="28" y="55" class="t1" font-size="16" font-weight="bold">FS1</text>
+  <text x="12" y="74" class="tm" font-size="9">RELEASED</text>
+  <text x="132" y="48" class="tf" font-size="9">MODE</text>
+  <text x="132" y="65" class="t2" font-size="11">MOMENTARY</text>
+  <text x="216" y="48" class="tf" font-size="9">ACTION</text>
+  <text x="216" y="65" class="t1" font-size="11">HARMONY</text>
+  <rect x="268" y="45" width="42" height="26" rx="3" class="accd"/>
+  <text x="289" y="62" class="t1" font-size="9" text-anchor="middle">EDIT</text>
 
   <!-- FS2 -->
-  <rect x="4" y="116" width="312" height="80" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
-  <circle cx="14" cy="146" r="4" class="dis"/>
-  <text x="28" y="152" class="t1" font-size="16" font-weight="bold">FS2</text>
-  <text x="12" y="170" class="tm" font-size="9">RELEASED</text>
-  <text x="150" y="151" class="tf" font-size="9">MODE</text>
-  <text x="150" y="168" class="t2" font-size="11">LATCHING</text>
-  <text x="240" y="151" class="tf" font-size="9">ACTION</text>
-  <text x="240" y="168" class="t1" font-size="11">REVERB</text>
+  <rect x="4" y="92" width="312" height="56" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <circle cx="14" cy="108" r="4" class="dis"/>
+  <text x="28" y="115" class="t1" font-size="16" font-weight="bold">FS2</text>
+  <text x="12" y="134" class="tm" font-size="9">RELEASED</text>
+  <text x="132" y="108" class="tf" font-size="9">MODE</text>
+  <text x="132" y="125" class="t2" font-size="11">LATCHING</text>
+  <text x="216" y="108" class="tf" font-size="9">ACTION</text>
+  <text x="216" y="125" class="t1" font-size="11">REVERB</text>
+  <rect x="268" y="105" width="42" height="26" rx="3" class="panel" stroke="#292A30" stroke-width="1"/>
+  <text x="289" y="122" class="t2" font-size="9" text-anchor="middle">EDIT</text>
 
-  <!-- NAVIGATION -->
+  <!-- EDIT PANEL: secondary options hidden until EDIT is tapped -->
+  <text x="10" y="163" class="tm" font-size="9">EDIT FS1</text>
+  <rect x="4" y="168" width="312" height="34" rx="3" class="surface"/>
+  <text x="14" y="189" class="tm" font-size="9">MODE</text>
+  <rect x="160" y="173" width="36" height="24" rx="3" class="panel" stroke="#292A30" stroke-width="1"/>
+  <text x="178" y="189" class="t2" font-size="11" text-anchor="middle">&lt;</text>
+  <text x="231" y="189" class="t1" font-size="10" text-anchor="middle">MOMENTARY</text>
+  <rect x="262" y="173" width="36" height="24" rx="3" class="panel" stroke="#292A30" stroke-width="1"/>
+  <text x="280" y="189" class="t2" font-size="11" text-anchor="middle">&gt;</text>
+
+  <!-- PRESS / RELEASE / LONG PRESS / DOUBLE PRESS rows continue below the fold (screen scrolls) -->
+
+  <!-- NAVIGATION (SET active) -->
   <rect y="204" width="320" height="36" class="nav"/>
   <rect x="240" y="204" width="80" height="3" class="acc"/>
   <text x="40" y="228" class="tm" font-size="11" text-anchor="middle">PERF</text>

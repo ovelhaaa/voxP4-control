@@ -1,5 +1,15 @@
 # M5 — Data-driven effect editor and real parameter model
 
+> **Status note (superseded by M7).** This document is kept as a milestone
+> snapshot. The controller later grew a canonical, registry-backed state and a
+> full-parameter UI; where this text says a capability does not exist, prefer
+> [`docs/m7_param_ui_coverage.md`](m7_param_ui_coverage.md). In particular, the
+> M7 milestone added: Delay/Chorus tempo sync + subdivisions, global TempoBpm,
+> functional Tap Tempo, DRIVE/GATE/COMPRESSOR editors, MASTER/ROUTING, Harmony
+> Advanced (dry alignment, MIDI range, harmony limiter) and the removal of the
+> standalone `LIMITER` card (the harmony bus limiter now lives in HARMONY
+> Advanced). `UiParamId` was removed; state is keyed by the canonical wire ID.
+
 Milestone goal: turn the Effect Edit screen from a static mock into a real,
 reusable, data-driven editor for HARMONY, REVERB, DELAY and LIMITER, with a
 parameter model ready to be connected to the ESP32-P4 over VoxLink **without
@@ -174,12 +184,19 @@ There is no `EnableMasterLimiter` in the backend, so the UI never pretends the
 master limiter can be disabled. `LimiterCeiling` (master) is intentionally not
 exposed in this milestone.
 
-## Deliberately not exposed
+## Deliberately not exposed (historical — see the M7 note)
 
-| Backend parameter | Why not exposed |
+> The table below describes the M5 state and is **no longer accurate**. In M7
+> every canonical parameter has a UI home; see
+> [`docs/m7_param_ui_coverage.md`](m7_param_ui_coverage.md) for the current
+> mapping. Notably, gate/compressor/drive editors, master controls, MIDI
+> range, dry alignment, harmony limiter (in HARMONY Advanced) and Delay/Chorus
+> tempo sync are all now implemented.
+
+| Backend parameter | Why not exposed (at M5) |
 |---|---|
 | Formant shift semitones | Enum exists but `apply_parameter()` has no real path and no public setter. |
-| Master `LimiterCeiling` | Mixing master ceiling with the harmony limiter would be misleading; reserved for a future Master/Advanced screen. |
+| Master `LimiterCeiling` | Reserved for a future Master/Advanced screen (now MASTER). |
 | Non-scale min/max MIDI, dry alignment, gate/compressor | Not part of the four editor effects in this milestone. |
 | Reverb algorithm/type | The backend has a single FDN reverb; `PLATE`/`HALL`/`ROOM` do not exist. |
 | Delay tempo sync | The DSP works in milliseconds; no BPM/division parameter exists (`1/4`, `1/8`, ... removed). |

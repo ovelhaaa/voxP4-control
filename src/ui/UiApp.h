@@ -14,7 +14,8 @@ enum class UiScreenId {
     FOOTSWITCH = 3,
     SYSTEM = 4,
     EFFECT_EDIT = 5, // Subscreen, not in main nav
-    SETTINGS = 6     // Subscreen for SET tab
+    SETTINGS = 6,    // Subscreen for SET tab
+    MASTER = 7       // Global routing / master controls
 };
 
 // Action layer to decouple UI from State Authority
@@ -44,12 +45,14 @@ struct UiAction {
 // UI Intent emitter
 void ui_emit_action(const UiAction& action);
 
-// Where a value came from. LocalDefault at boot, LocalPending after an
-// optimistic local edit, Authoritative once the P4 confirms/announces it.
-enum class UiValueAuthority : uint8_t {
-    LocalDefault = 0,
-    LocalPending = 1,
-    Authoritative = 2
+// Editable footswitch fields.
+enum class UiFootswitchField : uint8_t {
+    Mode = 0,
+    Press = 1,
+    Release = 2,
+    LongPress = 3,
+    DoublePress = 4,
+    Count
 };
 
 // Application state
@@ -68,27 +71,13 @@ struct UiAppState {
     // enabled state; it is a separate flag pending a real backend (VoxLink).
     bool globalBypass;
 
-    // Effect states (index order: 0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER, 4 MODULATION)
-    bool harmonyEnabled;
-    bool reverbEnabled;
-    bool delayEnabled;
-    bool limiterEnabled;
-    bool modulationEnabled;
-    UiValueAuthority effectAuthority[kUiEffectCount];
-    bool effectAuthoritative[kUiEffectCount]; // last P4-confirmed enable (for rollback)
-    
-    // Parameter model (values indexed by UiParamId). Still a LOCAL simulation
-    // until VoxLink provides P4-authoritative snapshots, but it is the single
-    // authority the editor and both effect summaries read from.
-    float parameterValues[kUiParamCount];
-    float parameterAuthoritativeValues[kUiParamCount]; // last P4 value
-    bool parameterValid[kUiParamCount];
-    UiValueAuthority parameterAuthority[kUiParamCount];
+    // Canonical parameter state (all VoxLink parameters, keyed by wire ID).
+    UiParamState params;
 
     // Meters
     float inputPeakDb;
     float outputPeakDb;
-    
+
     // Pitch
     float pitchFreqHz;
     int detectedNote;
@@ -109,13 +98,10 @@ void update_nav_bar(UiScreenId active_screen);
 // State updates (called from main loop)
 void ui_update_link_state(bool connected);
 void ui_update_preset(uint16_t id, const char* name);
-void ui_update_effect_state(int effectId, bool enabled);
 void ui_update_meters(float inputDb, float outputDb);
 void ui_update_pitch(float freqHz, int note, bool voiced);
 
-// Preset selection is separate from the loaded preset. Selecting highlights the
-// list row only; loading (see ui_load_selected_preset) changes the current
-// preset and fans the change out to every view.
+// Preset selection is separate from the loaded preset.
 void ui_select_preset(int index);
 void ui_load_selected_preset(void);
 bool ui_is_global_bypass(void);
@@ -123,32 +109,40 @@ void ui_commit_edits(void);
 void ui_revert_edits(void);
 void ui_update_performance_header(void);
 
-// Footswitch fan-out. A physical event must go through these; screens are never
-// called directly from main.cpp. `ui_update_footswitch_config` is fed from the
-// FootswitchManager during init and drives both the Footswitch screen and the
-// Performance summary.
+// Footswitch fan-out.
 void ui_update_footswitch_config(int index, uint8_t mode, uint8_t action);
 void ui_update_footswitch_state(int index, bool pressed);
+// Local editing (mode / press / release / long / double). Persists to the
+// FootswitchManager and fans the change out to every representation.
+void ui_set_footswitch_field(int index, UiFootswitchField field, uint8_t value);
+uint8_t ui_get_footswitch_field(int index, UiFootswitchField field);
 
 // Short display label for a footswitch action ("HARMONY TOGGLE" -> "HARMONY").
-// Single source of truth for the abbreviated label used by all screens.
 const char* ui_footswitch_short_label(uint8_t action);
 
-// Parameter model access. Local edits are optimistic (LocalPending) and produce
-// a wire intent; authoritative values come only from the P4 and win conflicts.
-void ui_set_parameter_local(UiParamId id, float value);
-void ui_apply_parameter_authoritative(UiParamId id, float acceptedValue);
-void ui_revert_parameter(UiParamId id);
-float ui_get_parameter(UiParamId id);
-float ui_get_authoritative_parameter(UiParamId id);
-bool ui_parameter_is_valid(UiParamId id);
-UiValueAuthority ui_parameter_authority(UiParamId id);
+// Parameter model access, keyed by VoxLink wire ID. Local edits are optimistic
+// (LocalPending) and produce a wire intent; authoritative values come only from
+// the P4 and win conflicts.
+void ui_set_parameter_local(uint16_t wireId, float value);
+void ui_apply_parameter_authoritative(uint16_t wireId, float acceptedValue);
+void ui_revert_parameter(uint16_t wireId);
+float ui_get_parameter(uint16_t wireId);
+float ui_get_authoritative_parameter(uint16_t wireId);
+bool ui_parameter_is_valid(uint16_t wireId);
+UiValueAuthority ui_parameter_authority(uint16_t wireId);
 
-// Effect enable, same authority model.
+// Read-only view of the canonical parameter state (views only; never an
+// authority). Used for conditional (mode/sync) visibility checks.
+const UiParamState& ui_get_param_state(void);
+
+// Effect enable is derived from the canonical enable parameter.
+bool ui_effect_enabled(UiEffectId effect);
 void ui_set_effect_enable_local(UiEffectId effect, bool enabled);
-void ui_apply_effect_enable_authoritative(UiEffectId effect, bool enabled);
-void ui_revert_effect_enable(UiEffectId effect);
-UiValueAuthority ui_effect_authority(UiEffectId effect);
+
+// Global Tempo. Tap Tempo computes BPM on the CYD and sends it as an ordinary
+// TempoBpm parameter; the P4 remains the authority.
+void ui_tap_tempo(void);
+float ui_get_tempo_bpm(void);
 
 // The App registers one callback so the VoxLink glue can translate local intents
 // into wire SET_PARAM requests without the UI depending on the client.
@@ -157,16 +151,10 @@ void ui_set_wire_intent_callback(UiWireIntentFn fn);
 
 // Capability gating driven by the VoxLink client (CAPS / link state).
 void ui_set_link_capabilities(bool presetsAvailable, bool bypassAvailable);
-// Rebuilds capability-gated controls (currently the Effect Editor body) after a
-// CAPS snapshot arrives. No-op when the editor is not open.
 void ui_refresh_capability_gated_controls();
-// Human-readable summary derived from the parameter state (no heap). Both
-// Performance and FX Chain consume this same function.
-void ui_format_effect_summary(int effectId, char* mainValue, size_t mainSize,
-                              char* metadata, size_t metaSize);
 
-// Canonical effect display name. Index order is fixed:
-// 0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER.
-const char* ui_effect_name(int effectId);
+// Human-readable summary derived from the canonical parameter state (no heap).
+void ui_format_effect_summary(UiEffectId effect, char* mainValue,
+                              size_t mainSize, char* metadata, size_t metaSize);
 
 #endif  // UI_APP_H

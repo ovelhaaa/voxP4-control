@@ -13,9 +13,11 @@
 //   python scripts/sync_voxlink_schema.py --voxp4 <path-to-voxP4-checkout>
 //   python scripts/sync_voxlink_schema.py --voxp4 <path> --check
 //
-// The controller keeps its own logical UiParamId. These VOXP4_PARAM_* values are
-// the wire/ABI IDs for the future VoxLink transport (M6) and must never be used
-// as UiParamId ordinals. The build does not require a voxP4 checkout.
+// The controller uses these VOXP4_PARAM_* values as the canonical parameter
+// keys for its UI state (see src/model/ParameterRegistry.h and
+// src/ui/params/UiParamState.h). They must never be treated as array indices;
+// the dense index comes from ParameterRegistry. The build does not require a
+// voxP4 checkout.
 
 #include "voxlink/generated/VoxP4ContractPin.h"
 #include "voxlink/generated/VoxP4ParamIds.h"

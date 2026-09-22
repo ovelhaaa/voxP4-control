@@ -15,54 +15,57 @@
   <rect x="4" y="4" width="312" height="24" rx="3" class="header"/>
   <text x="12" y="20.5" class="t1" font-size="13" font-weight="bold">FX CHAIN</text>
 
-  <!-- MODULE RACK: neutral outlines, active = top accent rail + LED + strong text -->
-  <!-- HARMONY ON -->
-  <rect x="4" y="45" width="74" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
-  <path d="M6 48 h70 a2 2 0 0 1 2 2 v1 h-74 v-1 a2 2 0 0 1 2 -2 z" class="acc"/>
-  <circle cx="16" cy="58.5" r="4" class="acc"/>
-  <text x="26" y="62" class="t1" font-size="9">HARMONY</text>
-  <text x="41" y="92" class="t1" font-size="16" font-weight="bold" text-anchor="middle">0 st</text>
-  <line x1="9" y1="107" x2="73" y2="107" stroke="#292A30" stroke-width="1"/>
-  <text x="41" y="121" class="t2" font-size="9" text-anchor="middle">FIXED</text>
+  <!-- MODULE RACK: 7 modules (64x84), horizontal snap-scroll. Active = top rail + LED + strong text. -->
+  <!-- GATE ON -->
+  <rect x="4" y="45" width="64" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <path d="M6 48 h60 a2 2 0 0 1 2 2 v1 h-64 v-1 a2 2 0 0 1 2 -2 z" class="acc"/>
+  <circle cx="15" cy="58.5" r="4" class="acc"/>
+  <text x="24" y="62" class="t1" font-size="8">GATE</text>
+  <text x="36" y="92" class="t1" font-size="15" font-weight="bold" text-anchor="middle">-55 dB</text>
+  <line x1="9" y1="107" x2="63" y2="107" stroke="#292A30" stroke-width="1"/>
+  <text x="36" y="121" class="t2" font-size="9" text-anchor="middle">THR</text>
 
-  <!-- REVERB ON -->
-  <rect x="83" y="45" width="74" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
-  <path d="M85 48 h70 a2 2 0 0 1 2 2 v1 h-74 v-1 a2 2 0 0 1 2 -2 z" class="acc"/>
-  <circle cx="95" cy="58.5" r="4" class="acc"/>
-  <text x="105" y="62" class="t1" font-size="9">REVERB</text>
-  <text x="120" y="92" class="t1" font-size="16" font-weight="bold" text-anchor="middle">18%</text>
-  <line x1="88" y1="107" x2="152" y2="107" stroke="#292A30" stroke-width="1"/>
-  <text x="120" y="121" class="t2" font-size="9" text-anchor="middle">2.0 s</text>
+  <!-- COMPRESSOR ON -->
+  <rect x="74" y="45" width="64" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <path d="M76 48 h60 a2 2 0 0 1 2 2 v1 h-64 v-1 a2 2 0 0 1 2 -2 z" class="acc"/>
+  <circle cx="85" cy="58.5" r="4" class="acc"/>
+  <text x="94" y="62" class="t1" font-size="8">COMPRESSOR</text>
+  <text x="106" y="92" class="t1" font-size="15" font-weight="bold" text-anchor="middle">3:1</text>
+  <line x1="79" y1="107" x2="133" y2="107" stroke="#292A30" stroke-width="1"/>
+  <text x="106" y="121" class="t2" font-size="9" text-anchor="middle">-18.0 dB</text>
 
-  <!-- DELAY ON -->
-  <rect x="163" y="45" width="74" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
-  <path d="M165 48 h70 a2 2 0 0 1 2 2 v1 h-74 v-1 a2 2 0 0 1 2 -2 z" class="acc"/>
-  <circle cx="175" cy="58.5" r="4" class="acc"/>
-  <text x="185" y="62" class="t1" font-size="9">DELAY</text>
-  <text x="200" y="92" class="t1" font-size="15" font-weight="bold" text-anchor="middle">250 ms</text>
-  <line x1="168" y1="107" x2="232" y2="107" stroke="#292A30" stroke-width="1"/>
-  <text x="200" y="121" class="t2" font-size="9" text-anchor="middle">R 375</text>
+  <!-- HARMONY OFF -->
+  <rect x="144" y="45" width="64" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <circle cx="155" cy="58.5" r="4" class="dis"/>
+  <text x="164" y="62" class="t2" font-size="8">HARMONY</text>
+  <text x="176" y="92" class="tm" font-size="15" font-weight="bold" text-anchor="middle">0 st</text>
+  <line x1="149" y1="107" x2="203" y2="107" stroke="#292A30" stroke-width="1"/>
+  <text x="176" y="121" class="tf" font-size="9" text-anchor="middle">FIXED</text>
 
-  <!-- LIMITER ON -->
-  <rect x="242" y="45" width="74" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
-  <path d="M244 48 h70 a2 2 0 0 1 2 2 v1 h-74 v-1 a2 2 0 0 1 2 -2 z" class="acc"/>
-  <circle cx="254" cy="58.5" r="4" class="acc"/>
-  <text x="264" y="62" class="t1" font-size="9">LIMITER</text>
-  <text x="279" y="92" class="t1" font-size="15" font-weight="bold" text-anchor="middle">-3.0 dB</text>
-  <line x1="247" y1="107" x2="311" y2="107" stroke="#292A30" stroke-width="1"/>
-  <text x="279" y="121" class="t2" font-size="9" text-anchor="middle">HARM BUS</text>
+  <!-- DRIVE OFF -->
+  <rect x="214" y="45" width="64" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <circle cx="225" cy="58.5" r="4" class="dis"/>
+  <text x="234" y="62" class="t2" font-size="8">DRIVE</text>
+  <text x="246" y="92" class="tm" font-size="15" font-weight="bold" text-anchor="middle">WARM</text>
+  <line x1="219" y1="107" x2="273" y2="107" stroke="#292A30" stroke-width="1"/>
+  <text x="246" y="121" class="tf" font-size="9" text-anchor="middle">40%</text>
+
+  <!-- MODULATION clipped at the right edge = more modules to scroll to (MOD/DLY/REV) -->
+  <rect x="284" y="45" width="64" height="84" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <circle cx="295" cy="58.5" r="4" class="dis"/>
+  <text x="304" y="62" class="t2" font-size="8">MODULATION</text>
 
   <!-- DIVIDER above global actions -->
   <line x1="4" y1="145" x2="316" y2="145" stroke="#292A30" stroke-width="1"/>
 
   <!-- GLOBAL ACTIONS -->
-  <rect x="6" y="152" width="150" height="48" rx="3" fill="none" stroke="#148E87" stroke-width="1"/>
-  <text x="81" y="172" class="aud" font-size="14" font-weight="bold" text-anchor="middle">ALL ON</text>
-  <text x="81" y="187" class="tf" font-size="9" text-anchor="middle">ENABLE ALL EFFECTS</text>
+  <rect x="6" y="154" width="150" height="44" rx="3" fill="none" stroke="#148E87" stroke-width="1"/>
+  <text x="81" y="173" class="aud" font-size="14" font-weight="bold" text-anchor="middle">ALL ON</text>
+  <text x="81" y="188" class="tf" font-size="9" text-anchor="middle">ENABLE ALL EFFECTS</text>
 
-  <rect x="164" y="152" width="150" height="48" rx="3" class="surface" stroke="#F45126" stroke-width="1"/>
-  <text x="239" y="172" class="t1" font-size="14" font-weight="bold" text-anchor="middle">BYPASS</text>
-  <text x="239" y="187" class="tm" font-size="9" text-anchor="middle">GLOBAL BYPASS</text>
+  <rect x="164" y="154" width="150" height="44" rx="3" class="surface" stroke="#F45126" stroke-width="1"/>
+  <text x="239" y="173" class="t1" font-size="14" font-weight="bold" text-anchor="middle">BYPASS</text>
+  <text x="239" y="188" class="tm" font-size="9" text-anchor="middle">GLOBAL BYPASS</text>
 
   <!-- NAVIGATION (FX active) -->
   <rect y="204" width="320" height="36" class="nav"/>

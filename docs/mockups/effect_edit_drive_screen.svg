@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="320" height="240">
+  <style>
+    .bg{fill:#090A0E}.surface{fill:#14151B}.elev{fill:#1C1D24}.header{fill:#101116}.nav{fill:#101116}.panel{fill:#202128}
+    .t1{fill:#F0EDE5}.t2{fill:#B1ACA3}.tm{fill:#716E69}.tf{fill:#4A4947}
+    .acc{fill:#F45126}.accb{fill:#FF6030}.accd{fill:#B83A1C}
+    text{font-family:Arial,Helvetica,sans-serif}
+  </style>
+
+  <rect width="320" height="240" class="bg"/>
+
+  <!-- HEADER -->
+  <rect x="4" y="4" width="312" height="28" rx="3" class="header"/>
+  <rect x="10" y="7" width="34" height="24" rx="3" class="surface" stroke="#292A30" stroke-width="1"/>
+  <text x="27" y="23" class="t2" font-size="11" text-anchor="middle">&lt;</text>
+  <text x="160" y="23" class="t1" font-size="12" font-weight="bold" text-anchor="middle">DRIVE</text>
+  <rect x="264" y="7" width="48" height="24" rx="3" class="accd"/>
+  <text x="288" y="23" class="t1" font-size="10" text-anchor="middle">ON</text>
+
+  <text x="10" y="45" class="tm" font-size="8">TONE</text>
+
+  <!-- MODE (segmented: WARM / OVERDRIVE / MEGAPHONE) -->
+  <rect x="4" y="46" width="312" height="46" rx="3" class="surface"/>
+  <text x="14" y="60" class="tm" font-size="9">MODE</text>
+  <text x="306" y="60" class="accb" font-size="11" text-anchor="end">WARM</text>
+  <rect x="14" y="66" width="95" height="22" rx="3" class="elev" stroke="#F45126" stroke-width="1"/>
+  <text x="61" y="81" class="accb" font-size="10" text-anchor="middle">WARM</text>
+  <rect x="112" y="66" width="95" height="22" rx="3" class="panel" stroke="#292A30" stroke-width="1"/>
+  <text x="159" y="81" class="t2" font-size="10" text-anchor="middle">OVERDRIVE</text>
+  <rect x="210" y="66" width="96" height="22" rx="3" class="panel" stroke="#292A30" stroke-width="1"/>
+  <text x="258" y="81" class="t2" font-size="10" text-anchor="middle">MEGAPHONE</text>
+
+  <!-- DRIVE -->
+  <rect x="4" y="96" width="312" height="38" rx="3" class="surface"/>
+  <text x="14" y="110" class="tm" font-size="9">DRIVE</text>
+  <text x="306" y="110" class="t1" font-size="11" text-anchor="end">40%</text>
+  <rect x="14" y="117" width="292" height="8" rx="3" class="panel"/>
+  <rect x="14" y="117" width="117" height="8" rx="3" class="acc"/>
+  <circle cx="131" cy="121" r="6" class="accb"/>
+
+  <!-- TONE -->
+  <rect x="4" y="138" width="312" height="38" rx="3" class="surface"/>
+  <text x="14" y="152" class="tm" font-size="9">TONE</text>
+  <text x="306" y="152" class="t1" font-size="11" text-anchor="end">65%</text>
+  <rect x="14" y="159" width="292" height="8" rx="3" class="panel"/>
+  <rect x="14" y="159" width="190" height="8" rx="3" class="acc"/>
+  <circle cx="204" cy="163" r="6" class="accb"/>
+
+  <!-- MIX (below the fold; OUTPUT is Advanced) -->
+  <rect x="4" y="180" width="312" height="38" rx="3" class="surface"/>
+  <text x="14" y="194" class="tm" font-size="9">MIX</text>
+  <text x="306" y="194" class="t1" font-size="11" text-anchor="end">75%</text>
+  <rect x="14" y="197" width="292" height="8" rx="3" class="panel"/>
+  <rect x="14" y="197" width="219" height="8" rx="3" class="acc"/>
+  <circle cx="233" cy="201" r="6" class="accb"/>
+
+  <!-- NAVIGATION (FX active) -->
+  <rect y="204" width="320" height="36" class="nav"/>
+  <rect x="80" y="204" width="80" height="2" class="acc"/>
+  <text x="40" y="228" class="tm" font-size="11" text-anchor="middle">PERF</text>
+  <text x="120" y="228" class="t1" font-size="11" font-weight="bold" text-anchor="middle">FX</text>
+  <text x="200" y="228" class="tm" font-size="11" text-anchor="middle">PRESET</text>
+  <text x="280" y="228" class="tm" font-size="11" text-anchor="middle">SET</text>
+</svg>

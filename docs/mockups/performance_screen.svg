@@ -11,9 +11,11 @@
 
   <rect width="320" height="240" class="bg"/>
 
-  <!-- HEADER: preset has visual priority -->
+  <!-- HEADER: preset (left) · compact TEMPO · link (right) -->
   <rect x="4" y="4" width="312" height="24" rx="3" class="header"/>
   <text x="12" y="20.5" class="t1" font-size="13" font-weight="bold">P03  LEAD AIR</text>
+  <!-- tapping the BPM opens MASTER -->
+  <text x="205" y="20" class="accb" font-size="10" font-weight="bold" text-anchor="middle">120 BPM</text>
   <circle cx="272" cy="16" r="4" class="aud"/>
   <text x="282" y="20" class="aud" font-size="11">LINK</text>
 
@@ -36,34 +38,44 @@
   <rect x="46" y="98" width="210" height="8" rx="2" class="aud"/>
   <text x="312" y="106" class="t2" font-size="9" text-anchor="end">-6</text>
 
-  <!-- EFFECT CARDS -->
-  <!-- HARMONY ON: neutral outline + top accent rail + LED -->
-  <rect x="4" y="114" width="72" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
-  <rect x="4.5" y="114.5" width="71" height="2.5" class="acc"/>
-  <text x="11" y="127" class="t1" font-size="8" font-weight="bold">HARMONY</text>
-  <circle cx="68" cy="124" r="3.5" class="acc"/>
-  <text x="11" y="152" class="t1" font-size="11">0 st</text>
+  <!-- EFFECT CARDS: 7 modules, horizontal snap-scroll (the 6th peeks) -->
+  <!-- GATE ON (default enable=1) -->
+  <rect x="4" y="114" width="58" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <rect x="4.5" y="114.5" width="57" height="2.5" class="acc"/>
+  <text x="10" y="127" class="t1" font-size="8" font-weight="bold">GATE</text>
+  <circle cx="51" cy="124" r="3.5" class="acc"/>
+  <text x="10" y="152" class="t1" font-size="11">-55 dB</text>
 
-  <!-- REVERB ON -->
-  <rect x="80" y="114" width="72" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
-  <rect x="80.5" y="114.5" width="71" height="2.5" class="acc"/>
-  <text x="87" y="127" class="t1" font-size="8" font-weight="bold">REVERB</text>
-  <circle cx="144" cy="124" r="3.5" class="acc"/>
-  <text x="87" y="152" class="t1" font-size="11">18%</text>
+  <!-- COMP ON (default enable=1) -->
+  <rect x="66" y="114" width="58" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <rect x="66.5" y="114.5" width="57" height="2.5" class="acc"/>
+  <text x="72" y="127" class="t1" font-size="8" font-weight="bold">COMP</text>
+  <circle cx="113" cy="124" r="3.5" class="acc"/>
+  <text x="72" y="152" class="t1" font-size="11">3:1</text>
 
-  <!-- DELAY ON -->
-  <rect x="156" y="114" width="72" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
-  <rect x="156.5" y="114.5" width="71" height="2.5" class="acc"/>
-  <text x="163" y="127" class="t1" font-size="8" font-weight="bold">DELAY</text>
-  <circle cx="220" cy="124" r="3.5" class="acc"/>
-  <text x="163" y="152" class="t1" font-size="11">250 ms</text>
+  <!-- HARM OFF (default enable=0) -->
+  <rect x="128" y="114" width="58" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <text x="134" y="127" class="t2" font-size="8" font-weight="bold">HARM</text>
+  <circle cx="175" cy="124" r="3.5" class="dis"/>
+  <text x="134" y="152" class="tm" font-size="11">0 st</text>
 
-  <!-- LIMITER ON -->
-  <rect x="232" y="114" width="72" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
-  <rect x="232.5" y="114.5" width="71" height="2.5" class="acc"/>
-  <text x="239" y="127" class="t1" font-size="8" font-weight="bold">LIMITER</text>
-  <circle cx="296" cy="124" r="3.5" class="acc"/>
-  <text x="239" y="152" class="t1" font-size="11">-3.0 dB</text>
+  <!-- DRIVE OFF (default enable=0) -->
+  <rect x="190" y="114" width="58" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <text x="196" y="127" class="t2" font-size="8" font-weight="bold">DRIVE</text>
+  <circle cx="237" cy="124" r="3.5" class="dis"/>
+  <text x="196" y="152" class="tm" font-size="11">WARM</text>
+
+  <!-- MOD OFF (default enable=0) -->
+  <rect x="252" y="114" width="58" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <text x="258" y="127" class="t2" font-size="8" font-weight="bold">MOD</text>
+  <circle cx="299" cy="124" r="3.5" class="dis"/>
+  <text x="258" y="152" class="tm" font-size="11">30%</text>
+
+  <!-- 6th card clipped at the right edge = "more to the right" -->
+  <rect x="314" y="114" width="58" height="46" rx="5" class="surface" stroke="#292A30" stroke-width="1"/>
+  <rect x="314.5" y="114.5" width="57" height="2.5" class="acc"/>
+  <text x="320" y="127" class="t1" font-size="8" font-weight="bold">DLY</text>
+  <text x="320" y="152" class="t1" font-size="11">250</text>
 
   <!-- FOOTSWITCH SUMMARY -->
   <rect x="4" y="164" width="152" height="32" rx="3" class="surface" stroke="#292A30" stroke-width="1"/>

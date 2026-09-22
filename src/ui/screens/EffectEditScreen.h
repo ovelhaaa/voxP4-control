@@ -5,19 +5,19 @@
 #include "ui/params/UiParamModel.h"
 
 // Initialize the data-driven effect editor. Header/back/enable are persistent;
-// only the parameter body is rebuilt per effect (and per harmony mode).
+// only the parameter body is rebuilt per effect (and per mode / sync change).
 void effect_edit_screen_init(lv_obj_t* parent);
 
-// Load an effect (0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER) and rebuild its
-// parameter body from the App parameter state.
-void effect_edit_load_effect(int effectId);
+// Load an effect and rebuild its parameter body from the canonical state.
+// BASIC is shown by default; ADVANCED stays collapsed until opened.
+void effect_edit_load_effect(UiEffectId effect);
 
 // Sync the compact ON/OFF toggle with the authoritative effect state.
-void effect_edit_set_enabled(int effectId, bool enabled);
+void effect_edit_set_enabled(UiEffectId effect, bool enabled);
 
 // Called by the App when a parameter value changes. Updates the affected row
-// immediately, or schedules a body rebuild for mode-changing controls.
-void effect_edit_notify(UiParamId id, float value);
+// immediately, or schedules a body rebuild for structural controls (mode/sync).
+void effect_edit_notify(uint16_t wireId, float value);
 
 // Performs a pending rebuild outside LVGL event dispatch. Called from ui_app_run.
 void effect_edit_tick(void);

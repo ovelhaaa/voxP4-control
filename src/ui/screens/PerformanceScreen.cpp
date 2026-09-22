@@ -8,6 +8,7 @@
 static lv_obj_t* performance_container = nullptr;
 static lv_obj_t* preset_label = nullptr;
 static lv_obj_t* link_indicator = nullptr;
+static lv_obj_t* tempo_label = nullptr;
 static VuMeter_t* input_meter = nullptr;
 static VuMeter_t* output_meter = nullptr;
 static lv_obj_t* pitch_note_label = nullptr;
@@ -41,6 +42,17 @@ void performance_screen_init(lv_obj_t* parent) {
     lv_label_set_text(preset_label, "P--  CONNECTING");
     lv_obj_set_style_text_color(preset_label, COLOR_TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(preset_label, FONT_BODY, 0);
+
+    // Compact global tempo. Tapping opens MASTER where it can be edited.
+    tempo_label = lv_label_create(header);
+    lv_label_set_text(tempo_label, "120 BPM");
+    lv_obj_set_style_text_color(tempo_label, COLOR_ACCENT_BRIGHT, 0);
+    lv_obj_set_style_text_font(tempo_label, FONT_SMALL, 0);
+    lv_obj_add_flag(tempo_label, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_ext_click_area(tempo_label, 12);
+    lv_obj_add_event_cb(tempo_label, [](lv_event_t* e) {
+        ui_navigate_to(UiScreenId::MASTER);
+    }, LV_EVENT_CLICKED, NULL);
 
     link_indicator = lv_label_create(header);
     lv_label_set_text(link_indicator, "○ LINK");
@@ -115,15 +127,19 @@ void performance_screen_init(lv_obj_t* parent) {
         if (i == 0) input_meter = meter; else output_meter = meter;
     }
 
-    // === EFFECT CARDS (46px) ===
+    // === EFFECT CARDS (46px, horizontal snap-scroll) ===
     lv_obj_t* effects_container = lv_obj_create(performance_container);
     lv_obj_set_size(effects_container, LV_PCT(100), 46);
+    lv_obj_add_flag(effects_container, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(effects_container, LV_DIR_HOR);
+    lv_obj_set_scroll_snap_x(effects_container, LV_SCROLL_SNAP_CENTER);
+    lv_obj_set_scrollbar_mode(effects_container, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_style_bg_color(effects_container, COLOR_BG, 0);
     lv_obj_set_style_border_width(effects_container, 0, 0);
     lv_obj_set_style_pad_all(effects_container, 0, 0);
     lv_obj_set_style_pad_column(effects_container, SPACING_XS, 0);
     lv_obj_set_flex_flow(effects_container, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(effects_container, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_align(effects_container, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     for (int i = 0; i < static_cast<int>(kUiEffectCount); i++) {
         effect_cards[i] = effect_card_create(effects_container, 0, 0, (EffectType_t)i);
@@ -201,18 +217,27 @@ void performance_update_pitch(float freqHz, const char* noteName, bool voiced) {
     }
 }
 
-void performance_update_effect(int effectIndex, bool enabled) {
+void performance_update_effect(UiEffectId effect, bool enabled) {
+    const int effectIndex = (int)effect;
     if (effectIndex < 0 || effectIndex >= static_cast<int>(kUiEffectCount)) return;
     if (effect_cards[effectIndex]) {
         effect_card_set_enabled(effect_cards[effectIndex], enabled);
     }
 }
 
-void performance_update_effect_value(int effectIndex, const char* mainValue) {
+void performance_update_effect_value(UiEffectId effect, const char* mainValue) {
+    const int effectIndex = (int)effect;
     if (effectIndex < 0 || effectIndex >= static_cast<int>(kUiEffectCount)) return;
     if (effect_cards[effectIndex] && mainValue) {
         effect_card_set_param(effect_cards[effectIndex], mainValue);
     }
+}
+
+void performance_update_tempo(float bpm) {
+    if (!tempo_label) return;
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%d BPM", (int)(bpm + 0.5f));
+    lv_label_set_text(tempo_label, buf);
 }
 
 void performance_update_preset(const char* name) {

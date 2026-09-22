@@ -1,79 +1,50 @@
 #ifndef UI_PARAM_MODEL_H
 #define UI_PARAM_MODEL_H
 
-// Data-driven parameter model for the effect editor.
+// Presentation model for the effect editors and the Performance/FX screens.
 //
-// This file is intentionally free of LVGL and Arduino dependencies so the pure
-// logic (descriptors, clamping, formatting, summaries) can be unit-tested on a
-// host and reused by the future VoxLink layer without redesign.
+// IMPORTANT ARCHITECTURE RULE
+// --------------------------
+// ParameterRegistry (src/model/ParameterRegistry.{h,cpp}) is the ONE canonical
+// source of truth for parameter ID, type, range and default. This file adds ONLY
+// presentation metadata on top of it:
+//   * short musical label
+//   * visual section header
+//   * widget type
+//   * uiStep (touch ergonomics, NOT the wire step)
+//   * value formatting
+//   * enum labels
+//   * Basic / Advanced / Global visibility
+//   * conditional display rules (mode + switch gating)
 //
-// The controller keeps its own logical IDs (UiParamId). Those IDs are NOT the
-// backend's VocalFxParameter ordinals. `voxlinkId` records the intended mapping
-// to the ESP32-P4 VoxLink parameter IDs and will be used by the transport layer
-// in a later milestone. No voxP4 headers are included here on purpose.
+// It deliberately does NOT store min/max/default. Those are read from the
+// registry through ui_param_min()/ui_param_max()/ui_param_default(). The native
+// test suite asserts that every canonical parameter has exactly one UI
+// placement, so adding a parameter to the VoxLink contract without a UI home
+// fails the build.
+//
+// This header is free of LVGL/Arduino so it can be unit-tested on a host.
 
 #include <cstddef>
 #include <cstdint>
 
-// Versioned VoxLink ABI constants (parameter IDs, count, golden vectors).
-// Synchronized from the ESP32-P4 firmware; see src/voxlink/VoxLinkContract.h.
+#include "model/ParameterRegistry.h"
+#include "ui/params/UiParamState.h"
 #include "voxlink/VoxLinkContract.h"
 
+// Signal-chain order used by the FX rack and the Performance indicators.
 enum class UiEffectId : uint8_t {
-    Harmony = 0,
-    Reverb = 1,
-    Delay = 2,
-    Limiter = 3,
-    Modulation = 4,
+    Gate = 0,
+    Compressor,
+    Harmony,
+    Drive,
+    Modulation,
+    Delay,
+    Reverb,
     Count
 };
 
 constexpr size_t kUiEffectCount = static_cast<size_t>(UiEffectId::Count);
-
-// Logical parameter IDs. Order is local to the controller and must not be used
-// as a wire ordinal.
-enum class UiParamId : uint16_t {
-    HarmonyMode = 0,
-    HarmonyInterval,
-    HarmonyDegree,
-    HarmonyKey,
-    HarmonyScale,
-    HarmonyNonScalePolicy,
-    HarmonyVoiceLeading,
-    HarmonyLevel,
-    HarmonyPan,
-    HarmonySmoothingMs,
-    HarmonyAttackMs,
-    HarmonyReleaseMs,
-    FormantEnabled,
-    FormantAmount,
-
-    ReverbWet,
-    ReverbDecaySeconds,
-    ReverbDamping,
-
-    DelayLeftMs,
-    DelayRightMs,
-    DelayFeedback,
-    DelayWet,
-    DelayDry,
-    DelayFeedbackLowpassHz,
-
-    LimiterThresholdDb,
-
-    ModulationMode,
-    ModulationMix,
-    ModulationRateHz,
-    ModulationDepthMs,
-    ModulationWidth,
-    MicroshiftLeftCents,
-    MicroshiftRightCents,
-    MicroshiftWindowMs,
-
-    Count
-};
-
-constexpr size_t kUiParamCount = static_cast<size_t>(UiParamId::Count);
 
 enum class UiControlType : uint8_t {
     Slider,
@@ -93,27 +64,40 @@ enum class UiValueFormat : uint8_t {
     Pan,            // "L 25" / "C" / "R 25"
     Hertz,          // "6.0 kHz"
     EnumLabel,      // options[(int)value]
-    Cents           // "-7 c" / "+9 c"
+    Cents,          // "-7 c" / "+9 c"
+    Ratio,          // "3:1"
+    Bpm,            // "120 BPM"
+    MidiNote,       // "C4"
+    CeilingDb       // amplitude 0..1 -> "-0.4 dB"
 };
 
-struct UiParamDescriptor {
-    UiParamId id;
+// Runtime generation position, used both for area layout and for reporting.
+enum class UiVisibility : uint8_t {
+    Basic = 0,
+    Advanced = 1,
+    Global = 2
+};
+
+// Conditional display rule for a control.
+enum class UiCondition : uint8_t {
+    Always = 0,
+    BoolTrue = 1,  // visible when state.get(conditionWireId) >= 0.5
+    BoolFalse = 2  // visible when state.get(conditionWireId) <  0.5
+};
+
+struct UiParamMeta {
+    uint16_t wireId;
     const char* label;
     const char* section;
     UiControlType type;
     UiValueFormat format;
-    // uiStep is the UI/touch ergonomics resolution, NOT the wire step. The
-    // VoxLink schema (integration/voxlink_params.json) owns the authoritative
-    // wire step/range; the UI step may be coarser and stays within the wire
-    // range. See docs/m5_1_voxlink_contract.md.
-    float minValue;
-    float maxValue;
     float uiStep;
-    float defaultValue;
-    const char* const* options; // enum labels for Segmented/Stepper/EnumLabel
+    const char* const* options;  // enum labels for Segmented/Stepper/EnumLabel
     uint8_t optionCount;
-    uint16_t voxlinkId;        // future ESP32-P4 VoxLink parameter ID (0 = none)
-    uint8_t harmonyModeMask;   // bit(mode) for mode-gated params; 0 = effect-agnostic
+    UiVisibility visibility;
+    UiCondition condition;
+    uint16_t conditionWireId;  // controlling switch for Bool* conditions
+    uint8_t modeMask;          // bit(mode); 0 = mode-agnostic
     bool wraparound;           // stepper wrap (KEY / SCALE)
 };
 
@@ -124,60 +108,67 @@ extern const char* const kUiHarmonyScaleLabels[12];
 extern const char* const kUiHarmonyScaleShortLabels[12];
 extern const char* const kUiNonScalePolicyLabels[3];
 extern const char* const kUiModulationModeLabels[4];
+extern const char* const kUiSubdivisionLabels[13];
+extern const char* const kUiDriveModeLabels[3];
+extern const char* const kUiSpatialRoutingLabels[2];
+extern const char* const kUiSpatialSourceLabels[3];
 
-// Descriptor tables (static const, no heap).
-extern const UiParamDescriptor kUiHarmonyDescriptors[];
-extern const size_t kUiHarmonyDescriptorCount;
-extern const UiParamDescriptor kUiReverbDescriptors[];
-extern const size_t kUiReverbDescriptorCount;
-extern const UiParamDescriptor kUiDelayDescriptors[];
-extern const size_t kUiDelayDescriptorCount;
-extern const UiParamDescriptor kUiLimiterDescriptors[];
-extern const size_t kUiLimiterDescriptorCount;
-extern const UiParamDescriptor kUiModulationDescriptors[];
-extern const size_t kUiModulationDescriptorCount;
+// Presentation metadata tables (static, no heap).
+extern const UiParamMeta kUiGateDescriptors[];
+extern const UiParamMeta kUiCompressorDescriptors[];
+extern const UiParamMeta kUiHarmonyDescriptors[];
+extern const UiParamMeta kUiDriveDescriptors[];
+extern const UiParamMeta kUiModulationDescriptors[];
+extern const UiParamMeta kUiDelayDescriptors[];
+extern const UiParamMeta kUiReverbDescriptors[];
+extern const UiParamMeta kUiMasterDescriptors[];
 
-// Descriptor array for an effect.
-const UiParamDescriptor* ui_effect_descriptors(UiEffectId effect, size_t* count);
+// Metadata array for one processing effect. Master/global parameters are not an
+// effect; use ui_master_metadata() for those.
+const UiParamMeta* ui_effect_metadata(UiEffectId effect, size_t* count);
+const UiParamMeta* ui_master_metadata(size_t* count);
 
-// Harmony mode gating. For non-harmony descriptors this is always true.
-bool ui_descriptor_applies(const UiParamDescriptor& descriptor, uint8_t harmonyMode);
+// Lookup across every effect and master. Returns nullptr when the wire id has no
+// metadata (e.g. it is an effect enable, which is represented as a header
+// toggle rather than a row).
+const UiParamMeta* ui_param_meta(uint16_t wireId);
 
-// Lookup across all effects. Returns nullptr when unknown.
-const UiParamDescriptor* ui_param_descriptor(UiParamId id);
+// Owning effect of a wire id (UiEffectId::Count for master/global/enable/unknown).
+UiEffectId ui_effect_of_wire(uint16_t wireId);
 
-// Owning effect of a parameter (UiEffectId::Count when unknown).
-UiEffectId ui_effect_of(UiParamId id);
+// Effect enable mapping (the header ON/OFF, not a descriptor row).
+uint16_t ui_effect_enable_wire(UiEffectId effect);
+bool ui_effect_from_enable_wire(uint16_t wireId, UiEffectId* out);
+bool ui_is_effect_enable(uint16_t wireId);
 
-// Wire ABI mapping. ui_param_voxlink_id returns 0 when a parameter is not bound
-// to the VoxLink schema. ui_effect_enable_voxlink_id maps the four visual module
-// enables to their backend parameter (LIMITER == harmony bus limiter).
-uint16_t ui_param_voxlink_id(UiParamId id);
-uint16_t ui_effect_enable_voxlink_id(UiEffectId effect);
+// Canonical display names.
+const char* ui_effect_name(UiEffectId effect);
+const char* ui_effect_short_name(UiEffectId effect);
 
-// Reverse lookup used by the VoxLink client glue to map authoritative wire IDs
-// back to UI parameters / effect enables.
-bool ui_param_from_voxlink_id(uint16_t voxlinkId, UiParamId* out);
-bool ui_effect_from_enable_voxlink_id(uint16_t id, UiEffectId* out);
+// Registry-backed accessors. Never duplicate these values in UI metadata.
+float ui_param_min(uint16_t wireId);
+float ui_param_max(uint16_t wireId);
+float ui_param_default(uint16_t wireId);
 
-// Local enable defaults mirrored from the VoxLink registry (*.enable default).
-// Used only until M6 GET_STATE provides the authoritative snapshot.
-bool ui_effect_default_enabled(UiEffectId effect);
+// Conditional display. `mode` is the owning effect's mode value (HarmonyMode for
+// HARMONY, ChorusMode for MODULATION, otherwise 0).
+bool ui_meta_applies(const UiParamMeta& meta, uint8_t mode,
+                     const UiParamState& state);
 
-// Clamp + quantize to the descriptor range/step.
-float ui_clamp_parameter(const UiParamDescriptor& descriptor, float value);
+// Clamp + quantize to the registry range and the descriptor uiStep.
+float ui_clamp_parameter(const UiParamMeta& meta, float value);
 
-// Wrapped stepper index helper (used by KEY/SCALE steppers and tested).
+// Wrapped stepper index helper (KEY / SCALE and subdivision steppers).
 int ui_step_index(int index, int delta, int count, bool wraparound);
 
 // Format a value into a fixed buffer. No heap.
-void ui_format_parameter_value(const UiParamDescriptor& descriptor, float value,
-                               char* out, size_t size);
+void ui_format_parameter_value(const UiParamMeta& meta, float value, char* out,
+                               size_t size);
 
-// Build the Performance/FX Chain summary for one effect from the parameter
-// value array (indexed by UiParamId). Both screens share this single function.
-void ui_build_effect_summary(UiEffectId effect, const float* values,
-                             char* mainValue, size_t mainSize,
-                             char* metadata, size_t metaSize);
+// Build the Performance/FX Chain summary for one effect from the canonical
+// state. Both screens share this single function.
+void ui_build_effect_summary(UiEffectId effect, const UiParamState& state,
+                             char* mainValue, size_t mainSize, char* metadata,
+                             size_t metaSize);
 
 #endif // UI_PARAM_MODEL_H

@@ -31,18 +31,22 @@ static const char* actionNames[] = {
     "HARMONY TOGGLE",
     "HARMONY MOMENTARY",
     "REVERB TOGGLE",
-    "REVERB FREEZE",
     "DELAY TOGGLE",
     "TAP TEMPO",
     "PRESET NEXT",
     "PRESET PREV",
     "GLOBAL BYPASS",
     "MODULATION TOGGLE",
+    "DRIVE TOGGLE",
+    "GATE TOGGLE",
+    "COMPRESSOR TOGGLE",
     "SUBSCENE NEXT",
     "SUBSCENE PREV",
     "SCENE NEXT",
     "SCENE PREV"
 };
+
+static const char* modeNames[] = {"MOMENTARY", "LATCHING"};
 
 void footswitch_manager_init(void) {
     // Initialize GPIO pins
@@ -169,10 +173,23 @@ bool footswitch_is_pressed(int fsIndex) {
 }
 
 const char* footswitch_action_name(FootswitchAction action) {
-    if (action >= sizeof(actionNames) / sizeof(actionNames[0])) {
+    if (action < 0 || action >= (FootswitchAction)(sizeof(actionNames) / sizeof(actionNames[0]))) {
         return "UNKNOWN";
     }
     return actionNames[action];
+}
+
+int footswitch_action_count(void) {
+    return (int)(sizeof(actionNames) / sizeof(actionNames[0]));
+}
+
+int footswitch_mode_count(void) {
+    return (int)(sizeof(modeNames) / sizeof(modeNames[0]));
+}
+
+const char* footswitch_mode_name(int mode) {
+    if (mode < 0 || mode >= footswitch_mode_count()) return "UNKNOWN";
+    return modeNames[mode];
 }
 
 void footswitch_set_event_callback(FootswitchEventCallback callback) {

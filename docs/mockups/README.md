@@ -87,31 +87,53 @@ o conteúdo.
   com hold curto), não recolorindo a barra inteira.
 - Valor numérico discreto à direita.
 
-#### 5. Effect Cards (72×46)
+#### 5. Effect Cards (58×46, 7 módulos, scroll horizontal)
+- Sete indicadores: **GATE · COMP · HARM · DRIVE · MOD · DLY · REV**.
+- A linha rola horizontalmente com snap; o 6º card aparece cortado na borda
+  (dica de scroll). Não se espremem 7 cards na largura de 320.
 - Estado ON: LED laranja + rail de accent no topo, totalmente dentro do card
   (clip corner) e alinhado à linguagem dos módulos da FX Chain.
 - A borda do card permanece neutra (`COLOR_SEPARATOR`) em ON e OFF.
 - Nunca preenche o card inteiro de cor.
 
-#### 6. FX Chain Modules (74×84)
-- Quatro módulos lado a lado; a borda permanece sempre neutra
-  (`COLOR_SEPARATOR`), evitando a leitura de "quatro caixas contornadas".
+#### 6. FX Chain Modules (64×84, 7 módulos, scroll horizontal)
+- Cadeia: **GATE → COMPRESSOR → HARMONY → DRIVE → MODULATION → DELAY → REVERB**.
+- A borda permanece sempre neutra (`COLOR_SEPARATOR`), evitando a leitura de
+  "caixas contornadas".
 - ON é comunicado por rail laranja no topo + LED + texto mais forte.
 - Valor principal domina (`FONT_EMPHASIS`); metadata discreta embaixo.
 
 #### 7. Footswitch Summary (32px)
 - FS1/FS2 com ação resumida; pressionado usa laranja.
 
-#### 8. Effect Editor (M5, data-driven)
+#### 8. Effect Editor (M7, data-driven, Basic/Advanced)
 - O body é reconstruído a partir de descritores por efeito; header/back/enable
   são persistentes.
-- Controles: `Slider`, `Toggle`, `Segmented` (2–3 opções) e `Stepper`
-  (`[-] valor [+]`) para enums de 12 valores (KEY/SCALE).
+- Controles: `Slider`, `Toggle`, `Segmented` (2–4 opções) e `Stepper`
+  (`[-] valor [+]`) para enums (KEY/SCALE/SUBDIVISION).
+- Seções **BASIC** (aberta) e **ADVANCED** (fechada por padrão); o usuário abre
+  o Advanced explicitamente.
+- Editores: GATE, COMPRESSOR, HARMONY, DRIVE, MODULATION, DELAY, REVERB.
 - Harmony muda de layout conforme MODE (FIXED / DIATONIC / MIDI); uma única voz
-  (sem `VOICE 1`).
-- Sem placeholders falsos: nada de `PLATE`, `1/4` ou `KEY AUTO`.
-- LIMITER representa o **Harmony bus limiter** (subtitle `HARMONY BUS`); o master
-  limiter não aparece aqui.
+  (sem `VOICE 1`). Advanced inclui VOICE, FORMANT, DYNAMICS, DRY ALIGN,
+  MIDI RANGE e HARM LIMITER.
+- Delay/Chorus: `TEMPO SYNC` alterna entre ms e subdivisions canônicas (1/1 …
+  1/16T), usando o `TempoBpm` global.
+- O antigo card `LIMITER` foi removido: `harmony.limiter.*` agora é
+  HARMONY → ADVANCED → HARM LIMITER. O limiter master vive em `MASTER`.
+- Sem placeholders falsos: nada de `PLATE`, `KEY AUTO` ou `REVERB FREEZE`.
+
+#### 9. MASTER / ROUTING (SET → MASTER)
+- Área global fora da Performance: `TEMPO` (BPM), `LIMITER CEILING`,
+  `MUTE DRY`, `SPATIAL ROUTING` (Parallel / DelayIntoReverb) e
+  `SPATIAL SOURCE` (Input / PostDynamics / PostHarmony).
+- Sem enable de limiter master (esse parâmetro não existe); apenas o ceiling.
+- Afordância `TAP TEMPO` no header.
+
+#### 10. Tempo
+- O BPM compacto aparece no header da Performance e abre o MASTER ao toque.
+- `TAP TEMPO` (footswitch ou MASTER) calcula BPM no CYD e envia `TempoBpm` como
+  parâmetro normal.
 
 ### Interação
 
@@ -127,22 +149,27 @@ o conteúdo.
 | Arquivo | Descrição |
 |---------|-----------|
 | `boot_screen.svg` | Splash de boot (`VOXP4 / CONTROL`) |
-| `performance_screen.svg` | Tela principal ao vivo |
-| `fx_chain_screen.svg` | Rack de módulos + ações globais |
-| `effect_edit_screen.svg` | Editor HARMONY (MODE=DIATONIC) |
+| `performance_screen.svg` | Tela principal ao vivo (7 indicadores + BPM) |
+| `fx_chain_screen.svg` | Rack de 7 módulos com scroll + ações globais |
+| `effect_edit_screen.svg` | Editor HARMONY (MODE=DIATONIC, BASIC) |
+| `effect_edit_harmony_advanced_screen.svg` | HARMONY → ADVANCED (dry align, harm limiter) |
+| `effect_edit_gate_screen.svg` | Editor GATE |
+| `effect_edit_compressor_screen.svg` | Editor COMPRESSOR |
+| `effect_edit_drive_screen.svg` | Editor DRIVE |
+| `effect_edit_modulation_screen.svg` | Editor MODULATION (CHORUS) |
+| `effect_edit_delay_screen.svg` | Editor DELAY (TEMPO SYNC + subdivisions) |
 | `effect_edit_reverb_screen.svg` | Editor REVERB |
-| `effect_edit_delay_screen.svg` | Editor DELAY |
-| `effect_edit_limiter_screen.svg` | Editor LIMITER (harmony bus) |
+| `master_screen.svg` | MASTER / ROUTING (tempo, ceiling, routing) |
 | `presets_screen.svg` | Browser de presets |
-| `footswitch_screen.svg` | Configuração de FS1/FS2 |
-| `settings_screen.svg` | Menu de settings |
+| `footswitch_screen.svg` | Configuração/edição de FS1/FS2 |
+| `settings_screen.svg` | Menu de settings (inclui MASTER / ROUTING) |
 | `system_screen.svg` | Diagnóstico (rolável) |
 
 ### Hierarquia da Performance Screen
 
 ```
 ┌────────────────────────────────────┐
-│ P03 LEAD AIR              ● LINK    │  Header 24
+│ P03 LEAD AIR        120 BPM  ● LINK │  Header 24
 ├────────────────────────────────────┤
 │ A3                    220.1 Hz      │  Pitch 40
 │                        VOICED       │
@@ -150,14 +177,17 @@ o conteúdo.
 │ IN  [██████████░░░░]         -12     │  Meters 34
 │ OUT [████████████░░]          -6     │
 ├────────────────────────────────────┤
-│ HARMONY  REVERB  DELAY  LIMITER     │  Effects 46
-│   ●ON      ●ON     OFF     ●ON      │
+│ GATE COMP HARM DRIVE MOD DLY ▸REV   │  Effects 46 (scroll h)
+│  ●ON  ●ON  OFF  OFF  OFF  ●ON  ●ON  │
 ├────────────────────────────────────┤
 │ FS1  HARMONY        FS2  REVERB     │  FS 32
 ├────────────────────────────────────┤
 │   PERF   │  FX  │ PRESET │  SET     │  Nav 36
 └────────────────────────────────────┘
 ```
+
+O rack de efeitos rola horizontalmente (snap); `DLY`/`REV` aparecem ao
+arrastar. O BPM no header abre o MASTER ao toque.
 
 ### Critérios de Aceitação Visual
 
@@ -171,15 +201,17 @@ o conteúdo.
 
 ### Validação
 
-- **Build verificado (M5)**: PlatformIO `esp32-cyd` (`espressif32@6.5.0`),
-  `SUCCESS` (RAM 15.7%, Flash 43.2%); `esp32-cyd-debug` `SUCCESS`
-  (RAM 15.7%, Flash 43.4%). Testes host do modelo: `pio test -e native`
-  17/17 PASS.
-- Features LVGL não usadas foram desabilitadas (`MENU`, `WIN`, `TILEVIEW`,
-  `SPAN`, `LIST`, `BTNMATRIX`+`MSGBOX`, `IMAGE`, `GRADIENT_SIMPLE`, `GRID`),
-  reduzindo o Flash em ~17 KB.
+- **Build M7**: PlatformIO `esp32-cyd` (`espressif32@6.5.0`) `SUCCESS`
+  (RAM 18.2%, Flash 57.6%).
+- **Testes host M7**: `pio test -e native` 82/82 PASS, incluindo o teste de
+  cobertura que exige que todos os 71 parâmetros do contrato tenham um único
+  lugar na UI.
+- **Cobertura da UI**: `python scripts/audit_ui_coverage.py --check` — 71/71
+  parâmetros colocados, 0 ausentes. Tabela completa em
+  [`../m7_param_ui_coverage.md`](../m7_param_ui_coverage.md).
 - **Validação em hardware**: pendente. Ajustes finais de contraste, calibração
-  de toque e legibilidade sob luz de palco precisam de teste no CYD real.
+  de toque, scroll horizontal do rack e legibilidade sob luz de palco precisam
+  de teste no CYD real.
 
 ### Notas de Implementação
 

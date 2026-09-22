@@ -6,11 +6,13 @@
 #include "../UiTheme.h"
 
 static const char* effect_names[] = {
-    "HARMONY",
-    "REVERB",
-    "DELAY",
-    "LIMITER",
-    "MOD"
+    "GATE",
+    "COMP",
+    "HARM",
+    "DRIVE",
+    "MOD",
+    "DLY",
+    "REV"
 };
 
 EffectCard_t* effect_card_create(lv_obj_t* parent, int32_t x, int32_t y, 

@@ -2,10 +2,12 @@
 #include "../UiApp.h"
 #include "../UiTheme.h"
 
-// Module card geometry, tuned directly for the 320x204 content area (5 cards).
-#define FX_CARD_W 58
+// Module card geometry. The rack holds seven modules and scrolls horizontally
+// with snap, so touch targets stay large instead of shrinking to fit.
+#define FX_CARD_W 64
 #define FX_CARD_H 84
-#define FX_ACTION_H 48
+#define FX_ACTION_H 44
+#define FX_CARD_GAP 6
 
 // Each effect is presented as a hardware-like processing module, not a settings
 // row. Active state is shown by a top accent rail + LED + stronger text, on a
@@ -223,20 +225,23 @@ void fx_chain_screen_init(lv_obj_t* parent) {
     lv_obj_set_style_text_color(title, COLOR_TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(title, FONT_BODY, 0);
 
-    // === MODULE RACK ===
+    // === MODULE RACK (horizontal, snap-scrolling over 7 modules) ===
     lv_obj_t* rack = lv_obj_create(fx_container);
     lv_obj_set_size(rack, LV_PCT(100), LV_PCT(100));
     lv_obj_set_flex_grow(rack, 1);
-    lv_obj_clear_flag(rack, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_flag(rack, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(rack, LV_DIR_HOR);
+    lv_obj_set_scroll_snap_x(rack, LV_SCROLL_SNAP_CENTER);
+    lv_obj_set_scrollbar_mode(rack, LV_SCROLLBAR_MODE_AUTO);
     lv_obj_set_style_bg_color(rack, COLOR_BG, 0);
     lv_obj_set_style_border_width(rack, 0, 0);
     lv_obj_set_style_pad_all(rack, 0, 0);
-    lv_obj_set_style_pad_column(rack, 5, 0);
+    lv_obj_set_style_pad_column(rack, FX_CARD_GAP, 0);
     lv_obj_set_flex_flow(rack, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(rack, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_align(rack, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    for (int i = 0; i < static_cast<int>(kUiEffectCount); i++) {
-        create_module(rack, i, ui_effect_name(i));
+    for (size_t i = 0; i < kUiEffectCount; ++i) {
+        create_module(rack, (int)i, ui_effect_name(static_cast<UiEffectId>(i)));
     }
 
     // === GLOBAL ACTIONS ===
@@ -267,8 +272,9 @@ void fx_chain_screen_init(lv_obj_t* parent) {
     }, LV_EVENT_CLICKED, NULL);
 }
 
-void fx_chain_update_effect_state(int effectId, bool enabled,
+void fx_chain_update_effect_state(UiEffectId effect, bool enabled,
                                   const char* mainValue, const char* metadata) {
+    const int effectId = (int)effect;
     if (effectId < 0 || effectId >= static_cast<int>(kUiEffectCount) || !fx_modules[effectId].card) return;
 
     FxModule_t& m = fx_modules[effectId];

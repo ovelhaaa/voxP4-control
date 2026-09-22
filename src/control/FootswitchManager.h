@@ -16,17 +16,20 @@ typedef enum {
     FS_ACTION_HARMONY_TOGGLE,
     FS_ACTION_HARMONY_MOMENTARY,
     FS_ACTION_REVERB_TOGGLE,
-    FS_ACTION_REVERB_FREEZE,
     FS_ACTION_DELAY_TOGGLE,
     FS_ACTION_TAP_TEMPO,
     FS_ACTION_PRESET_NEXT,
     FS_ACTION_PRESET_PREV,
     FS_ACTION_GLOBAL_BYPASS,
     FS_ACTION_MODULATION_TOGGLE,
+    FS_ACTION_DRIVE_TOGGLE,
+    FS_ACTION_GATE_TOGGLE,
+    FS_ACTION_COMPRESSOR_TOGGLE,
     FS_ACTION_SUBSCENE_NEXT,
     FS_ACTION_SUBSCENE_PREV,
     FS_ACTION_SCENE_NEXT,
-    FS_ACTION_SCENE_PREV
+    FS_ACTION_SCENE_PREV,
+    FS_ACTION_COUNT
 } FootswitchAction;
 
 // Footswitch configuration
@@ -81,6 +84,13 @@ bool footswitch_is_pressed(int fsIndex);
 
 // Get action name string
 const char* footswitch_action_name(FootswitchAction action);
+
+// Number of selectable actions (name table size).
+int footswitch_action_count(void);
+
+// Footswitch modes (selectable in the Footswitch screen).
+int footswitch_mode_count(void);
+const char* footswitch_mode_name(int mode);
 
 // Set event callback
 void footswitch_set_event_callback(FootswitchEventCallback callback);

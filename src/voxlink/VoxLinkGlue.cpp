@@ -21,7 +21,7 @@
 namespace {
 voxlink::VoxLinkClient g_client;
 constexpr size_t kIntentQueueDepth = 16;
-// Must hold a full 49-parameter snapshot plus LinkActive with margin. The
+// Must hold a full 71-parameter snapshot plus LinkActive with margin. The
 // FreeRTOS queue is also a head/tail ring with usable depth = depth-1.
 constexpr size_t kEventQueueDepth = 80;
 
@@ -189,20 +189,13 @@ void voxlink_glue_tick() {
                 break;
             case voxlink::EventType::ParamAuthoritative:
             case voxlink::EventType::ParamRevert: {
-                UiParamId pid;
-                UiEffectId effect;
-                if (ui_param_from_voxlink_id(ev.id, &pid)) {
-                    if (ev.type == voxlink::EventType::ParamRevert)
-                        ui_revert_parameter(pid);
-                    else
-                        ui_apply_parameter_authoritative(pid, ev.value);
-                } else if (ui_effect_from_enable_voxlink_id(ev.id, &effect)) {
-                    if (ev.type == voxlink::EventType::ParamRevert)
-                        ui_revert_effect_enable(effect);
-                    else
-                        ui_apply_effect_enable_authoritative(effect,
-                                                             ev.value >= 0.5f);
-                }
+                // The controller state is keyed by wire ID, so every canonical
+                // parameter (including effect enables) flows through the same
+                // path. The P4 remains the authority.
+                if (ev.type == voxlink::EventType::ParamRevert)
+                    ui_revert_parameter(ev.id);
+                else
+                    ui_apply_parameter_authoritative(ev.id, ev.value);
                 break;
             }
         }

@@ -7,17 +7,18 @@
 #include "screens/SystemScreen.h"
 #include "screens/EffectEditScreen.h"
 #include "screens/SettingsScreen.h"
+#include "screens/MasterScreen.h"
 #include "board/LGFX_CYD.h"
 #include "control/FootswitchManager.h"
+#include "model/TapTempo.h"
 #include "session/PerformanceSession.h"
 #include "storage/LibraryStorage.h"
 #include <lvgl.h>
+#include <Arduino.h>
 #include <cstdio>
 #include <cctype>
 #include <cstring>
-#if defined(DEBUG_BUILD)
-#include <Arduino.h>
-#endif
+#include <cmath>
 
 using namespace VoxUiTheme;
 
@@ -36,6 +37,9 @@ static UiWireIntentFn s_wire_intent = nullptr;
 static bool s_presets_available = true;
 static bool s_bypass_available = true;
 
+// Tap Tempo estimator. Pure C++, owned by the controller.
+static TapTempo s_tap_tempo;
+
 // Footswitch snapshot kept by the App layer so a physical event never needs to
 // consult a screen. Labels are derived once from the FootswitchManager config.
 static char fs_short_label[2][16] = {"--", "--"};
@@ -49,81 +53,56 @@ static void ui_log_heap(const char* stage) {
 }
 #endif
 
-// Canonical effect display names. Index order is fixed:
-// 0 HARMONY, 1 REVERB, 2 DELAY, 3 LIMITER, 4 MODULATION.
-static const char* kEffectNames[kUiEffectCount] = {
-    "HARMONY", "REVERB", "DELAY", "LIMITER", "MODULATION"};
-
-static bool effect_enabled_from_state(int effectId);
-
-const char* ui_effect_name(int effectId) {
-    if (effectId < 0 || effectId >= static_cast<int>(kUiEffectCount)) return "--";
-    return kEffectNames[effectId];
+static bool effect_enabled_from_state(UiEffectId effect) {
+    return app_state.params.get(ui_effect_enable_wire(effect)) >= 0.5f;
 }
 
 // Recompute and fan out the summary for a single effect. Only the affected
 // effect's Performance card and FX Chain module are touched.
-static void update_effect_summary(int effectId) {
-    if (effectId < 0 || effectId >= static_cast<int>(kUiEffectCount)) return;
+static void update_effect_summary(UiEffectId effect) {
+    if (effect >= UiEffectId::Count) return;
     char main_value[24];
     char metadata[24];
-    ui_build_effect_summary(static_cast<UiEffectId>(effectId),
-                            app_state.parameterValues, main_value,
+    ui_build_effect_summary(effect, app_state.params, main_value,
                             sizeof(main_value), metadata, sizeof(metadata));
-    performance_update_effect_value(effectId, main_value);
-    fx_chain_update_effect_state(effectId, effect_enabled_from_state(effectId),
+    performance_update_effect_value(effect, main_value);
+    fx_chain_update_effect_state(effect, effect_enabled_from_state(effect),
                                  main_value, metadata);
 }
 
-static void init_parameter_defaults() {
-    for (size_t i = 0; i < kUiParamCount; ++i) {
-        const UiParamDescriptor* d =
-            ui_param_descriptor(static_cast<UiParamId>(i));
-        app_state.parameterValues[i] = d ? d->defaultValue : 0.0f;
-        app_state.parameterAuthoritativeValues[i] = app_state.parameterValues[i];
-        app_state.parameterValid[i] = true;
-        app_state.parameterAuthority[i] = UiValueAuthority::LocalDefault;
-    }
+static void refresh_effect_enable(UiEffectId effect) {
+    performance_update_effect(effect, effect_enabled_from_state(effect));
+    effect_edit_set_enabled(effect, effect_enabled_from_state(effect));
+    update_effect_summary(effect);
 }
 
-static bool effect_enabled_from_state(int effectId) {
-    switch (effectId) {
-        case 0: return app_state.harmonyEnabled;
-        case 1: return app_state.reverbEnabled;
-        case 2: return app_state.delayEnabled;
-        case 3: return app_state.limiterEnabled;
-        case 4: return app_state.modulationEnabled;
-        default: return false;
-    }
-}
-
-static void fan_out_parameter(UiParamId id, float value);
+static void fan_out_parameter(uint16_t wireId, float value);
 static void apply_session_deltas(const std::vector<ParamDelta>& deltas);
 
 // Action dispatcher for view intent. This is the boundary between screens and
-// state authority. Until VoxLink is wired, actions update local optimistic
-// state, which is fanned out to every screen that represents the same thing.
+// state authority.
 void ui_emit_action(const UiAction& action) {
     switch (action.type) {
-        case UiActionType::ToggleEffect:
+        case UiActionType::ToggleEffect: {
             if (action.id >= kUiEffectCount) return;
-            ui_set_effect_enable_local(static_cast<UiEffectId>(action.id),
-                                       !effect_enabled_from_state(action.id));
+            const UiEffectId effect = static_cast<UiEffectId>(action.id);
+            ui_set_effect_enable_local(effect, !effect_enabled_from_state(effect));
             break;
+        }
 
         case UiActionType::OpenEffect:
             // Local navigation action, not sent to P4.
-            effect_edit_load_effect(action.id);
-            if (action.id < kUiEffectCount) {
-                effect_edit_set_enabled(action.id, effect_enabled_from_state(action.id));
-            }
+            effect_edit_load_effect(static_cast<UiEffectId>(action.id));
+            effect_edit_set_enabled(static_cast<UiEffectId>(action.id),
+                                    (action.id < kUiEffectCount)
+                                        ? effect_enabled_from_state(
+                                              static_cast<UiEffectId>(action.id))
+                                        : false);
             ui_navigate_to(UiScreenId::EFFECT_EDIT);
             break;
 
         case UiActionType::AllEffectsOn:
-            // Five real enable parameters; optimistic locally, sent to the P4
-            // when the link is active.
-            for (int i = 0; i < static_cast<int>(kUiEffectCount); i++) {
+            for (size_t i = 0; i < kUiEffectCount; ++i) {
                 ui_set_effect_enable_local(static_cast<UiEffectId>(i), true);
             }
             break;
@@ -167,8 +146,9 @@ void ui_emit_action(const UiAction& action) {
             break;
 
         case UiActionType::SetParameter:
-            // Optimistic local edit; produces a VoxLink intent when connected.
-            ui_set_parameter_local(static_cast<UiParamId>(action.id), action.value);
+            // action.id is a VoxLink wire ID. Optimistic local edit; produces a
+            // VoxLink intent when connected.
+            ui_set_parameter_local(action.id, action.value);
             break;
 
         case UiActionType::SetFootswitchConfig:
@@ -193,7 +173,8 @@ static lv_obj_t* nav_tabs[4] = {nullptr, nullptr, nullptr, nullptr};
 static const char* nav_labels[] = {"PERF", "FX", "PRESET", "SET"};
 
 // Screen containers
-static lv_obj_t* screen_containers[7] = {nullptr};
+static constexpr int kScreenContainerCount = 8;
+static lv_obj_t* screen_containers[kScreenContainerCount] = {nullptr};
 static UiScreenId current_screen = UiScreenId::PERFORMANCE;
 
 // LVGL display driver
@@ -210,8 +191,6 @@ static void disp_flush(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* c
     if (lcd_device) {
         lcd_device->startWrite();
         lcd_device->setAddrWindow(area->x1, area->y1, area->x2 - area->x1 + 1, area->y2 - area->y1 + 1);
-        // Must use the uint16_t overload: the void* overload treats the buffer
-        // as 3-byte RGB888, which garbles the RGB565 framebuffer.
         lcd_device->writePixels(reinterpret_cast<const uint16_t*>(color_p),
                                lv_area_get_width(area) * lv_area_get_height(area), true);
         lcd_device->endWrite();
@@ -230,7 +209,6 @@ static void touchpad_read(lv_indev_drv_t* indev_drv, lv_indev_data_t* data) {
         data->state = LV_INDEV_STATE_REL;
     } else {
         data->state = LV_INDEV_STATE_PR;
-        // The LGFX_CYD config already handles rotation correctly
         data->point.x = touchX;
         data->point.y = touchY;
     }
@@ -240,7 +218,7 @@ static void touchpad_read(lv_indev_drv_t* indev_drv, lv_indev_data_t* data) {
 static void nav_tab_clicked(lv_event_t* e) {
     lv_obj_t* tab = lv_event_get_target(e);
     int index = (int)(intptr_t)lv_obj_get_user_data(tab);
-    
+
     if (index >= 0 && index < 4) {
         if (index == 3) {
             ui_navigate_to(UiScreenId::SETTINGS);
@@ -250,7 +228,6 @@ static void nav_tab_clicked(lv_event_t* e) {
     }
 }
 
-// Create navigation bar at bottom
 static void create_nav_bar(lv_obj_t* parent) {
     nav_bar = lv_obj_create(parent);
     lv_obj_set_size(nav_bar, LV_PCT(100), 36);
@@ -260,7 +237,7 @@ static void create_nav_bar(lv_obj_t* parent) {
     lv_obj_set_style_pad_all(nav_bar, 0, 0);
     lv_obj_align(nav_bar, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_obj_set_flex_flow(nav_bar, LV_FLEX_FLOW_ROW);
-    
+
     for (int i = 0; i < 4; i++) {
         nav_tabs[i] = lv_btn_create(nav_bar);
         lv_obj_set_size(nav_tabs[i], LV_PCT(25), LV_PCT(100));
@@ -269,44 +246,41 @@ static void create_nav_bar(lv_obj_t* parent) {
         lv_obj_set_style_border_width(nav_tabs[i], 0, 0);
         lv_obj_set_style_shadow_width(nav_tabs[i], 0, 0);
         lv_obj_set_flex_grow(nav_tabs[i], 1);
-        // Subtle pressed feedback; the active tab is indicated by a top rail.
         ui_apply_pressed(nav_tabs[i], COLOR_SURFACE_ELEV, COLOR_BORDER);
         lv_obj_set_user_data(nav_tabs[i], (void*)(intptr_t)i);
         lv_obj_add_event_cb(nav_tabs[i], nav_tab_clicked, LV_EVENT_CLICKED, NULL);
-        
+
         lv_obj_t* label = lv_label_create(nav_tabs[i]);
         lv_label_set_text(label, nav_labels[i]);
         lv_obj_set_style_text_color(label, COLOR_TEXT_MUTED, 0);
         lv_obj_set_style_text_font(label, FONT_SMALL, 0);
         lv_obj_center(label);
     }
-    
-    // Update active tab visual
+
     update_nav_bar(current_screen);
 }
 
-// Update navigation bar to show active tab
 void update_nav_bar(UiScreenId active_screen) {
     int active_idx = (int)active_screen;
-    
-    // Handle subscreens - show parent tab as active
+
     if (active_screen == UiScreenId::EFFECT_EDIT) {
         active_idx = 1; // FX_CHAIN tab
-    } else if (active_screen == UiScreenId::SYSTEM || active_screen == UiScreenId::FOOTSWITCH || active_screen == UiScreenId::SETTINGS) {
+    } else if (active_screen == UiScreenId::SYSTEM ||
+               active_screen == UiScreenId::FOOTSWITCH ||
+               active_screen == UiScreenId::SETTINGS ||
+               active_screen == UiScreenId::MASTER) {
         active_idx = 3; // SET tab
     }
-    
+
     for (int i = 0; i < 4; i++) {
         if (!nav_tabs[i]) continue;
-        
+
         bool is_active = (i == active_idx);
-        // All tabs share the nav background; only the top rail and the text
-        // colour distinguish the active tab (no special permanent fill).
         lv_obj_set_style_bg_color(nav_tabs[i], COLOR_NAV, 0);
         lv_obj_set_style_border_side(nav_tabs[i], is_active ? LV_BORDER_SIDE_TOP : LV_BORDER_SIDE_NONE, 0);
         lv_obj_set_style_border_width(nav_tabs[i], is_active ? 2 : 0, 0);
         lv_obj_set_style_border_color(nav_tabs[i], COLOR_ACCENT, 0);
-        
+
         lv_obj_t* label = lv_obj_get_child(nav_tabs[i], 0);
         if (label) {
             lv_obj_set_style_text_color(label, is_active ? COLOR_TEXT_PRIMARY : COLOR_TEXT_MUTED, 0);
@@ -314,11 +288,10 @@ void update_nav_bar(UiScreenId active_screen) {
     }
 }
 
-// Show/hide screen containers using LVGL 8.x API
 static void show_screen(UiScreenId screen_id) {
     int idx = (int)screen_id;
-    
-    for (int i = 0; i < 7; i++) {
+
+    for (int i = 0; i < kScreenContainerCount; i++) {
         if (screen_containers[i]) {
             if (i == idx) {
                 lv_obj_clear_flag(screen_containers[i], LV_OBJ_FLAG_HIDDEN);
@@ -331,17 +304,12 @@ static void show_screen(UiScreenId screen_id) {
 
 void ui_app_init(LGFX_CYD& display) {
     lv_init();
-    
-    // Initialize theme styles
     ui_theme_init();
-    
-    // Store display reference
+
     lcd_device = &display;
-    
-    // Initialize LVGL display buffer
+
     lv_disp_draw_buf_init(&draw_buf, buf1, buf2, VoxCydConfig::ScreenWidth * VoxCydConfig::LvglBufferLines);
-    
-    // Initialize display driver
+
     lv_disp_drv_init(&disp_drv);
     disp_drv.hor_res = VoxCydConfig::ScreenWidth;
     disp_drv.ver_res = VoxCydConfig::ScreenHeight;
@@ -350,32 +318,22 @@ void ui_app_init(LGFX_CYD& display) {
     disp_drv.full_refresh = 0;
     disp_drv.direct_mode = 0;
     lv_disp_drv_register(&disp_drv);
-    
-    // Initialize input device (Touchpad)
+
     static lv_indev_drv_t indev_drv;
     lv_indev_drv_init(&indev_drv);
     indev_drv.type = LV_INDEV_TYPE_POINTER;
     indev_drv.read_cb = touchpad_read;
     lv_indev_drv_register(&indev_drv);
 
-    // Create content area (top portion, leaving space for nav bar)
     content_area = lv_obj_create(lv_scr_act());
-    lv_obj_set_size(content_area, LV_PCT(100), 204); // 240 - 36 = 204
+    lv_obj_set_size(content_area, LV_PCT(100), 204);
     lv_obj_set_style_bg_color(content_area, COLOR_BG, 0);
     lv_obj_set_style_pad_all(content_area, 0, 0);
     lv_obj_set_style_border_width(content_area, 0, 0);
     lv_obj_align(content_area, LV_ALIGN_TOP_MID, 0, 0);
-    
-    // Create screen containers
-    screen_containers[0] = lv_obj_create(content_area); // PERF
-    screen_containers[1] = lv_obj_create(content_area); // FX
-    screen_containers[2] = lv_obj_create(content_area); // PRESET
-    screen_containers[3] = lv_obj_create(content_area); // FOOTSWITCH
-    screen_containers[4] = lv_obj_create(content_area); // SYSTEM
-    screen_containers[5] = lv_obj_create(content_area); // EFFECT_EDIT
-    screen_containers[6] = lv_obj_create(content_area); // SETTINGS
-    
-    for (int i = 0; i < 7; i++) {
+
+    for (int i = 0; i < kScreenContainerCount; i++) {
+        screen_containers[i] = lv_obj_create(content_area);
         lv_obj_set_size(screen_containers[i], LV_PCT(100), LV_PCT(100));
         lv_obj_set_style_bg_color(screen_containers[i], COLOR_BG, 0);
         lv_obj_set_style_pad_all(screen_containers[i], 0, 0);
@@ -384,12 +342,9 @@ void ui_app_init(LGFX_CYD& display) {
             lv_obj_add_flag(screen_containers[i], LV_OBJ_FLAG_HIDDEN);
         }
     }
-    
-    // Initialize all screens. DEBUG_BUILD prints the heap cost of each screen
-    // once (never from the main loop).
+
 #if defined(DEBUG_BUILD)
-    Serial.printf("[UI] heap before screens: %u\n",
-                  (unsigned)esp_get_free_heap_size());
+    Serial.printf("[UI] heap before screens: %u\n", (unsigned)esp_get_free_heap_size());
 #endif
     performance_screen_init(screen_containers[0]);
 #if defined(DEBUG_BUILD)
@@ -419,43 +374,41 @@ void ui_app_init(LGFX_CYD& display) {
 #if defined(DEBUG_BUILD)
     ui_log_heap("Settings");
 #endif
+    master_screen_init(screen_containers[7]);
+#if defined(DEBUG_BUILD)
+    ui_log_heap("Master");
+#endif
 
-    // Create navigation bar (sibling to content_area on root)
     create_nav_bar(lv_scr_act());
 #if defined(DEBUG_BUILD)
     ui_log_heap("Nav bar");
 #endif
 
-    // Set initial state and hydrate UI
     app_state.currentScreen = UiScreenId::PERFORMANCE;
     app_state.linkUp = false;
     app_state.globalBypass = false;
     app_state.selectedPresetId = 0;
     app_state.presetName[0] = '\0';
 
-    // Hydrate UI with current state. Parameter defaults come from the
-    // descriptors; these are a LOCAL simulation that mirrors the ESP32-P4
-    // VoxLink registry defaults until the transport provides a real snapshot.
-    init_parameter_defaults();
     performance_update_link(app_state.linkUp);
-    // Enable defaults mirror the VoxLink registry (*.enable default values);
-    // never rely on zero initialization.
-    app_state.harmonyEnabled = ui_effect_default_enabled(UiEffectId::Harmony);
-    app_state.reverbEnabled = ui_effect_default_enabled(UiEffectId::Reverb);
-    app_state.delayEnabled = ui_effect_default_enabled(UiEffectId::Delay);
-    app_state.limiterEnabled = ui_effect_default_enabled(UiEffectId::Limiter);
-    app_state.modulationEnabled = ui_effect_default_enabled(UiEffectId::Modulation);
-    for (int i = 0; i < static_cast<int>(kUiEffectCount); i++) {
-        app_state.effectAuthoritative[i] = effect_enabled_from_state(i);
-        app_state.effectAuthority[i] = UiValueAuthority::LocalDefault;
-        ui_update_effect_state(i, effect_enabled_from_state(i));
+
+    // The canonical state already holds registry defaults (including effect
+    // enables). Fan them out to every view; never rely on zero initialization.
+    for (size_t i = 0; i < kUiEffectCount; ++i) {
+        refresh_effect_enable(static_cast<UiEffectId>(i));
     }
+    master_screen_refresh();
+    performance_update_tempo(app_state.params.get(VOXP4_PARAM_TEMPO_BPM));
 
     // Footswitch config comes from the real FootswitchManager, never hardcoded.
     for (int i = 0; i < 2; i++) {
         FootswitchConfig* cfg = footswitch_get_config(i);
         if (cfg) {
             ui_update_footswitch_config(i, (uint8_t)cfg->mode, (uint8_t)cfg->pressAction);
+            footswitch_update_edit(i, (uint8_t)cfg->mode, (uint8_t)cfg->pressAction,
+                                   (uint8_t)cfg->releaseAction,
+                                   (uint8_t)cfg->longPressAction,
+                                   (uint8_t)cfg->doublePressAction);
         }
     }
 
@@ -464,15 +417,18 @@ void ui_app_init(LGFX_CYD& display) {
     LibraryStorage::loadLibrary(s_library);
     s_session.setLibrary(&s_library);
 
-    // Apply resolved state from session
+    // Apply resolved state from session (canonical, wire-id keyed).
     const ResolvedState& resolved = s_session.getResolvedState();
-    for (size_t i = 0; i < kUiParamCount; ++i) {
-        uint16_t wid = ui_param_voxlink_id(static_cast<UiParamId>(i));
-        if (wid != 0) {
-            app_state.parameterValues[i] = resolved.getByWireId(wid).asFloat();
-            app_state.parameterValid[i] = true;
-        }
+    for (size_t i = 0; i < ParameterRegistry::kParamCount; ++i) {
+        const uint16_t wid = ParameterRegistry::denseIndexToWireId(i);
+        if (wid == 0) continue;
+        app_state.params.applyAuthoritative(wid, resolved.getByWireId(wid).asFloat());
     }
+    for (size_t i = 0; i < kUiEffectCount; ++i) {
+        refresh_effect_enable(static_cast<UiEffectId>(i));
+    }
+    master_screen_refresh();
+    performance_update_tempo(app_state.params.get(VOXP4_PARAM_TEMPO_BPM));
 
     if (!s_library.scenes.empty()) {
         const char* sceneNames[16];
@@ -502,14 +458,13 @@ void ui_app_run(void) {
 
 void ui_navigate_to(UiScreenId screen) {
     if (current_screen == screen) return;
-    
+
     current_screen = screen;
-    
-    // Show the selected screen
     show_screen(screen);
-    
-    // Update navigation bar visual
     update_nav_bar(screen);
+
+    // Master screen values may have changed while it was hidden.
+    if (screen == UiScreenId::MASTER) master_screen_refresh();
 }
 
 UiScreenId ui_get_current_screen(void) {
@@ -523,7 +478,6 @@ void ui_update_link_state(bool connected) {
 
 void ui_update_preset(uint16_t id, const char* name) {
     app_state.currentPresetId = id;
-    // A load is authoritative, so the selection follows the newly loaded preset.
     app_state.selectedPresetId = id;
 
     const char* safe_name = (name && name[0]) ? name : "--";
@@ -533,7 +487,6 @@ void ui_update_preset(uint16_t id, const char* name) {
     strncpy(app_state.presetName, buf, sizeof(app_state.presetName) - 1);
     app_state.presetName[sizeof(app_state.presetName) - 1] = '\0';
 
-    // Fan out one logical preset change to every representation.
     performance_update_preset(app_state.presetName);
     presets_update_current(id, safe_name);
     presets_select_preset((int)id - 1);
@@ -541,7 +494,6 @@ void ui_update_preset(uint16_t id, const char* name) {
 
 void ui_select_preset(int index) {
     if (index < 0) return;
-    // Selection only. It must NOT change the current preset.
     app_state.selectedPresetId = (uint16_t)(index + 1);
     presets_select_preset(index);
 }
@@ -569,6 +521,9 @@ const char* ui_footswitch_short_label(uint8_t action) {
     if (strstr(full, "HARMONY")) return "HARMONY";
     if (strstr(full, "REVERB")) return "REVERB";
     if (strstr(full, "DELAY")) return "DELAY";
+    if (strstr(full, "DRIVE")) return "DRIVE";
+    if (strstr(full, "GATE")) return "GATE";
+    if (strstr(full, "COMPRESSOR")) return "COMP";
     if (strstr(full, "MODULATION")) return "MOD";
     if (strstr(full, "TAP TEMPO")) return "TAP";
     if (strstr(full, "PRESET NEXT")) return "NEXT";
@@ -581,58 +536,123 @@ void ui_update_footswitch_config(int index, uint8_t mode, uint8_t action) {
     if (index < 0 || index > 1) return;
     snprintf(fs_short_label[index], sizeof(fs_short_label[index]), "%s",
              ui_footswitch_short_label(action));
-    // Fan out config to the Footswitch screen and the Performance summary.
     footswitch_update_config(index, mode, fs_short_label[index]);
     performance_update_footswitch(index, fs_short_label[index], fs_pressed[index]);
+}
+
+uint8_t ui_get_footswitch_field(int index, UiFootswitchField field) {
+    if (index < 0 || index > 1) return 0;
+    FootswitchConfig* cfg = footswitch_get_config(index);
+    if (cfg == nullptr) return 0;
+    switch (field) {
+        case UiFootswitchField::Mode: return (uint8_t)cfg->mode;
+        case UiFootswitchField::Press: return (uint8_t)cfg->pressAction;
+        case UiFootswitchField::Release: return (uint8_t)cfg->releaseAction;
+        case UiFootswitchField::LongPress: return (uint8_t)cfg->longPressAction;
+        case UiFootswitchField::DoublePress: return (uint8_t)cfg->doublePressAction;
+        default: return 0;
+    }
+}
+
+void ui_set_footswitch_field(int index, UiFootswitchField field, uint8_t value) {
+    if (index < 0 || index > 1) return;
+    FootswitchConfig* cfg = footswitch_get_config(index);
+    if (cfg == nullptr) return;
+    switch (field) {
+        case UiFootswitchField::Mode: cfg->mode = (FootswitchMode)value; break;
+        case UiFootswitchField::Press: cfg->pressAction = (FootswitchAction)value; break;
+        case UiFootswitchField::Release: cfg->releaseAction = (FootswitchAction)value; break;
+        case UiFootswitchField::LongPress: cfg->longPressAction = (FootswitchAction)value; break;
+        case UiFootswitchField::DoublePress: cfg->doublePressAction = (FootswitchAction)value; break;
+        default: return;
+    }
+    // Fan the new configuration out to every representation.
+    ui_update_footswitch_config(index, (uint8_t)cfg->mode, (uint8_t)cfg->pressAction);
+    footswitch_update_edit(index, (uint8_t)cfg->mode,
+                           (uint8_t)cfg->pressAction, (uint8_t)cfg->releaseAction,
+                           (uint8_t)cfg->longPressAction,
+                           (uint8_t)cfg->doublePressAction);
+}
+
+// Apply a single footswitch press action. Release handling for momentary
+// actions is done in ui_update_footswitch_state.
+static void execute_footswitch_action(int index, FootswitchAction action) {
+    switch (action) {
+        case FS_ACTION_SUBSCENE_NEXT:
+            ui_emit_action({ UiActionType::NextSubscene, 0, 0.0f });
+            break;
+        case FS_ACTION_SUBSCENE_PREV:
+            ui_emit_action({ UiActionType::PrevSubscene, 0, 0.0f });
+            break;
+        case FS_ACTION_SCENE_NEXT:
+        case FS_ACTION_PRESET_NEXT:
+            ui_emit_action({ UiActionType::NextScene, 0, 0.0f });
+            break;
+        case FS_ACTION_SCENE_PREV:
+        case FS_ACTION_PRESET_PREV:
+            ui_emit_action({ UiActionType::PrevScene, 0, 0.0f });
+            break;
+        case FS_ACTION_HARMONY_TOGGLE:
+        case FS_ACTION_HARMONY_MOMENTARY:
+            ui_set_effect_enable_local(UiEffectId::Harmony,
+                                       action == FS_ACTION_HARMONY_MOMENTARY
+                                           ? true
+                                           : !ui_effect_enabled(UiEffectId::Harmony));
+            break;
+        case FS_ACTION_REVERB_TOGGLE:
+            ui_set_effect_enable_local(UiEffectId::Reverb,
+                                       !ui_effect_enabled(UiEffectId::Reverb));
+            break;
+        case FS_ACTION_DELAY_TOGGLE:
+            ui_set_effect_enable_local(UiEffectId::Delay,
+                                       !ui_effect_enabled(UiEffectId::Delay));
+            break;
+        case FS_ACTION_MODULATION_TOGGLE:
+            ui_set_effect_enable_local(UiEffectId::Modulation,
+                                       !ui_effect_enabled(UiEffectId::Modulation));
+            break;
+        case FS_ACTION_DRIVE_TOGGLE:
+            ui_set_effect_enable_local(UiEffectId::Drive,
+                                       !ui_effect_enabled(UiEffectId::Drive));
+            break;
+        case FS_ACTION_GATE_TOGGLE:
+            ui_set_effect_enable_local(UiEffectId::Gate,
+                                       !ui_effect_enabled(UiEffectId::Gate));
+            break;
+        case FS_ACTION_COMPRESSOR_TOGGLE:
+            ui_set_effect_enable_local(UiEffectId::Compressor,
+                                       !ui_effect_enabled(UiEffectId::Compressor));
+            break;
+        case FS_ACTION_TAP_TEMPO:
+            ui_tap_tempo();
+            break;
+        case FS_ACTION_GLOBAL_BYPASS:
+            ui_emit_action({ UiActionType::GlobalBypass, 0, 0.0f });
+            break;
+        default:
+            (void)index;
+            break;
+    }
 }
 
 void ui_update_footswitch_state(int index, bool pressed) {
     if (index < 0 || index > 1) return;
     fs_pressed[index] = pressed;
-    // Fan out one physical event to every representation.
     performance_update_footswitch(index, fs_short_label[index], pressed);
     footswitch_update_state(index, pressed);
 
+    FootswitchConfig* cfg = footswitch_get_config(index);
+    if (cfg == nullptr) return;
+
     if (pressed) {
-        FootswitchConfig* cfg = footswitch_get_config(index);
-        if (cfg) {
-            switch (cfg->pressAction) {
-                case FS_ACTION_SUBSCENE_NEXT:
-                    ui_emit_action({ UiActionType::NextSubscene, 0, 0.0f });
-                    break;
-                case FS_ACTION_SUBSCENE_PREV:
-                    ui_emit_action({ UiActionType::PrevSubscene, 0, 0.0f });
-                    break;
-                case FS_ACTION_SCENE_NEXT:
-                    ui_emit_action({ UiActionType::NextScene, 0, 0.0f });
-                    break;
-                case FS_ACTION_SCENE_PREV:
-                    ui_emit_action({ UiActionType::PrevScene, 0, 0.0f });
-                    break;
-                case FS_ACTION_HARMONY_TOGGLE:
-                    ui_emit_action({ UiActionType::ToggleEffect, static_cast<uint16_t>(UiEffectId::Harmony), 0.0f });
-                    break;
-                case FS_ACTION_REVERB_TOGGLE:
-                    ui_emit_action({ UiActionType::ToggleEffect, static_cast<uint16_t>(UiEffectId::Reverb), 0.0f });
-                    break;
-                case FS_ACTION_DELAY_TOGGLE:
-                    ui_emit_action({ UiActionType::ToggleEffect, static_cast<uint16_t>(UiEffectId::Delay), 0.0f });
-                    break;
-                case FS_ACTION_MODULATION_TOGGLE:
-                    ui_emit_action({ UiActionType::ToggleEffect, static_cast<uint16_t>(UiEffectId::Modulation), 0.0f });
-                    break;
-                case FS_ACTION_GLOBAL_BYPASS:
-                    ui_emit_action({ UiActionType::GlobalBypass, 0, 0.0f });
-                    break;
-                case FS_ACTION_PRESET_NEXT:
-                    ui_emit_action({ UiActionType::NextScene, 0, 0.0f });
-                    break;
-                case FS_ACTION_PRESET_PREV:
-                    ui_emit_action({ UiActionType::PrevScene, 0, 0.0f });
-                    break;
-                default:
-                    break;
-            }
+        execute_footswitch_action(index, cfg->pressAction);
+    } else {
+        // Momentary actions release on the falling edge.
+        if (cfg->pressAction == FS_ACTION_HARMONY_MOMENTARY) {
+            ui_set_effect_enable_local(UiEffectId::Harmony, false);
+        }
+        if (cfg->releaseAction != FS_ACTION_NONE) {
+            execute_footswitch_action(index, cfg->releaseAction);
         }
     }
 }
@@ -640,35 +660,55 @@ void ui_update_footswitch_state(int index, bool pressed) {
 // ---------------------------------------------------------------------------
 // Parameter model
 // ---------------------------------------------------------------------------
-float ui_get_parameter(UiParamId id) {
-    const size_t index = static_cast<size_t>(id);
-    if (index >= kUiParamCount) return 0.0f;
-    return app_state.parameterValues[index];
+float ui_get_parameter(uint16_t wireId) {
+    return app_state.params.get(wireId);
 }
 
-bool ui_parameter_is_valid(UiParamId id) {
-    const size_t index = static_cast<size_t>(id);
-    if (index >= kUiParamCount) return false;
-    return app_state.parameterValid[index];
+bool ui_parameter_is_valid(uint16_t wireId) {
+    return app_state.params.isValid(wireId);
 }
 
-UiValueAuthority ui_parameter_authority(UiParamId id) {
-    const size_t index = static_cast<size_t>(id);
-    if (index >= kUiParamCount) return UiValueAuthority::LocalDefault;
-    return app_state.parameterAuthority[index];
+UiValueAuthority ui_parameter_authority(uint16_t wireId) {
+    return app_state.params.authority(wireId);
 }
 
-void ui_format_effect_summary(int effectId, char* mainValue, size_t mainSize,
+float ui_get_authoritative_parameter(uint16_t wireId) {
+    return app_state.params.authoritative(wireId);
+}
+
+const UiParamState& ui_get_param_state(void) {
+    return app_state.params;
+}
+
+float ui_get_tempo_bpm(void) {
+    return app_state.params.get(VOXP4_PARAM_TEMPO_BPM);
+}
+
+void ui_format_effect_summary(UiEffectId effect, char* mainValue, size_t mainSize,
                               char* metadata, size_t metaSize) {
-    if (effectId < 0 || effectId >= static_cast<int>(kUiEffectCount)) return;
-    ui_build_effect_summary(static_cast<UiEffectId>(effectId),
-                            app_state.parameterValues, mainValue, mainSize,
+    if (effect >= UiEffectId::Count) return;
+    ui_build_effect_summary(effect, app_state.params, mainValue, mainSize,
                             metadata, metaSize);
 }
 
-static void fan_out_parameter(UiParamId id, float value) {
-    update_effect_summary(static_cast<int>(ui_effect_of(id)));
-    effect_edit_notify(id, value);
+bool ui_effect_enabled(UiEffectId effect) {
+    return effect_enabled_from_state(effect);
+}
+
+static void fan_out_parameter(uint16_t wireId, float value) {
+    (void)value;
+    UiEffectId effect;
+    if (ui_effect_from_enable_wire(wireId, &effect)) {
+        refresh_effect_enable(effect);
+    } else {
+        effect = ui_effect_of_wire(wireId);
+        if (effect < UiEffectId::Count) update_effect_summary(effect);
+    }
+    if (wireId == VOXP4_PARAM_TEMPO_BPM) {
+        performance_update_tempo(app_state.params.get(VOXP4_PARAM_TEMPO_BPM));
+    }
+    effect_edit_notify(wireId, value);
+    master_screen_notify(wireId, value);
 }
 
 void ui_update_performance_header(void) {
@@ -701,19 +741,8 @@ void ui_update_performance_header(void) {
 
 static void apply_session_deltas(const std::vector<ParamDelta>& deltas) {
     for (const auto& delta : deltas) {
-        UiParamId uiId;
-        if (ui_param_from_voxlink_id(delta.wireId, &uiId)) {
-            const size_t index = static_cast<size_t>(uiId);
-            if (index < kUiParamCount) {
-                app_state.parameterValues[index] = delta.value.asFloat();
-                app_state.parameterValid[index] = true;
-                fan_out_parameter(uiId, delta.value.asFloat());
-            }
-        }
-        UiEffectId effId;
-        if (ui_effect_from_enable_voxlink_id(delta.wireId, &effId)) {
-            ui_update_effect_state(static_cast<int>(effId), delta.value.asBool());
-        }
+        app_state.params.applyAuthoritative(delta.wireId, delta.value.asFloat());
+        fan_out_parameter(delta.wireId, delta.value.asFloat());
         if (s_wire_intent != nullptr) {
             s_wire_intent(delta.wireId, delta.value.asFloat());
         }
@@ -733,111 +762,51 @@ void ui_revert_edits(void) {
     apply_session_deltas(deltas);
 }
 
-void ui_set_parameter_local(UiParamId id, float value) {
-    const size_t index = static_cast<size_t>(id);
-    if (index >= kUiParamCount) return;
-    const UiParamDescriptor* descriptor = ui_param_descriptor(id);
-    if (descriptor == nullptr) return;
-
-    const float clamped = ui_clamp_parameter(*descriptor, value);
-    app_state.parameterValues[index] = clamped;
-    app_state.parameterValid[index] = true;
-    // Optimistic: pending until the P4 confirms via PARAM_CHANGED.
-    app_state.parameterAuthority[index] = UiValueAuthority::LocalPending;
-    fan_out_parameter(id, clamped);
-
-    const uint16_t wire_id = ui_param_voxlink_id(id);
-    if (wire_id != 0) {
-        s_session.applyTemporaryEdit(wire_id, ParameterValue::makeFloat(clamped));
-        ui_update_performance_header();
+void ui_set_parameter_local(uint16_t wireId, float value) {
+    const UiParamMeta* meta = ui_param_meta(wireId);
+    float clamped = value;
+    if (meta != nullptr) {
+        clamped = ui_clamp_parameter(*meta, value);
     }
-    if (s_wire_intent != nullptr && wire_id != 0) s_wire_intent(wire_id, clamped);
+    app_state.params.setLocal(wireId, clamped);
+    const float applied = app_state.params.get(wireId);
+    fan_out_parameter(wireId, applied);
+
+    s_session.applyTemporaryEdit(wireId, ParameterValue::makeFloat(applied));
+    ui_update_performance_header();
+
+    if (s_wire_intent != nullptr) s_wire_intent(wireId, applied);
 }
 
-void ui_apply_parameter_authoritative(UiParamId id, float acceptedValue) {
-    const size_t index = static_cast<size_t>(id);
-    if (index >= kUiParamCount) return;
-    const UiParamDescriptor* descriptor = ui_param_descriptor(id);
-    if (descriptor == nullptr) return;
-
-    const float clamped = ui_clamp_parameter(*descriptor, acceptedValue);
-    app_state.parameterValues[index] = clamped;
-    app_state.parameterAuthoritativeValues[index] = clamped;
-    app_state.parameterValid[index] = true;
-    app_state.parameterAuthority[index] = UiValueAuthority::Authoritative;
-    fan_out_parameter(id, clamped);
+void ui_apply_parameter_authoritative(uint16_t wireId, float acceptedValue) {
+    app_state.params.applyAuthoritative(wireId, acceptedValue);
+    fan_out_parameter(wireId, app_state.params.get(wireId));
 }
 
-void ui_revert_parameter(UiParamId id) {
-    const size_t index = static_cast<size_t>(id);
-    if (index >= kUiParamCount) return;
-    app_state.parameterValues[index] = app_state.parameterAuthoritativeValues[index];
-    app_state.parameterAuthority[index] = UiValueAuthority::Authoritative;
-    fan_out_parameter(id, app_state.parameterValues[index]);
-}
-
-void ui_update_effect_state(int effectId, bool enabled) {
-    switch (effectId) {
-        case 0: app_state.harmonyEnabled = enabled; break;
-        case 1: app_state.reverbEnabled = enabled; break;
-        case 2: app_state.delayEnabled = enabled; break;
-        case 3: app_state.limiterEnabled = enabled; break;
-        case 4: app_state.modulationEnabled = enabled; break;
-        default: return;
-    }
-    // Fan out one logical state change to every representation so the UI can
-    // never show conflicting effect states across screens.
-    performance_update_effect(effectId, enabled);
-    update_effect_summary(effectId);
-    effect_edit_set_enabled(effectId, enabled);
-}
-
-float ui_get_authoritative_parameter(UiParamId id) {
-    const size_t index = static_cast<size_t>(id);
-    if (index >= kUiParamCount) return 0.0f;
-    return app_state.parameterAuthoritativeValues[index];
-}
-
-UiValueAuthority ui_effect_authority(UiEffectId effect) {
-    const int index = static_cast<int>(effect);
-    if (index < 0 || index >= static_cast<int>(kUiEffectCount))
-        return UiValueAuthority::LocalDefault;
-    return app_state.effectAuthority[index];
+void ui_revert_parameter(uint16_t wireId) {
+    app_state.params.revert(wireId);
+    fan_out_parameter(wireId, app_state.params.get(wireId));
 }
 
 void ui_set_effect_enable_local(UiEffectId effect, bool enabled) {
-    const int index = static_cast<int>(effect);
-    if (index < 0 || index >= static_cast<int>(kUiEffectCount)) return;
-    ui_update_effect_state(index, enabled);
-    app_state.effectAuthority[index] = UiValueAuthority::LocalPending;
-    const uint16_t wire_id = ui_effect_enable_voxlink_id(effect);
-    if (wire_id != 0) {
-        s_session.applyTemporaryEdit(wire_id, ParameterValue::makeBool(enabled));
-        ui_update_performance_header();
+    const uint16_t wireId = ui_effect_enable_wire(effect);
+    if (wireId == 0) return;
+    ui_set_parameter_local(wireId, enabled ? 1.0f : 0.0f);
+}
+
+void ui_tap_tempo(void) {
+    float bpm = 0.0f;
+    if (s_tap_tempo.tap(millis(), &bpm)) {
+        ui_set_parameter_local(VOXP4_PARAM_TEMPO_BPM, bpm);
     }
-    if (s_wire_intent != nullptr && wire_id != 0)
-        s_wire_intent(wire_id, enabled ? 1.0f : 0.0f);
-}
-
-void ui_apply_effect_enable_authoritative(UiEffectId effect, bool enabled) {
-    const int index = static_cast<int>(effect);
-    if (index < 0 || index >= static_cast<int>(kUiEffectCount)) return;
-    ui_update_effect_state(index, enabled);
-    app_state.effectAuthoritative[index] = enabled;
-    app_state.effectAuthority[index] = UiValueAuthority::Authoritative;
-}
-
-void ui_revert_effect_enable(UiEffectId effect) {
-    const int index = static_cast<int>(effect);
-    if (index < 0 || index >= static_cast<int>(kUiEffectCount)) return;
-    ui_update_effect_state(index, app_state.effectAuthoritative[index]);
-    app_state.effectAuthority[index] = UiValueAuthority::Authoritative;
+    master_screen_refresh_tap(s_tap_tempo.hasEstimate(), s_tap_tempo.bpm());
 }
 
 void ui_set_wire_intent_callback(UiWireIntentFn fn) { s_wire_intent = fn; }
 
 void ui_refresh_capability_gated_controls() {
     if (current_screen == UiScreenId::EFFECT_EDIT) effect_edit_refresh();
+    master_screen_refresh();
 }
 
 void ui_set_link_capabilities(bool presetsAvailable, bool bypassAvailable) {
