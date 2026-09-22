@@ -1,4 +1,4 @@
-# VoxP4 Portable Library Format — Version 1 (V1) Specification
+# VoxP4 Portable Library Format — Version 1 (V1) Frozen Specification
 
 ## 1. Overview and Purpose
 
@@ -7,7 +7,7 @@ The **VoxP4 Portable Library Format (V1)** is the public, language-agnostic data
 This specification enables external authoring tools (such as future Web Editors, desktop library managers, mobile companion apps, and command-line scripts) to create, inspect, edit, version, and validate VoxP4 project files that can be directly imported and executed by the `voxP4-control` physical surface and any future runtimes.
 
 ### Core Architectural Invariant
-> **The portable library format represents the musical and performance state of the VoxP4 vocal processor.**
+> **The portable library format represents the musical and performance state of the VoxP4 vocal processor.**  
 > It is strictly decoupled from C++ implementation classes, LVGL widgets, GUI screen layout, and raw VoxLink wire protocol packets.
 
 ---
@@ -15,12 +15,13 @@ This specification enables external authoring tools (such as future Web Editors,
 ## 2. File Identification & Encoding
 
 - **Format Identifier**: `voxp4-library`
-- **Format Version**: `1`
-- **Schema Version**: `1`
+- **Format Version**: `1` (Exact match required for V1; unsupported versions are rejected atomically)
+- **Schema Version**: `1` (Exact match required for frozen V1 specification)
 - **Character Encoding**: UTF-8 without Byte Order Mark (BOM).
 - **File Extensions**: `.voxp4.json` (recommended) or `.json`.
 - **MIME Type**: `application/vnd.voxp4.library+json` or `application/json`.
-- **Determinism**: Serializers SHOULD emit fields in standard canonical order with 2-space indentation to facilitate Git diffs, human readability, and deterministic round-tripping.
+- **Determinism**: Serializers emit fields in canonical order with 2-space indentation to facilitate Git diffs, human readability, and deterministic round-tripping.
+- **Maximum File Size**: 131,072 bytes (128 KB).
 
 ---
 
@@ -33,9 +34,11 @@ All top-level entities (`Preset`, `Scene`, `Subscene`, `Setlist`, `SetlistEntry`
   - `Scene` IDs must be unique across `scenes[]`.
   - `Subscene` IDs must be unique within their parent `Scene.subscenes[]`.
   - `Setlist` IDs must be unique across `setlists[]`.
+  - `SetlistEntry` IDs must be unique within their parent `Setlist.entries[]`.
 - **Format**:
   - Semantic slug format is recommended: lowercase alphanumeric words separated by hyphens (e.g. `"preset-wide-vocal"`, `"scene-creep"`, `"subscene-chorus-lead"`).
   - Standard UUID strings (e.g. `"a8098c1a-f86e-11da-bd1a-00112444be1e"`) are fully valid and supported.
+  - Length: minimum 1 character, maximum 64 characters.
   - Array indices MUST NOT be used as persistent identities.
 
 ---
@@ -62,13 +65,15 @@ A portable library file is a single JSON object structured as follows:
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `format` | string | Yes | Must be `"voxp4-library"`. |
-| `formatVersion` | integer | Yes | Must be `1` for this specification. |
-| `schemaVersion` | integer | Yes | Semantic schema revision (defaults to `1`). |
-| `libraryId` | string | Yes | Stable, opaque identifier for the entire library. |
-| `name` | string | Yes | Human-readable title of the library (max 64 chars). |
-| `presets` | array | Yes | Array of reusable Preset objects. |
-| `scenes` | array | Yes | Array of Scene (song/performance) objects. |
-| `setlists` | array | Yes | Array of Setlist objects. |
+| `formatVersion` | integer | Yes | Must be `1` for this frozen specification. |
+| `schemaVersion` | integer | Yes | Semantic schema revision (must be `1`). |
+| `libraryId` | string | Yes | Stable, opaque identifier for the entire library (1..64 chars). |
+| `name` | string | Yes | Human-readable title of the library (1..64 chars). |
+| `presets` | array | Yes | Array of reusable Preset objects (max 64). |
+| `scenes` | array | Yes | Array of Scene (song/performance) objects (max 64). |
+| `setlists` | array | Yes | Array of Setlist objects (max 16). |
+
+Structural objects reject unrecognized envelope fields (`"additionalProperties": false`).
 
 ---
 
@@ -83,17 +88,17 @@ A `Preset` represents a reusable sound configuration.
   "parameters": {
     "HarmonyEnable": true,
     "HarmonyLevel": 0.85,
-    "ModulationMode": "Microshift",
-    "ModulationMix": 0.35,
-    "MicroshiftLeftCents": -7.0,
-    "MicroshiftRightCents": 9.0,
+    "ChorusMode": "Microshift",
+    "ChorusMix": 0.35,
+    "ChorusMicroshiftLeftCents": -7.0,
+    "ChorusMicroshiftRightCents": 9.0,
     "ReverbWet": 0.22
   }
 }
 ```
 
-- `id`: Unique string ID.
-- `name`: Display name.
+- `id`: Unique string ID (1..64 chars).
+- `name`: Display name (1..64 chars).
 - `parameters`: Sparse object mapping semantic parameter names to values. Does not need to include all 71 parameters.
 
 ---
@@ -121,13 +126,13 @@ A `Scene` represents an autonomous performance unit (e.g. a song, spoken word se
 }
 ```
 
-- `id`: Unique string ID.
-- `name`: Display name of the scene.
+- `id`: Unique string ID (1..64 chars).
+- `name`: Display name of the scene (1..64 chars).
 - `basePresetId`: (Optional) ID of a preset in `presets[]` to inherit from.
-- `metadata`: (Optional) Freeform non-DSP metadata: `artist`, `notes`, `tags`.
-  - **Notice**: Musical properties such as tempo, tonal key, and scale MUST NOT be duplicated in `metadata`. They exist strictly as parameters (`TempoBpm`, `HarmonyKey`, `HarmonyScale`).
+- `metadata`: (Optional) Freeform non-DSP metadata: `artist`, `notes`, `tags` (extensible with custom string fields).
+  - **Musical Notice**: Musical properties such as tempo, tonal key, and scale MUST NOT be placed in `metadata`. They exist strictly as parameters (`TempoBpm`, `HarmonyKey`, `HarmonyScale`).
 - `parameters`: (Optional) Sparse overrides applied on top of the base preset.
-- `subscenes`: Ordered array of `Subscene` objects.
+- `subscenes`: Ordered array of `Subscene` objects (max 16).
 
 ---
 
@@ -148,8 +153,8 @@ A `Subscene` represents a section or variation within a scene (e.g. Intro, Verse
 }
 ```
 
-- `id`: Unique string ID (within the scene).
-- `name`: Display name (e.g. `"Verse"`, `"Chorus"`).
+- `id`: Unique string ID within the scene (1..64 chars).
+- `name`: Display name (1..64 chars).
 - `parameters`: Sparse overrides applied on top of the scene and preset.
 
 ---
@@ -179,81 +184,76 @@ A `Setlist` defines an ordered sequence of Scenes for live performance.
 }
 ```
 
-- A scene may appear multiple times in the same setlist (e.g. an opening song re-played as an encore). Each occurrence is uniquely identified by its `id`.
+- Max setlists: 16. Max entries per setlist: 64.
+- A scene may appear multiple times in the same setlist. Each occurrence has its own unique entry `id`.
 - `sceneId` must reference a valid `id` in `scenes[]`.
 
 ---
 
-## 5. Semantic Parameter Representation
+## 5. Parameter Contract & Canonical Enums
 
-Parameter keys in `"parameters"` objects MUST use stable semantic names rather than raw wire hex numbers (`0x0100`).
+The full parameter catalog is machine-readable in [`schemas/voxp4-parameters-v1.json`](file:///c:/progs/VoxP4/voxP4-control/schemas/voxp4-parameters-v1.json).
 
 ### 5.1. Naming Conventions
-Both PascalCase and dot-notated keys are supported by the reference parser:
-- PascalCase (Primary): `"HarmonyEnable"`, `"TempoBpm"`, `"ReverbWet"`, `"DelayFeedback"`, `"MicroshiftLeftCents"`.
-- Dot Notation: `"harmony.enable"`, `"tempo.bpm"`, `"reverb.wet"`, `"delay.feedback"`.
+- Primary format: PascalCase semantic names (`"TempoBpm"`, `"HarmonyEnable"`, `"ChorusMode"`, `"ReverbWet"`).
+- Dot-notation keys (`"tempo.bpm"`, `"harmony.enable"`) are accepted by the parser for developer convenience.
 
-### 5.2. Supported Value Types
-- **Boolean**: `true` or `false`.
-- **Integer**: e.g. `4`, `-7`.
-- **Float**: e.g. `0.25`, `120.0`, `-18.0`.
-- **Enum Values**: May be supplied either as an integer ordinal (0, 1, 2...) or as human-readable string labels:
-  - `HarmonyMode`: `"Fixed"`, `"Diatonic"`, `"Midi"`
-  - `HarmonyKey`: `"C"`, `"C#"`, `"Db"`, `"D"`, `"D#"`, `"Eb"`, `"E"`, `"F"`, `"F#"`, `"Gb"`, `"G"`, `"G#"`, `"Ab"`, `"A"`, `"A#"`, `"Bb"`, `"B"`
-  - `HarmonyScale`: `"Major"`, `"Minor"`, `"Dorian"`, `"Phrygian"`, `"Lydian"`, `"Mixolydian"`, `"Locrian"`, `"HarmonicMinor"`, `"MelodicMinor"`, `"PentatonicMajor"`, `"PentatonicMinor"`, `"Blues"`
-  - `ModulationMode`: `"Dimension"`, `"Chorus"`, `"Ensemble"`, `"Microshift"`
-  - `DriveMode`: `"Warm"`, `"Crunch"`, `"Lead"`
-
----
-
-## 6. Deterministic Resolution Hierarchy
-
-State resolution is strictly hierarchical and deterministic:
-
-```text
-Firmware Defaults
-        ↓
-Base Preset Overrides
-        ↓
-Scene Overrides
-        ↓
-Subscene Overrides
-        ↓
-Temporary Performance Edits (Runtime only)
-```
-
-$$\text{ResolvedParameterState} = \text{Defaults} \oplus \text{Preset} \oplus \text{Scene} \oplus \text{Subscene} \oplus \text{TemporaryEdits}$$
-
-Where $\oplus$ indicates that a higher tier replaces any parameter specified in lower tiers.
+### 5.2. Strict Enum Rules
+All 11 enum parameters serialize and deserialize strictly using canonical string labels. Numeric integer fallback during serialization is forbidden:
+1. `HarmonyMode`: `"Fixed"`, `"Diatonic"`, `"Midi"`
+2. `HarmonyKey`: `"C"`, `"C#"`, `"D"`, `"D#"`, `"E"`, `"F"`, `"F#"`, `"G"`, `"G#"`, `"A"`, `"A#"`, `"B"` (aliases like `"Db"`, `"Eb"`, `"Gb"`, `"Ab"`, `"Bb"` are parsed to their sharp equivalents).
+3. `HarmonyScale`: `"Major"`, `"NaturalMinor"`, `"HarmonicMinor"`, `"MelodicMinor"`, `"Dorian"`, `"Phrygian"`, `"Lydian"`, `"Mixolydian"`, `"Locrian"`, `"MajorPentatonic"`, `"MinorPentatonic"`, `"BluesMinor"` (aliases `"minor"` -> NaturalMinor, `"blues"` -> BluesMinor).
+4. `HarmonyVoice1NonScalePolicy`: `"Nearest"`, `"Chromatic"`, `"Bypass"`
+5. `DelayLeftSubdivision`, `DelayRightSubdivision`, `ChorusSubdivision`:
+   `"Whole"`, `"Half"`, `"Quarter"`, `"Eighth"`, `"Sixteenth"`, `"ThirtySecond"`, `"DottedHalf"`, `"DottedQuarter"`, `"DottedEighth"`, `"DottedSixteenth"`, `"TripletQuarter"`, `"TripletEighth"`, `"TripletSixteenth"`
+6. `OutputSpatialRouting`: `"Parallel"`, `"DelayIntoReverb"`
+7. `OutputSpatialSource`: `"Input"`, `"PostDynamics"`, `"PostHarmony"`
+8. `ChorusMode`: `"Chorus"`, `"Ensemble"`, `"Dimension"`, `"Microshift"`
+9. `DriveMode`: `"Warm"`, `"Overdrive"`, `"Megaphone"` (aliases `"crunch"`, `"lead"`).
 
 ---
 
-## 7. Validation & Error Handling Rules
+## 6. Two-Level Validation Architecture
 
-A valid library must satisfy all the following rules:
+Validation is explicitly divided into two decoupled layers:
 
-1. **Format Identifier**: `format` must equal `"voxp4-library"`.
-2. **Version Bounds**: `formatVersion` must be $\le 1$.
-3. **Required Identifiers**: `libraryId` and `name` must be non-empty strings.
-4. **Duplicate IDs**: No duplicate IDs within `presets[]`, `scenes[]`, `setlists[]`, or within any `subscenes[]`.
-5. **Referential Integrity**:
-   - Every `scene.basePresetId` must match an existing `preset.id`.
-   - Every `setlist.entry.sceneId` must match an existing `scene.id`.
-6. **Parameter Validation**:
-   - Parameter keys must correspond to known VoxP4 parameters. Unknown parameters trigger validation warnings or errors.
-   - Values must not be `NaN` or infinite.
-   - Numeric values must be within the defined $[min, max]$ range of the parameter descriptor.
-7. **Collection Limits**:
-   - Maximum presets: 64
-   - Maximum scenes: 128
-   - Maximum subscenes per scene: 32
-   - Maximum setlists: 32
-   - Maximum entries per setlist: 64
+### Level 1 — Structural Validation (JSON Schema)
+Enforced by [`schemas/voxp4-library-v1.schema.json`](file:///c:/progs/VoxP4/voxP4-control/schemas/voxp4-library-v1.schema.json):
+- JSON syntax validity.
+- Required envelope keys (`format`, `formatVersion`, `libraryId`, `name`).
+- Exact version values (`formatVersion == 1`, `schemaVersion == 1`).
+- Array size limits (`presets <= 64`, `scenes <= 64`, `subscenes <= 16`, `setlists <= 16`, `entries <= 64`).
+- String length bounds (`1..64` chars).
+- No unknown envelope properties (`additionalProperties: false`).
+
+### Level 2 — Semantic Validation (Firmware Runtime)
+Enforced by `LibraryValidator` and `ParameterRegistry`:
+- Referential integrity: all `scene.basePresetId` exist in `presets[]`; all `setlist.entry.sceneId` exist in `scenes[]`.
+- Uniqueness: no duplicate IDs across presets, scenes, subscenes within a scene, setlists, or entries within a setlist.
+- Parameter bounds: all numbers within $[min, max]$.
+- Unknown parameter policy: unknown parameters trigger validation failure (Strict Import) to prevent silent parameter loss during live performance.
+- Enum validation: unknown enum strings are rejected.
 
 ---
 
-## 8. Migration & Future Versioning Policy
+## 7. Memory Model & Runtime Independence
 
-- When new versions of the format are introduced (e.g. `formatVersion: 2`):
-  - Forward-compatibility: Runtimes MUST reject files with unsupported `formatVersion > kSupportedFormatVersion` atomically, without corrupting existing valid libraries.
-  - Backward-compatibility: Future runtimes will implement explicit `migrateV1ToV2()` transformation passes during import.
+The CYD firmware runtime uses a **fixed-capacity sparse override representation** (`CompactParamSet`):
+- A 71-bit bitset (10 bytes) tracking parameter presence.
+- A fixed array of 71 typed `ParameterValue` slots.
+- Total memory per override set: ~292 bytes.
+- Zero heap allocation, zero node fragmentation, $O(1)$ random access.
+- Total RAM for a realistic 10-song setlist: **~26 KB**, leaving **>240 KB free heap** on the ESP32.
+
+---
+
+## 8. Web Editor Integration Contract
+
+An external Web Editor or authoring tool should follow these rules:
+1. Fetch [`schemas/voxp4-parameters-v1.json`](file:///c:/progs/VoxP4/voxP4-control/schemas/voxp4-parameters-v1.json) to populate effect UI controls, sliders, ranges, and enum dropdowns.
+2. Build the document as a standard JSON object adhering to [`schemas/voxp4-library-v1.schema.json`](file:///c:/progs/VoxP4/voxP4-control/schemas/voxp4-library-v1.schema.json).
+3. Always emit `format: "voxp4-library"`, `formatVersion: 1`, `schemaVersion: 1`.
+4. Use stable semantic slugs for IDs (e.g. `scene-song-title`).
+5. Only write overrides into `parameters` that differ from the parent tier or default.
+6. Validate the export against the schema before saving as `.voxp4.json`.
+7. Import into the CYD via the atomic import pipeline: if the file contains any structural or semantic error, the CYD rejects it completely and keeps the previous valid library intact.

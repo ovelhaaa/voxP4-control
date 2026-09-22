@@ -1,0 +1,18 @@
+{
+  "format": "voxp4-library",
+  "formatVersion": 1,
+  "schemaVersion": 1,
+  "libraryId": "lib-out-of-range",
+  "name": "Out of Range Parameter Library",
+  "presets": [
+    {
+      "id": "preset-1",
+      "name": "Range Violation Preset",
+      "parameters": {
+        "TempoBpm": 999.0
+      }
+    }
+  ],
+  "scenes": [],
+  "setlists": []
+}

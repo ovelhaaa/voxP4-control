@@ -1,0 +1,23 @@
+{
+  "format": "voxp4-library",
+  "formatVersion": 1,
+  "schemaVersion": 1,
+  "libraryId": "lib-broken-preset-ref",
+  "name": "Missing Preset Reference",
+  "presets": [
+    {
+      "id": "preset-real",
+      "name": "Real Preset",
+      "parameters": {}
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene-1",
+      "name": "Scene Referencing Ghost",
+      "basePresetId": "preset-non-existent",
+      "subscenes": []
+    }
+  ],
+  "setlists": []
+}

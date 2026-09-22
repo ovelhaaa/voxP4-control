@@ -1,0 +1,10 @@
+{
+  "format": "voxp4-library",
+  "formatVersion": 1,
+  "schemaVersion": 2,
+  "libraryId": "lib-bad-schema-version",
+  "name": "Unsupported Schema Version",
+  "presets": [],
+  "scenes": [],
+  "setlists": []
+}

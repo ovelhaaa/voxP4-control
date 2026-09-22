@@ -1,0 +1,18 @@
+{
+  "format": "voxp4-library",
+  "formatVersion": 1,
+  "schemaVersion": 1,
+  "libraryId": "lib-unknown-param",
+  "name": "Unknown Parameter Library",
+  "presets": [
+    {
+      "id": "preset-1",
+      "name": "Preset With Unknown Param",
+      "parameters": {
+        "SuperFutureDspParameter": 42.0
+      }
+    }
+  ],
+  "scenes": [],
+  "setlists": []
+}

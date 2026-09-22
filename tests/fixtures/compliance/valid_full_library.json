@@ -1,0 +1,95 @@
+{
+  "format": "voxp4-library",
+  "formatVersion": 1,
+  "schemaVersion": 1,
+  "libraryId": "lib-full-compliance",
+  "name": "Full Compliance Test Library",
+  "presets": [
+    {
+      "id": "preset-all-effects",
+      "name": "All Effects Active",
+      "parameters": {
+        "HarmonyEnable": true,
+        "HarmonyInterval": 7,
+        "HarmonyLevel": 0.85,
+        "HarmonyMode": "Diatonic",
+        "HarmonyKey": "F#",
+        "HarmonyScale": "HarmonicMinor",
+        "HarmonyVoice1NonScalePolicy": "Nearest",
+        "CompressorEnable": true,
+        "CompressorThresholdDb": -18.0,
+        "GateEnable": true,
+        "GateThresholdDb": -55.0,
+        "DelayEnable": true,
+        "DelayLeftMs": 250.0,
+        "DelayRightMs": 375.0,
+        "DelayLeftSubdivision": "DottedEighth",
+        "DelayRightSubdivision": "TripletQuarter",
+        "ReverbEnable": true,
+        "ReverbWet": 0.22,
+        "ReverbDecayS": 2.5,
+        "OutputSpatialRouting": "DelayIntoReverb",
+        "OutputSpatialSource": "PostDynamics",
+        "ChorusEnable": true,
+        "ChorusMode": "Microshift",
+        "ChorusSubdivision": "Eighth",
+        "ChorusMicroshiftLeftCents": -7.0,
+        "ChorusMicroshiftRightCents": 9.0,
+        "DriveEnable": true,
+        "DriveMode": "Warm",
+        "DriveDrive": 0.45
+      }
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene-full-test",
+      "name": "Song Full Test",
+      "basePresetId": "preset-all-effects",
+      "metadata": {
+        "artist": "Compliance Artist",
+        "notes": "Exercises all 11 enum parameters and float ranges",
+        "tags": "test, compliance, canonical"
+      },
+      "parameters": {
+        "TempoBpm": 128.0,
+        "HarmonyKey": "Eb",
+        "HarmonyScale": "Major"
+      },
+      "subscenes": [
+        {
+          "id": "sub-intro",
+          "name": "Intro Section",
+          "parameters": {
+            "HarmonyMode": "Fixed",
+            "DriveMode": "Overdrive",
+            "ChorusMode": "Chorus"
+          }
+        },
+        {
+          "id": "sub-chorus",
+          "name": "Chorus Section",
+          "parameters": {
+            "HarmonyMode": "Midi",
+            "DriveMode": "Megaphone",
+            "ChorusMode": "Ensemble",
+            "OutputSpatialRouting": "Parallel",
+            "OutputSpatialSource": "PostHarmony"
+          }
+        }
+      ]
+    }
+  ],
+  "setlists": [
+    {
+      "id": "setlist-full",
+      "name": "Full Setlist",
+      "entries": [
+        {
+          "id": "entry-1",
+          "sceneId": "scene-full-test"
+        }
+      ]
+    }
+  ]
+}

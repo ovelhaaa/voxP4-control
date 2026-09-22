@@ -1,0 +1,21 @@
+{
+  "format": "voxp4-library",
+  "formatVersion": 1,
+  "schemaVersion": 1,
+  "libraryId": "lib-dup-id",
+  "name": "Duplicate ID Library",
+  "presets": [
+    {
+      "id": "preset-clean",
+      "name": "Clean Lead",
+      "parameters": {}
+    },
+    {
+      "id": "preset-clean",
+      "name": "Another Clean",
+      "parameters": {}
+    }
+  ],
+  "scenes": [],
+  "setlists": []
+}

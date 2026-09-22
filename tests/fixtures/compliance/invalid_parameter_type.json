@@ -1,0 +1,18 @@
+{
+  "format": "voxp4-library",
+  "formatVersion": 1,
+  "schemaVersion": 1,
+  "libraryId": "lib-bad-param-type",
+  "name": "Invalid Parameter Type Library",
+  "presets": [
+    {
+      "id": "preset-1",
+      "name": "Type Mismatch Preset",
+      "parameters": {
+        "TempoBpm": true
+      }
+    }
+  ],
+  "scenes": [],
+  "setlists": []
+}

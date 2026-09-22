@@ -1,0 +1,283 @@
+{
+  "format": "voxp4-library",
+  "formatVersion": 1,
+  "schemaVersion": 1,
+  "libraryId": "lib-too-many-entries",
+  "name": "Too Many Entries",
+  "presets": [],
+  "scenes": [
+    {
+      "id": "scene-1",
+      "name": "Scene 1",
+      "subscenes": []
+    }
+  ],
+  "setlists": [
+    {
+      "id": "setlist-1",
+      "name": "Big Setlist",
+      "entries": [
+        {
+          "id": "entry-1",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-2",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-3",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-4",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-5",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-6",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-7",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-8",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-9",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-10",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-11",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-12",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-13",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-14",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-15",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-16",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-17",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-18",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-19",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-20",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-21",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-22",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-23",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-24",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-25",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-26",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-27",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-28",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-29",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-30",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-31",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-32",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-33",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-34",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-35",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-36",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-37",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-38",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-39",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-40",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-41",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-42",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-43",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-44",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-45",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-46",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-47",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-48",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-49",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-50",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-51",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-52",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-53",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-54",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-55",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-56",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-57",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-58",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-59",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-60",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-61",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-62",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-63",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-64",
+          "sceneId": "scene-1"
+        },
+        {
+          "id": "entry-65",
+          "sceneId": "scene-1"
+        }
+      ]
+    }
+  ]
+}

@@ -14,13 +14,15 @@ struct ValidationResult {
 class LibraryValidator {
 public:
     static constexpr uint32_t kSupportedFormatVersion = 1;
+    static constexpr uint32_t kSupportedSchemaVersion = 1;
 
     static constexpr size_t kMaxPresets = 64;
-    static constexpr size_t kMaxScenes = 128;
-    static constexpr size_t kMaxSubscenesPerScene = 32;
-    static constexpr size_t kMaxSetlists = 32;
+    static constexpr size_t kMaxScenes = 64;
+    static constexpr size_t kMaxSubscenesPerScene = 16;
+    static constexpr size_t kMaxSetlists = 16;
     static constexpr size_t kMaxEntriesPerSetlist = 64;
     static constexpr size_t kMaxStringLength = 64;
+    static constexpr size_t kMaxFileSize = 131072; // 128 KB
 
     static ValidationResult validate(const Library& library);
 };

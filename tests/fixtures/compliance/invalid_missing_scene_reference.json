@@ -1,0 +1,27 @@
+{
+  "format": "voxp4-library",
+  "formatVersion": 1,
+  "schemaVersion": 1,
+  "libraryId": "lib-broken-scene-ref",
+  "name": "Missing Scene Reference",
+  "presets": [],
+  "scenes": [
+    {
+      "id": "scene-existing",
+      "name": "Existing Song",
+      "subscenes": []
+    }
+  ],
+  "setlists": [
+    {
+      "id": "setlist-1",
+      "name": "Broken Setlist",
+      "entries": [
+        {
+          "id": "entry-1",
+          "sceneId": "scene-ghost"
+        }
+      ]
+    }
+  ]
+}

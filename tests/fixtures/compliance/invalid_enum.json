@@ -1,0 +1,18 @@
+{
+  "format": "voxp4-library",
+  "formatVersion": 1,
+  "schemaVersion": 1,
+  "libraryId": "lib-bad-enum",
+  "name": "Invalid Enum Library",
+  "presets": [
+    {
+      "id": "preset-1",
+      "name": "Invalid Enum Preset",
+      "parameters": {
+        "ModulationMode": "SuperCrazyAlienChorus"
+      }
+    }
+  ],
+  "scenes": [],
+  "setlists": []
+}

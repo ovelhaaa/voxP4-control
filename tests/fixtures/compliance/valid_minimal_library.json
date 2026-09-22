@@ -1,0 +1,44 @@
+{
+  "format": "voxp4-library",
+  "formatVersion": 1,
+  "schemaVersion": 1,
+  "libraryId": "lib-minimal",
+  "name": "Minimal Rig",
+  "presets": [
+    {
+      "id": "preset-1",
+      "name": "Default Preset",
+      "parameters": {
+        "HarmonyEnable": false
+      }
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene-1",
+      "name": "Default Scene",
+      "basePresetId": "preset-1",
+      "subscenes": [
+        {
+          "id": "sub-1",
+          "name": "Default Subscene",
+          "parameters": {
+            "HarmonyEnable": false
+          }
+        }
+      ]
+    }
+  ],
+  "setlists": [
+    {
+      "id": "setlist-1",
+      "name": "Default Setlist",
+      "entries": [
+        {
+          "id": "entry-1",
+          "sceneId": "scene-1"
+        }
+      ]
+    }
+  ]
+}

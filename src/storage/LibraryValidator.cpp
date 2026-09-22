@@ -10,15 +10,23 @@ ValidationResult LibraryValidator::validate(const Library& library) {
     if (library.format != "voxp4-library") {
         res.errors.push_back("Invalid format: expected 'voxp4-library', got '" + library.format + "'");
     }
-    if (library.formatVersion > kSupportedFormatVersion) {
+    if (library.formatVersion != kSupportedFormatVersion) {
         res.errors.push_back("Unsupported formatVersion: " + std::to_string(library.formatVersion) +
-                             " (supported: <= " + std::to_string(kSupportedFormatVersion) + ")");
+                             " (supported: " + std::to_string(kSupportedFormatVersion) + ")");
     }
-    if (library.formatVersion == 0) {
-        res.errors.push_back("Invalid formatVersion: 0");
+    if (library.schemaVersion != kSupportedSchemaVersion) {
+        res.errors.push_back("Unsupported schemaVersion: " + std::to_string(library.schemaVersion) +
+                             " (supported: " + std::to_string(kSupportedSchemaVersion) + ")");
     }
     if (library.libraryId.empty()) {
         res.errors.push_back("Missing required field: libraryId");
+    } else if (library.libraryId.length() > kMaxStringLength) {
+        res.errors.push_back("libraryId exceeds length limit of " + std::to_string(kMaxStringLength));
+    }
+    if (library.name.empty()) {
+        res.errors.push_back("Missing required field: name");
+    } else if (library.name.length() > kMaxStringLength) {
+        res.errors.push_back("name exceeds length limit of " + std::to_string(kMaxStringLength));
     }
 
     // 2. Collection limits
@@ -37,11 +45,15 @@ ValidationResult LibraryValidator::validate(const Library& library) {
     for (const auto& p : library.presets) {
         if (p.id.empty()) {
             res.errors.push_back("Preset has empty id");
+        } else if (p.id.length() > kMaxStringLength) {
+            res.errors.push_back("Preset id exceeds length limit of " + std::to_string(kMaxStringLength) + ": " + p.id);
         } else if (!presetIds.insert(p.id).second) {
             res.errors.push_back("Duplicate preset id: " + p.id);
         }
-        if (p.name.length() > kMaxStringLength) {
-            res.warnings.push_back("Preset name exceeds suggested length: " + p.name);
+        if (p.name.empty()) {
+            res.errors.push_back("Preset '" + p.id + "' has empty name");
+        } else if (p.name.length() > kMaxStringLength) {
+            res.errors.push_back("Preset name exceeds length limit of " + std::to_string(kMaxStringLength) + ": " + p.name);
         }
 
         // Validate preset parameter overrides
@@ -68,8 +80,15 @@ ValidationResult LibraryValidator::validate(const Library& library) {
     for (const auto& s : library.scenes) {
         if (s.id.empty()) {
             res.errors.push_back("Scene has empty id");
+        } else if (s.id.length() > kMaxStringLength) {
+            res.errors.push_back("Scene id exceeds length limit of " + std::to_string(kMaxStringLength) + ": " + s.id);
         } else if (!sceneIds.insert(s.id).second) {
             res.errors.push_back("Duplicate scene id: " + s.id);
+        }
+        if (s.name.empty()) {
+            res.errors.push_back("Scene '" + s.id + "' has empty name");
+        } else if (s.name.length() > kMaxStringLength) {
+            res.errors.push_back("Scene name exceeds length limit of " + std::to_string(kMaxStringLength) + ": " + s.name);
         }
 
         // Referential integrity: basePresetId
@@ -103,8 +122,15 @@ ValidationResult LibraryValidator::validate(const Library& library) {
         for (const auto& sub : s.subscenes) {
             if (sub.id.empty()) {
                 res.errors.push_back("Scene '" + s.id + "' has subscene with empty id");
+            } else if (sub.id.length() > kMaxStringLength) {
+                res.errors.push_back("Subscene id exceeds length limit of " + std::to_string(kMaxStringLength) + ": " + sub.id);
             } else if (!subsceneIds.insert(sub.id).second) {
                 res.errors.push_back("Scene '" + s.id + "' has duplicate subscene id: " + sub.id);
+            }
+            if (sub.name.empty()) {
+                res.errors.push_back("Subscene '" + sub.id + "' has empty name");
+            } else if (sub.name.length() > kMaxStringLength) {
+                res.errors.push_back("Subscene name exceeds length limit of " + std::to_string(kMaxStringLength) + ": " + sub.name);
             }
 
             for (size_t i = 0; i < CompactParamSet::kMaxParams; ++i) {
@@ -131,8 +157,15 @@ ValidationResult LibraryValidator::validate(const Library& library) {
     for (const auto& sl : library.setlists) {
         if (sl.id.empty()) {
             res.errors.push_back("Setlist has empty id");
+        } else if (sl.id.length() > kMaxStringLength) {
+            res.errors.push_back("Setlist id exceeds length limit of " + std::to_string(kMaxStringLength) + ": " + sl.id);
         } else if (!setlistIds.insert(sl.id).second) {
             res.errors.push_back("Duplicate setlist id: " + sl.id);
+        }
+        if (sl.name.empty()) {
+            res.errors.push_back("Setlist '" + sl.id + "' has empty name");
+        } else if (sl.name.length() > kMaxStringLength) {
+            res.errors.push_back("Setlist name exceeds length limit of " + std::to_string(kMaxStringLength) + ": " + sl.name);
         }
 
         if (sl.entries.size() > kMaxEntriesPerSetlist) {
@@ -141,6 +174,11 @@ ValidationResult LibraryValidator::validate(const Library& library) {
 
         for (size_t e = 0; e < sl.entries.size(); ++e) {
             const auto& entry = sl.entries[e];
+            if (entry.id.empty()) {
+                res.errors.push_back("Setlist '" + sl.id + "' entry " + std::to_string(e) + " has empty id");
+            } else if (entry.id.length() > kMaxStringLength) {
+                res.errors.push_back("Setlist entry id exceeds length limit of " + std::to_string(kMaxStringLength) + ": " + entry.id);
+            }
             if (entry.sceneId.empty()) {
                 res.errors.push_back("Setlist '" + sl.id + "' entry " + std::to_string(e) + " has empty sceneId");
             } else if (sceneIds.find(entry.sceneId) == sceneIds.end()) {

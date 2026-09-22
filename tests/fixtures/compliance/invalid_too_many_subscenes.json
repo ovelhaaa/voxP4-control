@@ -1,0 +1,102 @@
+{
+  "format": "voxp4-library",
+  "formatVersion": 1,
+  "schemaVersion": 1,
+  "libraryId": "lib-too-many-subscenes",
+  "name": "Too Many Subscenes",
+  "presets": [],
+  "scenes": [
+    {
+      "id": "scene-1",
+      "name": "Scene 1",
+      "subscenes": [
+        {
+          "id": "sub-1",
+          "name": "Sub 1",
+          "parameters": {}
+        },
+        {
+          "id": "sub-2",
+          "name": "Sub 2",
+          "parameters": {}
+        },
+        {
+          "id": "sub-3",
+          "name": "Sub 3",
+          "parameters": {}
+        },
+        {
+          "id": "sub-4",
+          "name": "Sub 4",
+          "parameters": {}
+        },
+        {
+          "id": "sub-5",
+          "name": "Sub 5",
+          "parameters": {}
+        },
+        {
+          "id": "sub-6",
+          "name": "Sub 6",
+          "parameters": {}
+        },
+        {
+          "id": "sub-7",
+          "name": "Sub 7",
+          "parameters": {}
+        },
+        {
+          "id": "sub-8",
+          "name": "Sub 8",
+          "parameters": {}
+        },
+        {
+          "id": "sub-9",
+          "name": "Sub 9",
+          "parameters": {}
+        },
+        {
+          "id": "sub-10",
+          "name": "Sub 10",
+          "parameters": {}
+        },
+        {
+          "id": "sub-11",
+          "name": "Sub 11",
+          "parameters": {}
+        },
+        {
+          "id": "sub-12",
+          "name": "Sub 12",
+          "parameters": {}
+        },
+        {
+          "id": "sub-13",
+          "name": "Sub 13",
+          "parameters": {}
+        },
+        {
+          "id": "sub-14",
+          "name": "Sub 14",
+          "parameters": {}
+        },
+        {
+          "id": "sub-15",
+          "name": "Sub 15",
+          "parameters": {}
+        },
+        {
+          "id": "sub-16",
+          "name": "Sub 16",
+          "parameters": {}
+        },
+        {
+          "id": "sub-17",
+          "name": "Sub 17",
+          "parameters": {}
+        }
+      ]
+    }
+  ],
+  "setlists": []
+}

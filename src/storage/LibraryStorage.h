@@ -17,6 +17,11 @@ public:
     // Returns true on success, false if validation fails or write fails.
     static bool saveLibraryAtomic(const Library& library, const char* path = nullptr);
 
+    // Transactionally import a library from raw JSON string content.
+    // Pipeline: size check -> parse -> structural checks -> semantic validation -> temporary write -> atomic replace.
+    // If any validation or write fails, returns false with outError and leaves existing storage untouched.
+    static bool importLibraryAtomic(const std::string& jsonContent, Library& outLibrary, std::string& outError, const char* path = nullptr);
+
     // Creates the canonical factory default library.
     static Library createFactoryLibrary();
 };

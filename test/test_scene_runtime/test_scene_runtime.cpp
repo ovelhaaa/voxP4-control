@@ -10,7 +10,9 @@
 #include "storage/LibraryValidator.h"
 #include "storage/LibrarySerializer.h"
 #include "storage/LibraryStorage.h"
+#include <ArduinoJson.h>
 #include <fstream>
+#include <set>
 #include <sstream>
 
 void setUp(void) {}
@@ -346,6 +348,211 @@ void test_web_editor_golden_fixture_and_roundtrip(void) {
     TEST_ASSERT_EQUAL_UINT(lib.scenes.size(), roundtripLib.scenes.size());
 }
 
+static bool loadAndValidateFixture(const char* path, std::string& outErr) {
+    std::ifstream ifs(path);
+    if (!ifs.is_open()) {
+        outErr = std::string("Could not open file: ") + path;
+        return false;
+    }
+    std::stringstream ss;
+    ss << ifs.rdbuf();
+    Library lib;
+    if (!LibrarySerializer::deserializeJson(ss.str(), lib, outErr)) {
+        return false;
+    }
+    ValidationResult val = LibraryValidator::validate(lib);
+    if (!val.isValid()) {
+        outErr = val.errors.empty() ? "Validation failed" : val.errors[0];
+        return false;
+    }
+    return true;
+}
+
+void test_71_parameter_contract_audit(void) {
+    std::set<uint16_t> wireIds;
+    std::set<size_t> denseIndices;
+    std::set<std::string> semanticNames;
+
+    TEST_ASSERT_EQUAL_UINT(71, VOXP4_PARAM_COUNT);
+
+    for (size_t i = 0; i < VOXP4_PARAM_COUNT; ++i) {
+        const ParamDescriptor* desc = ParameterRegistry::getByIndex(i);
+        TEST_ASSERT_NOT_NULL(desc);
+        TEST_ASSERT_EQUAL_UINT(i, desc->denseIndex);
+        TEST_ASSERT_TRUE(desc->wireId > 0);
+        TEST_ASSERT_NOT_NULL(desc->semanticName);
+        TEST_ASSERT_TRUE(std::strlen(desc->semanticName) > 0);
+
+        // Verify uniqueness
+        TEST_ASSERT_TRUE_MESSAGE(wireIds.insert(desc->wireId).second, desc->semanticName);
+        TEST_ASSERT_TRUE_MESSAGE(denseIndices.insert(desc->denseIndex).second, desc->semanticName);
+        TEST_ASSERT_TRUE_MESSAGE(semanticNames.insert(desc->semanticName).second, desc->semanticName);
+
+        // Range invariants
+        TEST_ASSERT_TRUE(desc->minValue <= desc->defaultValue);
+        TEST_ASSERT_TRUE(desc->defaultValue <= desc->maxValue);
+
+        // Direct lookups match
+        TEST_ASSERT_EQUAL_PTR(desc, ParameterRegistry::getByName(desc->semanticName));
+        TEST_ASSERT_EQUAL_PTR(desc, ParameterRegistry::getByName(desc->key));
+        TEST_ASSERT_EQUAL_PTR(desc, ParameterRegistry::getByWireId(desc->wireId));
+
+        // Enum contract verification
+        if (desc->type == ParamType::Enum) {
+            int maxVal = static_cast<int>(desc->maxValue);
+            TEST_ASSERT_TRUE(maxVal >= 1);
+            for (int v = 0; v <= maxVal; ++v) {
+                const char* enumStr = LibrarySerializer::serializeEnumString(desc, v);
+                TEST_ASSERT_NOT_NULL_MESSAGE(enumStr, desc->semanticName);
+                int parsed = LibrarySerializer::parseEnumString(desc, enumStr);
+                TEST_ASSERT_EQUAL_INT_MESSAGE(v, parsed, desc->semanticName);
+            }
+            // Out of bounds enum must fail serialization
+            TEST_ASSERT_NULL(LibrarySerializer::serializeEnumString(desc, -1));
+            TEST_ASSERT_NULL(LibrarySerializer::serializeEnumString(desc, maxVal + 1));
+            TEST_ASSERT_NULL(LibrarySerializer::serializeEnumString(desc, 999));
+        }
+    }
+}
+
+void test_web_contract_parity(void) {
+    std::ifstream ifs("schemas/voxp4-parameters-v1.json");
+    TEST_ASSERT_TRUE_MESSAGE(ifs.is_open(), "Could not open schemas/voxp4-parameters-v1.json");
+
+    std::stringstream ss;
+    ss << ifs.rdbuf();
+    std::string jsonStr = ss.str();
+
+    DynamicJsonDocument doc(65536);
+    DeserializationError err = deserializeJson(doc, jsonStr);
+    TEST_ASSERT_FALSE_MESSAGE(err, err.c_str());
+
+    TEST_ASSERT_EQUAL_INT(1, doc["contractVersion"].as<int>());
+    TEST_ASSERT_EQUAL_INT(71, doc["parameterCount"].as<int>());
+
+    JsonArray paramsArr = doc["parameters"].as<JsonArray>();
+    TEST_ASSERT_EQUAL_UINT(71, paramsArr.size());
+
+    for (JsonObject p : paramsArr) {
+        const char* name = p["name"];
+        const char* key = p["key"];
+        const char* ptype = p["type"];
+        float pmin = p["min"];
+        float pmax = p["max"];
+        float pdef = p["default"];
+
+        const ParamDescriptor* desc = ParameterRegistry::getByName(name);
+        TEST_ASSERT_NOT_NULL_MESSAGE(desc, name);
+        TEST_ASSERT_EQUAL_STRING(name, desc->semanticName);
+        TEST_ASSERT_EQUAL_STRING(key, desc->key);
+        TEST_ASSERT_EQUAL_FLOAT(pmin, desc->minValue);
+        TEST_ASSERT_EQUAL_FLOAT(pmax, desc->maxValue);
+        TEST_ASSERT_EQUAL_FLOAT(pdef, desc->defaultValue);
+
+        if (std::strcmp(ptype, "enum") == 0) {
+            TEST_ASSERT_EQUAL(ParamType::Enum, desc->type);
+            TEST_ASSERT_TRUE(p.containsKey("values"));
+            JsonArray values = p["values"].as<JsonArray>();
+            int maxVal = static_cast<int>(desc->maxValue);
+            TEST_ASSERT_EQUAL_INT(maxVal + 1, values.size());
+
+            for (size_t vIdx = 0; vIdx < values.size(); ++vIdx) {
+                const char* expectedLabel = values[vIdx];
+                const char* actualLabel = LibrarySerializer::serializeEnumString(desc, static_cast<int>(vIdx));
+                TEST_ASSERT_NOT_NULL(actualLabel);
+                TEST_ASSERT_EQUAL_STRING(expectedLabel, actualLabel);
+            }
+        }
+    }
+}
+
+void test_compliance_fixtures_suite(void) {
+    std::string err;
+
+    // Valid fixtures
+    TEST_ASSERT_TRUE_MESSAGE(loadAndValidateFixture("tests/fixtures/compliance/valid_minimal_library.json", err), err.c_str());
+    TEST_ASSERT_TRUE_MESSAGE(loadAndValidateFixture("tests/fixtures/compliance/valid_full_library.json", err), err.c_str());
+
+    // Invalid version fixtures
+    TEST_ASSERT_FALSE(loadAndValidateFixture("tests/fixtures/compliance/invalid_future_format_version.json", err));
+    TEST_ASSERT_FALSE(loadAndValidateFixture("tests/fixtures/compliance/invalid_format_version_zero.json", err));
+    TEST_ASSERT_FALSE(loadAndValidateFixture("tests/fixtures/compliance/invalid_future_schema_version.json", err));
+
+    // Invalid referential and uniqueness fixtures
+    TEST_ASSERT_FALSE(loadAndValidateFixture("tests/fixtures/compliance/invalid_duplicate_id.json", err));
+    TEST_ASSERT_FALSE(loadAndValidateFixture("tests/fixtures/compliance/invalid_missing_preset_reference.json", err));
+    TEST_ASSERT_FALSE(loadAndValidateFixture("tests/fixtures/compliance/invalid_missing_scene_reference.json", err));
+
+    // Invalid parameter fixtures
+    TEST_ASSERT_FALSE(loadAndValidateFixture("tests/fixtures/compliance/invalid_unknown_parameter.json", err));
+    TEST_ASSERT_FALSE(loadAndValidateFixture("tests/fixtures/compliance/invalid_parameter_type.json", err));
+    TEST_ASSERT_FALSE(loadAndValidateFixture("tests/fixtures/compliance/invalid_parameter_range.json", err));
+    TEST_ASSERT_FALSE(loadAndValidateFixture("tests/fixtures/compliance/invalid_enum.json", err));
+
+    // Invalid collection limit fixtures
+    TEST_ASSERT_FALSE(loadAndValidateFixture("tests/fixtures/compliance/invalid_too_many_scenes.json", err));
+    TEST_ASSERT_FALSE(loadAndValidateFixture("tests/fixtures/compliance/invalid_too_many_subscenes.json", err));
+    TEST_ASSERT_FALSE(loadAndValidateFixture("tests/fixtures/compliance/invalid_too_many_setlist_entries.json", err));
+}
+
+void test_demo_setlist_canary(void) {
+    std::string err;
+    TEST_ASSERT_TRUE_MESSAGE(loadAndValidateFixture("examples/demo_setlist.voxp4.json", err), err.c_str());
+
+    // Test that the canary can be executed by PerformanceSession
+    std::ifstream ifs("examples/demo_setlist.voxp4.json");
+    std::stringstream ss;
+    ss << ifs.rdbuf();
+    Library canaryLib;
+    TEST_ASSERT_TRUE(LibrarySerializer::deserializeJson(ss.str(), canaryLib, err));
+
+    PerformanceSession session(&canaryLib);
+    TEST_ASSERT_NOT_NULL(session.getActiveSetlist());
+    TEST_ASSERT_NOT_NULL(session.getActiveScene());
+    TEST_ASSERT_NOT_NULL(session.getActiveSubscene());
+
+    const ResolvedState& state = session.getResolvedState();
+    const ParamDescriptor* dBpm = ParameterRegistry::getByName("TempoBpm");
+    TEST_ASSERT_EQUAL_FLOAT(54.0f, state.get(dBpm->denseIndex).asFloat());
+}
+
+void test_serialization_determinism(void) {
+    Library lib = LibraryStorage::createFactoryLibrary();
+
+    std::string json1, json2, json3;
+    TEST_ASSERT_TRUE(LibrarySerializer::serializeJson(lib, json1, true));
+    TEST_ASSERT_TRUE(LibrarySerializer::serializeJson(lib, json2, true));
+    TEST_ASSERT_EQUAL_STRING(json1.c_str(), json2.c_str());
+
+    Library lib2;
+    std::string err;
+    TEST_ASSERT_TRUE(LibrarySerializer::deserializeJson(json1, lib2, err));
+    TEST_ASSERT_TRUE(LibrarySerializer::serializeJson(lib2, json3, true));
+    TEST_ASSERT_EQUAL_STRING(json1.c_str(), json3.c_str());
+}
+
+void test_atomic_import_integrity(void) {
+    Library original = LibraryStorage::createFactoryLibrary();
+    const char* testPath = "test_atomic_storage.json";
+    TEST_ASSERT_TRUE(LibraryStorage::saveLibraryAtomic(original, testPath));
+
+    // Corrupted JSON import attempt
+    Library importedLib;
+    std::string err;
+    std::string corruptJson = "{ \"format\": \"voxp4-library\", TRUNCATED...";
+    bool ok = LibraryStorage::importLibraryAtomic(corruptJson, importedLib, err, testPath);
+    TEST_ASSERT_FALSE(ok);
+
+    // Verify original file is still valid and untouched
+    Library checkLib;
+    TEST_ASSERT_TRUE(LibraryStorage::loadLibrary(checkLib, testPath));
+    TEST_ASSERT_EQUAL_STRING(original.libraryId.c_str(), checkLib.libraryId.c_str());
+
+    // Cleanup
+    std::remove(testPath);
+    std::remove("library.voxp4.tmp.json");
+}
+
 int main(int argc, char** argv) {
     UNITY_BEGIN();
     RUN_TEST(test_parameter_value_types);
@@ -359,5 +566,11 @@ int main(int argc, char** argv) {
     RUN_TEST(test_commit_temporary_edits);
     RUN_TEST(test_library_validator);
     RUN_TEST(test_web_editor_golden_fixture_and_roundtrip);
+    RUN_TEST(test_71_parameter_contract_audit);
+    RUN_TEST(test_web_contract_parity);
+    RUN_TEST(test_compliance_fixtures_suite);
+    RUN_TEST(test_demo_setlist_canary);
+    RUN_TEST(test_serialization_determinism);
+    RUN_TEST(test_atomic_import_integrity);
     return UNITY_END();
 }

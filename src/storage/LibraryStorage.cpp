@@ -223,3 +223,30 @@ bool LibraryStorage::saveLibraryAtomic(const Library& library, const char* path)
     return std::rename(tmpPath, targetPath) == 0;
 #endif
 }
+
+bool LibraryStorage::importLibraryAtomic(const std::string& jsonContent, Library& outLibrary, std::string& outError, const char* path) {
+    if (jsonContent.size() > LibraryValidator::kMaxFileSize) {
+        outError = "Payload exceeds maximum library file size of " + std::to_string(LibraryValidator::kMaxFileSize) + " bytes";
+        return false;
+    }
+
+    Library imported;
+    if (!LibrarySerializer::deserializeJson(jsonContent, imported, outError)) {
+        return false;
+    }
+
+    ValidationResult val = LibraryValidator::validate(imported);
+    if (!val.isValid()) {
+        outError = val.errors.empty() ? "Validation failed" : val.errors[0];
+        return false;
+    }
+
+    if (!saveLibraryAtomic(imported, path)) {
+        outError = "Failed to write imported library to persistent storage";
+        return false;
+    }
+
+    outLibrary = imported;
+    return true;
+}
+
