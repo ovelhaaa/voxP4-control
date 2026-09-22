@@ -1,0 +1,141 @@
+{
+  "format": "voxp4-library",
+  "formatVersion": 1,
+  "schemaVersion": 1,
+  "libraryId": "web-demo-rig",
+  "name": "Web Editor Demo Rig",
+  "presets": [
+    {
+      "id": "preset-clean-lead",
+      "name": "Clean Lead",
+      "parameters": {
+        "HarmonyEnable": false,
+        "ReverbWet": 0.15,
+        "DelayEnable": false,
+        "CompressorEnable": true,
+        "CompressorThresholdDb": -16.0
+      }
+    },
+    {
+      "id": "preset-wide-harmony",
+      "name": "Wide Harmony",
+      "parameters": {
+        "HarmonyEnable": true,
+        "HarmonyLevel": 0.85,
+        "ModulationMode": "Microshift",
+        "ModulationMix": 0.35,
+        "MicroshiftLeftCents": -7.0,
+        "MicroshiftRightCents": 9.0,
+        "ReverbWet": 0.25
+      }
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene-creep",
+      "name": "Creep",
+      "basePresetId": "preset-clean-lead",
+      "metadata": {
+        "artist": "Radiohead",
+        "notes": "G - B - C - Cm progression"
+      },
+      "parameters": {
+        "TempoBpm": 92.0,
+        "HarmonyKey": "G",
+        "HarmonyScale": "Major"
+      },
+      "subscenes": [
+        {
+          "id": "creep-intro",
+          "name": "Intro",
+          "parameters": {
+            "HarmonyEnable": false,
+            "DelayEnable": false
+          }
+        },
+        {
+          "id": "creep-verse",
+          "name": "Verse",
+          "parameters": {
+            "HarmonyEnable": false,
+            "ReverbWet": 0.18
+          }
+        },
+        {
+          "id": "creep-chorus",
+          "name": "Chorus",
+          "parameters": {
+            "HarmonyEnable": true,
+            "HarmonyLevel": 0.90,
+            "DelayEnable": true,
+            "DelayWet": 0.25,
+            "ReverbWet": 0.32
+          }
+        },
+        {
+          "id": "creep-bridge",
+          "name": "Bridge",
+          "parameters": {
+            "HarmonyEnable": true,
+            "ModulationMix": 0.40,
+            "ReverbWet": 0.45
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-space-oddity",
+      "name": "Space Oddity",
+      "basePresetId": "preset-wide-harmony",
+      "metadata": {
+        "artist": "David Bowie",
+        "notes": "Acoustic space anthem"
+      },
+      "parameters": {
+        "TempoBpm": 84.0,
+        "HarmonyKey": "C",
+        "HarmonyScale": "Major"
+      },
+      "subscenes": [
+        {
+          "id": "space-verse",
+          "name": "Verse",
+          "parameters": {
+            "HarmonyEnable": false,
+            "ReverbWet": 0.20
+          }
+        },
+        {
+          "id": "space-lift-off",
+          "name": "Lift Off",
+          "parameters": {
+            "HarmonyEnable": true,
+            "DelayEnable": true,
+            "DelayWet": 0.35,
+            "ReverbWet": 0.40
+          }
+        }
+      ]
+    }
+  ],
+  "setlists": [
+    {
+      "id": "setlist-friday-gig",
+      "name": "Friday Gig",
+      "entries": [
+        {
+          "id": "entry-1",
+          "sceneId": "scene-creep"
+        },
+        {
+          "id": "entry-2",
+          "sceneId": "scene-space-oddity"
+        },
+        {
+          "id": "entry-3",
+          "sceneId": "scene-creep"
+        }
+      ]
+    }
+  ]
+}

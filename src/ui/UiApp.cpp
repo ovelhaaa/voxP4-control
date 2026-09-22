@@ -9,6 +9,8 @@
 #include "screens/SettingsScreen.h"
 #include "board/LGFX_CYD.h"
 #include "control/FootswitchManager.h"
+#include "session/PerformanceSession.h"
+#include "storage/LibraryStorage.h"
 #include <lvgl.h>
 #include <cstdio>
 #include <cctype>
@@ -20,6 +22,14 @@
 using namespace VoxUiTheme;
 
 static UiAppState app_state = {};
+
+// Performance Session & Library
+static Library s_library;
+static PerformanceSession s_session(&s_library);
+
+PerformanceSession* ui_get_performance_session() {
+    return &s_session;
+}
 
 // VoxLink bridge state (see VoxLinkGlue.cpp).
 static UiWireIntentFn s_wire_intent = nullptr;
@@ -87,6 +97,9 @@ static bool effect_enabled_from_state(int effectId) {
     }
 }
 
+static void fan_out_parameter(UiParamId id, float value);
+static void apply_session_deltas(const std::vector<ParamDelta>& deltas);
+
 // Action dispatcher for view intent. This is the boundary between screens and
 // state authority. Until VoxLink is wired, actions update local optimistic
 // state, which is fanned out to every screen that represents the same thing.
@@ -124,14 +137,33 @@ void ui_emit_action(const UiAction& action) {
             break;
 
         case UiActionType::LoadPreset:
-            // LOCAL TEMPORARY placeholder: selected preset becomes current.
             if (action.id > 0) app_state.selectedPresetId = action.id;
             ui_load_selected_preset();
             break;
 
         case UiActionType::SavePreset:
-            // No persistence backend yet. Control is disabled in the UI; this
-            // guard exists only so a stray event can never fake a save.
+        case UiActionType::CommitEdits:
+            ui_commit_edits();
+            break;
+
+        case UiActionType::RevertEdits:
+            ui_revert_edits();
+            break;
+
+        case UiActionType::NextSubscene:
+            apply_session_deltas(s_session.nextSubscene());
+            break;
+
+        case UiActionType::PrevSubscene:
+            apply_session_deltas(s_session.previousSubscene());
+            break;
+
+        case UiActionType::NextScene:
+            apply_session_deltas(s_session.nextScene());
+            break;
+
+        case UiActionType::PrevScene:
+            apply_session_deltas(s_session.previousScene());
             break;
 
         case UiActionType::SetParameter:
@@ -427,9 +459,33 @@ void ui_app_init(LGFX_CYD& display) {
         }
     }
 
-    // Establish a coherent local current preset (placeholder until a preset
-    // backend exists). This fans out to Performance and Presets together.
-    ui_update_preset(3, presets_get_name(2));
+    // Initialize library & session
+    LibraryStorage::init();
+    LibraryStorage::loadLibrary(s_library);
+    s_session.setLibrary(&s_library);
+
+    // Apply resolved state from session
+    const ResolvedState& resolved = s_session.getResolvedState();
+    for (size_t i = 0; i < kUiParamCount; ++i) {
+        uint16_t wid = ui_param_voxlink_id(static_cast<UiParamId>(i));
+        if (wid != 0) {
+            app_state.parameterValues[i] = resolved.getByWireId(wid).asFloat();
+            app_state.parameterValid[i] = true;
+        }
+    }
+
+    if (!s_library.scenes.empty()) {
+        const char* sceneNames[16];
+        int count = 0;
+        for (size_t i = 0; i < s_library.scenes.size() && count < 16; ++i) {
+            sceneNames[count++] = s_library.scenes[i].name.c_str();
+        }
+        presets_update_list(sceneNames, count);
+        presets_update_current(1, sceneNames[0]);
+    } else {
+        ui_update_preset(1, presets_get_name(0));
+    }
+    ui_update_performance_header();
 
     performance_update_meters(app_state.inputPeakDb, app_state.outputPeakDb);
     const char* noteName = note_name_from_midi(app_state.detectedNote);
@@ -492,7 +548,11 @@ void ui_select_preset(int index) {
 
 void ui_load_selected_preset(void) {
     const uint16_t id = app_state.selectedPresetId;
-    ui_update_preset(id, presets_get_name((int)id - 1));
+    if (id > 0 && id <= s_library.scenes.size()) {
+        apply_session_deltas(s_session.selectScene(s_library.scenes[id - 1].id));
+    } else if (id > 0) {
+        ui_update_preset(id, presets_get_name((int)id - 1));
+    }
 }
 
 bool ui_is_global_bypass(void) {
@@ -502,6 +562,10 @@ bool ui_is_global_bypass(void) {
 const char* ui_footswitch_short_label(uint8_t action) {
     const char* full = footswitch_action_name((FootswitchAction)action);
     if (full == nullptr) return "NONE";
+    if (strstr(full, "SUBSCENE NEXT")) return "SUB NEXT";
+    if (strstr(full, "SUBSCENE PREV")) return "SUB PREV";
+    if (strstr(full, "SCENE NEXT")) return "SCENE NEXT";
+    if (strstr(full, "SCENE PREV")) return "SCENE PREV";
     if (strstr(full, "HARMONY")) return "HARMONY";
     if (strstr(full, "REVERB")) return "REVERB";
     if (strstr(full, "DELAY")) return "DELAY";
@@ -528,6 +592,49 @@ void ui_update_footswitch_state(int index, bool pressed) {
     // Fan out one physical event to every representation.
     performance_update_footswitch(index, fs_short_label[index], pressed);
     footswitch_update_state(index, pressed);
+
+    if (pressed) {
+        FootswitchConfig* cfg = footswitch_get_config(index);
+        if (cfg) {
+            switch (cfg->pressAction) {
+                case FS_ACTION_SUBSCENE_NEXT:
+                    ui_emit_action({ UiActionType::NextSubscene, 0, 0.0f });
+                    break;
+                case FS_ACTION_SUBSCENE_PREV:
+                    ui_emit_action({ UiActionType::PrevSubscene, 0, 0.0f });
+                    break;
+                case FS_ACTION_SCENE_NEXT:
+                    ui_emit_action({ UiActionType::NextScene, 0, 0.0f });
+                    break;
+                case FS_ACTION_SCENE_PREV:
+                    ui_emit_action({ UiActionType::PrevScene, 0, 0.0f });
+                    break;
+                case FS_ACTION_HARMONY_TOGGLE:
+                    ui_emit_action({ UiActionType::ToggleEffect, static_cast<uint16_t>(UiEffectId::Harmony), 0.0f });
+                    break;
+                case FS_ACTION_REVERB_TOGGLE:
+                    ui_emit_action({ UiActionType::ToggleEffect, static_cast<uint16_t>(UiEffectId::Reverb), 0.0f });
+                    break;
+                case FS_ACTION_DELAY_TOGGLE:
+                    ui_emit_action({ UiActionType::ToggleEffect, static_cast<uint16_t>(UiEffectId::Delay), 0.0f });
+                    break;
+                case FS_ACTION_MODULATION_TOGGLE:
+                    ui_emit_action({ UiActionType::ToggleEffect, static_cast<uint16_t>(UiEffectId::Modulation), 0.0f });
+                    break;
+                case FS_ACTION_GLOBAL_BYPASS:
+                    ui_emit_action({ UiActionType::GlobalBypass, 0, 0.0f });
+                    break;
+                case FS_ACTION_PRESET_NEXT:
+                    ui_emit_action({ UiActionType::NextScene, 0, 0.0f });
+                    break;
+                case FS_ACTION_PRESET_PREV:
+                    ui_emit_action({ UiActionType::PrevScene, 0, 0.0f });
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -564,6 +671,68 @@ static void fan_out_parameter(UiParamId id, float value) {
     effect_edit_notify(id, value);
 }
 
+void ui_update_performance_header(void) {
+    const Scene* sc = s_session.getActiveScene();
+    const Subscene* sub = s_session.getActiveSubscene();
+    const Setlist* sl = s_session.getActiveSetlist();
+
+    const char* sceneName = sc ? sc->name.c_str() : "No Scene";
+    const char* subName = sub ? sub->name.c_str() : (sc ? "Default" : "--");
+
+    int subIdx = 0, subTotal = 0;
+    if (sc && !sc->subscenes.empty()) {
+        subTotal = static_cast<int>(sc->subscenes.size());
+        for (size_t i = 0; i < sc->subscenes.size(); ++i) {
+            if (sc->subscenes[i].id == s_session.getActiveSubsceneId()) {
+                subIdx = static_cast<int>(i) + 1;
+                break;
+            }
+        }
+    }
+
+    int setIdx = 0, setTotal = 0;
+    if (sl && !sl->entries.empty()) {
+        setTotal = static_cast<int>(sl->entries.size());
+        setIdx = s_session.getActiveEntryIndex() + 1;
+    }
+
+    performance_update_scene_status(sceneName, subName, subIdx, subTotal, setIdx, setTotal, s_session.isDirty());
+}
+
+static void apply_session_deltas(const std::vector<ParamDelta>& deltas) {
+    for (const auto& delta : deltas) {
+        UiParamId uiId;
+        if (ui_param_from_voxlink_id(delta.wireId, &uiId)) {
+            const size_t index = static_cast<size_t>(uiId);
+            if (index < kUiParamCount) {
+                app_state.parameterValues[index] = delta.value.asFloat();
+                app_state.parameterValid[index] = true;
+                fan_out_parameter(uiId, delta.value.asFloat());
+            }
+        }
+        UiEffectId effId;
+        if (ui_effect_from_enable_voxlink_id(delta.wireId, &effId)) {
+            ui_update_effect_state(static_cast<int>(effId), delta.value.asBool());
+        }
+        if (s_wire_intent != nullptr) {
+            s_wire_intent(delta.wireId, delta.value.asFloat());
+        }
+    }
+    ui_update_performance_header();
+}
+
+void ui_commit_edits(void) {
+    if (s_session.commitTemporaryEdits()) {
+        LibraryStorage::saveLibraryAtomic(s_library);
+        ui_update_performance_header();
+    }
+}
+
+void ui_revert_edits(void) {
+    std::vector<ParamDelta> deltas = s_session.revertTemporaryEdits();
+    apply_session_deltas(deltas);
+}
+
 void ui_set_parameter_local(UiParamId id, float value) {
     const size_t index = static_cast<size_t>(id);
     if (index >= kUiParamCount) return;
@@ -578,6 +747,10 @@ void ui_set_parameter_local(UiParamId id, float value) {
     fan_out_parameter(id, clamped);
 
     const uint16_t wire_id = ui_param_voxlink_id(id);
+    if (wire_id != 0) {
+        s_session.applyTemporaryEdit(wire_id, ParameterValue::makeFloat(clamped));
+        ui_update_performance_header();
+    }
     if (s_wire_intent != nullptr && wire_id != 0) s_wire_intent(wire_id, clamped);
 }
 
@@ -638,6 +811,10 @@ void ui_set_effect_enable_local(UiEffectId effect, bool enabled) {
     ui_update_effect_state(index, enabled);
     app_state.effectAuthority[index] = UiValueAuthority::LocalPending;
     const uint16_t wire_id = ui_effect_enable_voxlink_id(effect);
+    if (wire_id != 0) {
+        s_session.applyTemporaryEdit(wire_id, ParameterValue::makeBool(enabled));
+        ui_update_performance_header();
+    }
     if (s_wire_intent != nullptr && wire_id != 0)
         s_wire_intent(wire_id, enabled ? 1.0f : 0.0f);
 }

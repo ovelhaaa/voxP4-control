@@ -12,6 +12,7 @@ void performance_update_pitch(float freqHz, const char* noteName, bool voiced);
 void performance_update_effect(int effectIndex, bool enabled);
 void performance_update_effect_value(int effectIndex, const char* mainValue);
 void performance_update_preset(const char* name);
+void performance_update_scene_status(const char* sceneName, const char* subsceneName, int subIdx, int subTotal, int setIdx, int setTotal, bool isDirty);
 void performance_update_link(bool connected);
 void performance_update_footswitch(int fsIndex, const char* label, bool pressed);
 

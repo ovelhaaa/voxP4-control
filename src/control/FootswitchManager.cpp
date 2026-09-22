@@ -37,7 +37,11 @@ static const char* actionNames[] = {
     "PRESET NEXT",
     "PRESET PREV",
     "GLOBAL BYPASS",
-    "MODULATION TOGGLE"
+    "MODULATION TOGGLE",
+    "SUBSCENE NEXT",
+    "SUBSCENE PREV",
+    "SCENE NEXT",
+    "SCENE PREV"
 };
 
 void footswitch_manager_init(void) {

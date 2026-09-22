@@ -26,7 +26,13 @@ enum class UiActionType {
     SetFootswitchConfig,
     GlobalBypass,
     AllEffectsOn,
-    SetParameter
+    SetParameter,
+    NextSubscene,
+    PrevSubscene,
+    NextScene,
+    PrevScene,
+    CommitEdits,
+    RevertEdits
 };
 
 struct UiAction {
@@ -113,6 +119,9 @@ void ui_update_pitch(float freqHz, int note, bool voiced);
 void ui_select_preset(int index);
 void ui_load_selected_preset(void);
 bool ui_is_global_bypass(void);
+void ui_commit_edits(void);
+void ui_revert_edits(void);
+void ui_update_performance_header(void);
 
 // Footswitch fan-out. A physical event must go through these; screens are never
 // called directly from main.cpp. `ui_update_footswitch_config` is fed from the

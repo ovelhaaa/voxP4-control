@@ -219,6 +219,29 @@ void performance_update_preset(const char* name) {
     if (preset_label) lv_label_set_text(preset_label, name);
 }
 
+void performance_update_scene_status(const char* sceneName, const char* subsceneName,
+                                     int subIdx, int subTotal, int setIdx, int setTotal,
+                                     bool isDirty) {
+    if (!preset_label) return;
+    char buf[64];
+    if (setTotal > 0 && subTotal > 0) {
+        snprintf(buf, sizeof(buf), "[%02d/%02d] %s | %s [%d/%d]%s",
+                 setIdx, setTotal, sceneName ? sceneName : "--",
+                 subsceneName ? subsceneName : "--", subIdx, subTotal,
+                 isDirty ? " *" : "");
+    } else if (subTotal > 0) {
+        snprintf(buf, sizeof(buf), "%s | %s [%d/%d]%s",
+                 sceneName ? sceneName : "--",
+                 subsceneName ? subsceneName : "--", subIdx, subTotal,
+                 isDirty ? " *" : "");
+    } else if (sceneName) {
+        snprintf(buf, sizeof(buf), "%s%s", sceneName, isDirty ? " *" : "");
+    } else {
+        snprintf(buf, sizeof(buf), "--%s", isDirty ? " *" : "");
+    }
+    lv_label_set_text(preset_label, buf);
+}
+
 void performance_update_link(bool connected) {
     if (link_indicator) {
         lv_label_set_text(link_indicator, connected ? "● LINK" : "○ LINK");

@@ -212,13 +212,19 @@ void presets_screen_init(lv_obj_t* parent) {
         ui_emit_action(action);
     }, LV_EVENT_CLICKED, NULL);
 
-    // SAVE AS and DELETE have no persistence backend: they are deliberately
-    // disabled so they cannot look falsely functional.
-    lv_obj_t* save_btn = create_action_button(action_row, "SAVE AS", COLOR_SEPARATOR, COLOR_TEXT_MUTED);
-    ui_apply_disabled(save_btn);
+    // SAVE commits temporary quick edits into the active Subscene/Scene
+    lv_obj_t* save_btn = create_action_button(action_row, "SAVE", COLOR_SEPARATOR, COLOR_TEXT_PRIMARY);
+    lv_obj_add_event_cb(save_btn, [](lv_event_t* e) {
+        UiAction action = { UiActionType::CommitEdits, 0, 0.0f };
+        ui_emit_action(action);
+    }, LV_EVENT_CLICKED, NULL);
 
-    lv_obj_t* delete_btn = create_action_button(action_row, "DELETE", COLOR_SEPARATOR, COLOR_TEXT_MUTED);
-    ui_apply_disabled(delete_btn);
+    // REVERT discards temporary quick edits and rolls back to saved Subscene state
+    lv_obj_t* revert_btn = create_action_button(action_row, "REVERT", COLOR_SEPARATOR, COLOR_TEXT_MUTED);
+    lv_obj_add_event_cb(revert_btn, [](lv_event_t* e) {
+        UiAction action = { UiActionType::RevertEdits, 0, 0.0f };
+        ui_emit_action(action);
+    }, LV_EVENT_CLICKED, NULL);
 }
 
 const char* presets_get_name(int index) {
